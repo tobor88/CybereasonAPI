@@ -5,6 +5,13 @@
  __RESOURCE:__ [Cybereason API Documentation](https://nest.cybereason.com/documentation/api-documentation)
 
 ## Current Cmdlets
+__Connect-CybereasonAPI__: This cmdlet is used to authenticate to the Cybereason API. This will create a global variable called $Session that will get used with the rest of the cmdletts in this module that need it.
+
+__Get-CybereasonReputations__: This cmdlet is used to view or download a CSV list of reputation informatino that have been manually configured on your environments Cybereason server.
+[Documentation for Manage Reputations](https://nest.cybereason.com/documentation/api-documentation/all-versions/manage-reputations)
+
+__Set-CybereasonReputations__: This cmdlet is used to add or update a custom reputation on the Cybereason server instance. Using the Cybereason Reputation Management API, you can integrate and update threat intelligence from various sources to improve detections, view and update file reputations, and add items to the whitelist based on behavioral characteristics.
+
 __Get-CybereasonThreatIntel__: This cmdlet is used to communicate with every link under the "Get Threat Intel" section of the API documentation. 
 It can perform the following actions.
  - Get a file reputation	
@@ -22,11 +29,6 @@ It can perform the following actions.
 [Documentation for Get Threat Intel](https://nest.cybereason.com/documentation/api-documentation/all-versions/get-threat-intel#get-threat-intel)
 
 ## Still To Come Cmdlets
-__Invoke-ManageReputations__: Using the Cybereason Reputation Management API, you can integrate and update threat intelligence from various sources to improve detections, view and update file reputations, and add items to the whitelist based on behavioral characteristics.
-- Download a CSV list of reputations
-- Add or update a custom reputation <br>
-[Documentation for Manage Reputations](https://nest.cybereason.com/documentation/api-documentation/all-versions/manage-reputations)
-
 __Invoke-HuntAndInvestigate__: Using hunting queries and file search capabilities in the API, further your investigation of malicious behavior in your organization, including:
 - Run investigative queries
 - Search for files

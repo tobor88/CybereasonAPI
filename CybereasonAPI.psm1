@@ -1,23 +1,23 @@
 <#
 .SYNOPSIS
-This cmdlet was created to quickly and easily look up threat information on an IP address or domain using the Cybereason API.
+This cmdlet was created to quickly and easily perform all Threat Intelligence tasks that the Cybereason API allows such as looking up a domain or IP address.
 
 
 .DESCRIPTION
-Easily and quickly communicate with the Cyberason API to discover threat intel on an IP address or domain
+Easily and quickly communicate with the Cyberason API to discover threat intel on an IP address, domain, product, process, file extension or check for database updates avaialable in those categories.
 
 
 .PARAMETER Md5Hash
-This parameter accepts an MD5 hash of a file to check the reputation of against the Cybereason database
+This parameter accepts an MD5 hash of a file to check the reputation of the files signature against the Cybereason database. The -FileToHash parameter can be used if you do not already have the hash value available
 
 .PARAMETER FileToHash
 This parameter defines a file that you want to check against the cybereason reputation database. If you do not have the hash of the file this will automtically get the hash for you and check it's reputation
 
 .PARAMETER Domain
-This parameter defines the domain to be checked on
+This parameter defines a domain to check against the malicious domain database and discover info such as when the domain was first registered
 
 .PARAMETER IPAddress
-This parameter defines the IP address to be checked on
+This parameter defines the IP address to be checked against the Cyberason malicious IP address database
 
 .PARAMETER ProductClassification
 This switch parameter indicates you wish to retrieve product classification information
@@ -37,7 +37,7 @@ This switch parameter indicates you wish to retrieve port information
 .PARAMETER CollectionInfo
 This switch parameter indicates you wish to retrieve collection information 
 
-.PARAMETER IPRep
+.PARAMETER IPReputation
 This switch parameter indicates you wish to retrieve a list of IP address reputations 
 
 .PARAMETER DomainRep
@@ -48,28 +48,85 @@ This switch parameter indicates you wish to check for database updates
 
 
 .EXAMPLE
-Get-ThreatIntel -Md5Hash 'D7AB69FAD18D4A643D84A271DFC0DBDF'
+Get-CybereasonThreatIntel -Md5Hash 'D7AB69FAD18D4A643D84A271DFC0DBDF'
 # This example returns details on a file’s reputation based on the Cybereason threat intelligence service using the MD5 hash. If you do not already have the hash, use the -FileToHash parameter to have it obtained automtacilly for you.
 
 .EXAMPLE
-Get-ThreatIntel -Md5Hash (Get-FileHash -Algorithm MD5 -Path C:\Users\Public\Desktop\AlwaysInstallElevatedCheck.htm).Hash
+Get-CybereasonThreatIntel -Md5Hash (Get-FileHash -Algorithm MD5 -Path C:\Users\Public\Desktop\AlwaysInstallElevatedCheck.htm).Hash
 # This example gets the file hash of a file on the OS and determines if it is malicious or not
 
 .EXAMPLE
-Get-ThreatIntel -FileToHash C:\Windows\System32\cmd.exe
+Get-CybereasonThreatIntel -FileToHash C:\Windows\System32\cmd.exe
 # This example returns details on the file C:\Windows\System32\cmd.exe's reputation based on the Cybereason threat intelligence service. This determines the MD5 hash automatically of the file you define. If you already have the hash enter it using the -Md5Hash parameter instead of this one.
 
 .EXAMPLE
-Get-ThreatIntel -Domain www.cybereason.com
+Get-CybereasonThreatIntel -Domain www.cybereason.com
 # This example returns details on domain reputations for www.cybereason.com based on the Cybereason threat intelligence service.
 
 .EXAMPLE
-Get-ThreatIntel -IPAddress 1.1.1.1
+Get-CybereasonThreatIntel -IPAddress 1.1.1.1
 # This example returns details on IP address reputations for 1.1.1.1 based on the Cybereason threat intelligence service. 
 
 .EXAMPLE
-Get-ThreatIntel -DbUpdateCheck
-# The rest of the options are all switch parameters and do not have any values to enter. As such I am not going to do this for every single one. The -DbUpdateCheck switch parameter checks fro Cybereason sensor updates that are available
+Get-CybereasonThreatIntel -ProductClassification
+# This example retrieves product classification information
+
+.EXAMPLE
+Get-CybereasonThreatIntel -ProcessClassification
+# This example retrieves process classification information
+
+.EXAMPLE
+Get-CybereasonThreatIntel -ProcessHierarchy
+# This example retrieves process hierarchy information
+
+.EXAMPLE
+Get-CybereasonThreatIntel -FileExtension
+# This example retrieves file extension information
+
+.EXAMPLE
+Get-CybereasonThreatIntel -PortInfo
+# This example returns information on all ports
+
+.EXAMPLE
+Get-CybereasonThreatIntel -CollectionInfo
+# This example returns information on collection information used by the Cybereason platform
+
+.EXAMPLE
+Get-CybereasonThreatIntel -IPReputation
+# This example returns a list of IP Address reputations
+
+.EXAMPLE
+Get-CybereasonThreatIntel -DomainReputation
+# This example returns a list of Domain reputations
+
+.EXAMPLE
+Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI const
+# The -DbUpdateCheck switch parameter checks fro Cybereason sensor updates that are available for collection information
+
+.EXAMPLE
+Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI domain_reputation
+# The -DbUpdateCheck switch parameter checks fro Cybereason sensor updates that are available for domain reputations
+
+.EXAMPLE
+Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI file_extension
+# The -DbUpdateCheck switch parameter checks fro Cybereason sensor updates that are available for file extensions
+
+.EXAMPLE
+Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI ip_reputation
+# The -DbUpdateCheck switch parameter checks fro Cybereason sensor updates that are available for IP Address reputations
+
+.EXAMPLE
+Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI process_classification
+# The -DbUpdateCheck switch parameter checks fro Cybereason sensor updates that are available for process classifications
+
+.EXAMPLE
+Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI process_hierarchy
+# The -DbUpdateCheck switch parameter checks fro Cybereason sensor updates that are available for process hierarchy information
+
+.EXAMPLE
+Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI product_classification
+# The -DbUpdateCheck switch parameter checks fro Cybereason sensor updates that are available for product classification information
+
 
 .NOTES
 Author: Robert H. Osborne
@@ -97,18 +154,18 @@ https://www.linkedin.com/in/roberthosborne/
 https://www.youracclaim.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
-Function Get-ThreatIntel {
+Function Get-CybereasonThreatIntel {
     [CmdletBinding()]
         param(
             [Parameter(
                 ParameterSetName='Md5Hash',
-                Mandatory=$False,
+                Mandatory=$True,
                 ValueFromPipeline=$False)]  # End Parameter
             [String]$Md5Hash,
 
             [Parameter(
                 ParameterSetName='FileToHash',
-                Mandatory=$False,
+                Mandatory=$True,
                 ValueFromPipeline=$False)]  # End Parameter
             [String]$FileToHash,
 
@@ -151,12 +208,12 @@ Function Get-ThreatIntel {
             [Switch][Bool]$CollectionInfo,
            
             [Parameter(
-                ParameterSetName='IPRep')]  # End Parameter
-            [Switch][Bool]$IPRep,
+                ParameterSetName='IPReputation')]  # End Parameter
+            [Switch][Bool]$IPReputation,
 
             [Parameter(
-                ParameterSetName='DomainRep')]  # End Parameter
-            [Switch][Bool]$DomainRep,
+                ParameterSetName='DomainReputation')]  # End Parameter
+            [Switch][Bool]$DomainReputation,
 
             [Parameter(
                 ParameterSetName='DbUpdateCheck')]  # End Parameter
@@ -302,14 +359,12 @@ Function Get-ThreatIntel {
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
-            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList"
-            For ($i = 0; $i -le $Results.Count; $i++)
-            {
-
-                $Name = ($Results.Key.name[$i] | Out-String).Trim()
-                $Signer = ($Results.Value.signer[$i] | Out-String).Trim()
-                $Type = ($Results.Value.type[$i] | Out-String).Trim()
-                $Title = ($Results.Value.title[$i] | Out-String).Trim()
+            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" | `
+            ForEach-Object {
+                $Name = ($_.Key.name | Out-String).Trim()
+                $Signer = ($_.Value.signer | Out-String).Trim()
+                $Type = ($_.Value.type | Out-String).Trim()
+                $Title = ($_.Value.title | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{Name="$Name"; Signer=$Signer; Type=$Type; Title="$Title"}
 
@@ -327,16 +382,14 @@ Function Get-ThreatIntel {
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
-            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList"
-            For ($i = 0; $i -le $Results.Count; $i++)
-            {
-
-                $ProcessName = ($Results.Key.name[$i] | Out-String).Trim()
-                $Title = ($Results.Value.title[$i] | Out-String).Trim()
-                $ProductName = ($Results.Value.productName[$i] | Out-String).Trim()
-                $CompanyName = ($Results.Value.companyName[$i] | Out-String).Trim()
-                $fileDescription = ($Results.Value.fileDescription[$i] | Out-String).Trim()
-                $filePath = ($Results.Value.path[$i] | Out-String).Trim()
+            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" | `
+            ForEach-Object {
+                $ProcessName = ($_.Key.name | Out-String).Trim()
+                $Title = ($_.Value.title | Out-String).Trim()
+                $ProductName = ($_.Value.productName | Out-String).Trim()
+                $CompanyName = ($_.Value.companyName | Out-String).Trim()
+                $fileDescription = ($_.Value.fileDescription | Out-String).Trim()
+                $filePath = ($_.Value.path | Out-String).Trim()
 
 
                 $Obj += New-Object -TypeName PSObject -Property @{ProcessName="$ProcessName"; Title="$Title"; ProductName=$ProductName; CompanyName=$CompanyName; FileDescription=$fileDescription; FilePath=$FilePath}
@@ -355,12 +408,11 @@ Function Get-ThreatIntel {
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
-            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList"
-            For ($i = 0; $i -le $Results.Count; $i++)
-            {
+            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" | `
+            ForEach-Object {
 
-                $Parent = ($Results.Value.parent[$i] | Out-String).Trim()
-                $ProcessName = ($Results.Key.name[$i] | Out-String).Trim()
+                $Parent = ($_.Value.parent | Out-String).Trim()
+                $ProcessName = ($_.Key.name | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{Parent="$Parent"; ProcessName="$ProcessName"}
 
@@ -418,12 +470,10 @@ Function Get-ThreatIntel {
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
-            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList"
-            For ($i = 0; $i -le $Results.Count; $i++)
-            {
-
-                $Name = ($Results.Key.name[$i] | Out-String).Trim()
-                $Data = ($Results.Value.data[$i] | Out-String).Trim()
+            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" | `
+            ForEach-Object {
+                $Name = ($_.Key.name | Out-String).Trim()
+                $Data = ($_.Value.data | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{Name="$Name"; Data="$Data"}
 
@@ -433,7 +483,7 @@ Function Get-ThreatIntel {
 
         }  # End Switch CollectionInfo
 
-        'IPRep' {
+        'IPReputation' {
 
             $Uri = $Site + 'download_v1/ip_reputation'
             $JsonData = "{}"
@@ -456,14 +506,14 @@ Function Get-ThreatIntel {
             
             $Obj
 
-        }  # End IPRep Switch
+        }  # End IPReputation Switch
 
-        'DomainRep' {
+        'DomainReputation' {
 
             $Uri = $Site + 'download_v1/domain_reputation'
             $JsonData = "{}"
 
-            Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
+            Write-Verbose "Sending Threat Intel JSON data to Cybereason's API"
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
             $Results = $Response.Content | ConvertFrom-Json
@@ -480,7 +530,7 @@ Function Get-ThreatIntel {
             
             $Obj 
         
-        }  #End Switch DomainRep
+        }  #End Switch DomainReputation
 
         'DbUpdateCheck' {
 
@@ -498,4 +548,4 @@ Function Get-ThreatIntel {
 
     }  # End Switch
 
-}  # End Function Get-ThreatIntel
+}  # End Function Get-CybereasonThreatIntel

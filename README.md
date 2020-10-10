@@ -5,7 +5,7 @@
  __RESOURCE:__ [Cybereason API Documentation](https://nest.cybereason.com/documentation/api-documentation)
 
 ## Current Cmdlets
-__Get-ThreatIntel__: This cmdlet is used to communicate with every link under the "Get Threat Intel" section of the API documentation. 
+__Get-CybereasonThreatIntel__: This cmdlet is used to communicate with every link under the "Get Threat Intel" section of the API documentation. 
 It can perform the following actions.
  - Get a file reputation	
  - Get reputation for a domain	
@@ -112,5 +112,5 @@ __Manage Sensors (Multiple Cmdlets)__: Cybereason enables you to manage your Sen
 - Remove a sensor from a group <br>
 [Documentation for Manage Sensors](https://nest.cybereason.com/documentation/api-documentation/all-versions/manage-sensors)
 
-Below are images of the results from different Get-ThreatIntel commands.
-![Get-ThreatIntel Result Image](https://raw.githubusercontent.com/tobor88/CybereasonAPI/main/images/GetThreatInfoImage.png)
+Below are images of the results from different Get-CybereasonThreatIntel commands.
+![Get-CybereasonThreatIntel Result Image](https://raw.githubusercontent.com/tobor88/CybereasonAPI/main/images/GetThreatInfoImage.png)

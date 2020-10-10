@@ -160,13 +160,21 @@ Function Get-ThreatIntel {
 
             [Parameter(
                 ParameterSetName='DbUpdateCheck')]  # End Parameter
-            [Switch][Bool]$DbUpdateCheck
+            [Switch][Bool]$DbUpdateCheck,
 
+            [Parameter(
+                ParameterSetName='DbUpdateCheck',
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the reputaion API value to be added to the query of the API's URI. This goes here in the URI, /download_v1/<HERE>/service `n[E] EXMAPLE: process_classification")]  # End Parameter
+            [ValidateSet("ip_reputation","domain_reputation","process_classification","file_extension","process_hierarchy","process_hierarchy","product_classification","const")]
+            [String]$ReputationAPI
+            
         )  # End param
 
     $Obj = @()
     $Site = 'https://sage.cybereason.com/rest/'
-    $PSBoundParameters.Keys
+
     Switch ($PSBoundParameters.Keys)
     {
 
@@ -179,12 +187,11 @@ Function Get-ThreatIntel {
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
             $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
-            $MD5 = $Results.requestKey.md5 | Out-String 
-            $SHA1 = $Results.requestKey.sha1 | Out-String 
+            $MD5 = ($Results.requestKey.md5 | Out-String).Trim()
+            $SHA1 = ($Results.requestKey.sha1 | Out-String).Trim()
             $MaliciousScore = $Results.aggregatedResult.maliciousClassification
-            $ProductType = $Results.aggregatedResult.productClassification.productType | Out-String
-            $Type = $Results.aggregatedResult.productClassification.Type | Out-String
-
+            $ProductType = ($Results.aggregatedResult.productClassification.productType | Out-String).Trim()
+            $Type = ($Results.aggregatedResult.productClassification.Type | Out-String).Trim()
             $Obj += New-Object -TypeName PSObject -Property @{md5="$MD5"; sha1="$SHA1"; MaliciousScore="$MaliciousScore"; ProductType="$ProductType"; Type="$Type"}
 
             $Obj
@@ -208,11 +215,12 @@ Function Get-ThreatIntel {
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
             $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
-            $MD5 = $Results.requestKey.md5 | Out-String 
-            $SHA1 = $Results.requestKey.sha1 | Out-String 
+            $MD5 = ($Results.requestKey.md5 | Out-String).Trim()
+            $SHA1 = ($Results.requestKey.sha1 | Out-String).Trim()
             $MaliciousScore = $Results.aggregatedResult.maliciousClassification
-            $ProductType = $Results.aggregatedResult.productClassification.productType | Out-String
-            $Type = $Results.aggregatedResult.productClassification.Type | Out-String
+            $ProductType = ($Results.aggregatedResult.productClassification.productType | Out-String).Trim()
+            If ($SHA1.Length -ne 40) { $SHA1 = ((Get-FileHash -Algorithm SHA1 -Path $FileToHash).Hash).Trim() }
+            $Type = ($Results.aggregatedResult.productClassification.Type | Out-String).Trim()
 
             $Obj += New-Object -TypeName PSObject -Property @{md5="$MD5"; sha1="$SHA1"; MaliciousScore="$MaliciousScore"; ProductType="$ProductType"; Type="$Type"}
 
@@ -228,7 +236,7 @@ Function Get-ThreatIntel {
             Write-Verbose "Testing $IPAddress"
 
             $Obj = @()
-            If ($IpA -Match $IPv4Regex)
+            If ($IPAddress -Match $IPv4Regex)
             {
 
                 $IPType = 'Ipv4'
@@ -246,14 +254,14 @@ Function Get-ThreatIntel {
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
             $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
-            $IPAddress = $Results.requestKey.ipAddress | Out-String
-            $AddressType = $Results.requestKey.addressType | Out-String
+            $IPAddres = ($Results.requestKey.ipAddress | Out-String).Trim()
+            $AddressType = ($Results.requestKey.addressType | Out-String).Trim()
             $MaliciousScore = $Results.aggregatedResult.maliciousClassification
-            $FirstSeen = Get-Date ($Results.aggregatedResult.firstSeen) 
-            $AllowFurther = $Results.allowFurtherClassification | Out-String
-            $CPID = $Results.cpId | Out-String
+            $FirstSeen = Get-Date ($Results.aggregatedResult.firstSeen)
+            $AllowFurther = ($Results.allowFurtherClassification | Out-String).Trim()
+            $CPID = ($Results.cpId | Out-String).Trim()
 
-            $Obj += New-Object -TypeName PSObject -Property @{IP=$IPAddress; Type=$AddressType; MaliciousScore=$MaliciousScore; FirstSeen=$FirstSeen; AllowFurtherClassification=$AllowFurther; CPID=$CPID}
+            $Obj += New-Object -TypeName PSObject -Property @{IP=$IPAddres; Type=$AddressType; MaliciousScore=$MaliciousScore; FirstSeen=$FirstSeen; AllowFurtherClassification=$AllowFurther; CPID=$CPID}
 
             $Obj   
 
@@ -263,22 +271,22 @@ Function Get-ThreatIntel {
 
             $Uri = $Site + 'classification_v1/domain_batch'
 
-            Write-Verbose "Testing $D"
+            Write-Verbose "Testing $Domain"
 
-            $JsonData = '{"requestData": [{"requestKey": {"domain": "' + $D + '"} }] }'
+            $JsonData = '{"requestData": [{"requestKey": {"domain": "' + $Domain + '"} }] }'
 
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
             $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
 
-            $Dom = $Results.requestKey.domain | Out-String
-            $Source = $Results.aggregatedResult.maliciousClassification.source | Out-String
+            $Dom = ($Results.requestKey.domain | Out-String).Trim()
+            $Source = ($Results.aggregatedResult.maliciousClassification.source | Out-String).Trim()
             $MaliciousScore = $Results.aggregatedResult.maliciousClassification
-            $FirstSeen = Get-Date ($Results.aggregatedResult.firstSeen) 
-            $AllowFurther = $Results.allowFurtherClassification | Out-String
-            $CPID = $Results.cpId | Out-String
-            $CPType = $Results.cpType | Out-String
+            $FirstSeen = Get-Date -Date ($Results.aggregatedResult.firstSeen)
+            $AllowFurther = ($Results.allowFurtherClassification | Out-String).Trim()
+            $CPID = ($Results.cpId | Out-String).Trim()
+            $CPType = ($Results.cpType | Out-String).Trim()
 
             $Obj += New-Object -TypeName PSObject -Property @{Domain=$Dom; Source=$Source; MaliciousScore=$MaliciousScore; FirstSeen=$FirstSeen; AllowFurtherClassification=$AllowFurther; CPID=$CPID; CPType=$CPType}
 
@@ -298,10 +306,10 @@ Function Get-ThreatIntel {
             For ($i = 0; $i -le $Results.Count; $i++)
             {
 
-                $Name = $Results.Key.name[$i] | Out-String
-                $Signer = $Results.Value.signer[$i] | Out-String
-                $Type = $Results.Value.type[$i] | Out-String
-                $Title = $Results.Value.title[$i] | Out-String
+                $Name = ($Results.Key.name[$i] | Out-String).Trim()
+                $Signer = ($Results.Value.signer[$i] | Out-String).Trim()
+                $Type = ($Results.Value.type[$i] | Out-String).Trim()
+                $Title = ($Results.Value.title[$i] | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{Name="$Name"; Signer=$Signer; Type=$Type; Title="$Title"}
 
@@ -323,12 +331,12 @@ Function Get-ThreatIntel {
             For ($i = 0; $i -le $Results.Count; $i++)
             {
 
-                $ProcessName = $Results.Key.name[$i] | Out-String
-                $Title = $Results.Value.title[$i] | Out-String
-                $ProductName = $Results.Value.productName[$i] | Out-String
-                $CompanyName = $Results.Value.companyName[$i] | Out-String
-                $fileDescription = $Results.Value.fileDescription[$i] | Out-String
-                $filePath = $Results.Value.path[$i] | Out-String
+                $ProcessName = ($Results.Key.name[$i] | Out-String).Trim()
+                $Title = ($Results.Value.title[$i] | Out-String).Trim()
+                $ProductName = ($Results.Value.productName[$i] | Out-String).Trim()
+                $CompanyName = ($Results.Value.companyName[$i] | Out-String).Trim()
+                $fileDescription = ($Results.Value.fileDescription[$i] | Out-String).Trim()
+                $filePath = ($Results.Value.path[$i] | Out-String).Trim()
 
 
                 $Obj += New-Object -TypeName PSObject -Property @{ProcessName="$ProcessName"; Title="$Title"; ProductName=$ProductName; CompanyName=$CompanyName; FileDescription=$fileDescription; FilePath=$FilePath}
@@ -351,8 +359,8 @@ Function Get-ThreatIntel {
             For ($i = 0; $i -le $Results.Count; $i++)
             {
 
-                $Parent = $Results.Value.parent[$i] | Out-String
-                $ProcessName = $Results.Key.name[$i] | Out-String
+                $Parent = ($Results.Value.parent[$i] | Out-String).Trim()
+                $ProcessName = ($Results.Key.name[$i] | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{Parent="$Parent"; ProcessName="$ProcessName"}
 
@@ -384,20 +392,19 @@ Function Get-ThreatIntel {
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
-            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" 
-            For ($i = 0; $i -le $Results.Count; $i++)
-            {
+            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" | `
+            ForEach-Object {
 
-                $Port = $Results.Key.port[$i] | Out-String
-                $Protocol = $Results.Key.protocol[$i] | Out-String
-                $Type = $Results.Value.type[$i] | Out-String
-                $ShortDescription = $Results.Value.shortDescription[$i] | Out-String
-                $Source = $Results.Value.sources[$i] | Out-String
-                $LongDescr = $Results.Value.longDescription[$i] | Out-String
+                $Port = ($_.Key.port | Out-String).Trim()
+                $Protocol = ($_.Key.protocol | Out-String).Trim()
+                $Type = ($_.Value.type | Out-String).Trim()
+                $ShortDescription = ($_.Value.shortDescription | Out-String).Trim()
+                $Source = ($_.Value.sources | Out-String).Trim()
+                $LongDescr = ($_.Value.longDescription | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{Port="$Port"; Protocol="$Protocol"; Type=$Type; ShortDescription=$ShortDescription; Source=$Source; LongDescription=$LongDescr}
 
-            }  # End For
+            }  # End ForEach-Object
 
             $Obj
 
@@ -415,8 +422,8 @@ Function Get-ThreatIntel {
             For ($i = 0; $i -le $Results.Count; $i++)
             {
 
-                $Name = $Results.Key.name[$i] | Out-String
-                $Data = $Results.Value.data[$i] | Out-String
+                $Name = ($Results.Key.name[$i] | Out-String).Trim()
+                $Data = ($Results.Value.data[$i] | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{Name="$Name"; Data="$Data"}
 
@@ -438,10 +445,10 @@ Function Get-ThreatIntel {
             For ($i = 0; $i -le $Results.ipReputationResponseList.Count; $i++)
             {
 
-                $IPAddress = $Results.ipReputationResponseList.requestkey.ipaddress[$i] | Out-String
-                $AddressType = $Results.ipReputationResponseList.requestkey.addressType[$i] | Out-String
-                $ReputationSource = $Results.ipReputationResponseList.aggregatedResult.reputationSource[$i] | Out-String
-                $ReputationScore = $Results.ipReputationResponseList.aggregatedResult.reputationScore[$i] | Out-String
+                $IPAddress = ($Results.ipReputationResponseList.requestkey.ipaddress[$i] | Out-String).Trim()
+                $AddressType = ($Results.ipReputationResponseList.requestkey.addressType[$i] | Out-String).Trim()
+                $ReputationSource = ($Results.ipReputationResponseList.aggregatedResult.reputationSource[$i] | Out-String).Trim()
+                $ReputationScore = ($Results.ipReputationResponseList.aggregatedResult.reputationScore[$i] | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{IPAddress="$IPAddress"; AddressType="$AddressType"; ReputationSource="$ReputationSource"; ReputationScore="$ReputationScore"}
 
@@ -460,12 +467,12 @@ Function Get-ThreatIntel {
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
             $Results = $Response.Content | ConvertFrom-Json
-            For ($i = 0; $i -le $Results.ipReputationResponseList.Count; $i++)
+            For ($i = 0; $i -le ($Results.domainReputationResponseList).Count; $i++)
             {
 
-                $Domain = $Results.domainReputationResponseList.requestkey[$i] | Out-String
-                $ReputationSource = $Results.domainReputationResponseList.aggregatedResult.reputationSource[$i] | Out-String
-                $ReputationScore = $Results.domainReputationResponseList.aggregatedResult.reputationScore[$i] | Out-String
+                $Domain = ($Results.domainReputationResponseList.requestkey[$i] | Out-String).Trim()
+                $ReputationSource = ($Results.domainReputationResponseList.aggregatedResult.reputationSource[$i] | Out-String).Trim()
+                $ReputationScore = ($Results.domainReputationResponseList.aggregatedResult.reputationScore[$i] | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{Domain="$Domain"; ReputationSource="$ReputationSource"; ReputationScore="$ReputationScore"}
 
@@ -477,13 +484,13 @@ Function Get-ThreatIntel {
 
         'DbUpdateCheck' {
 
-            $Uri = $Site + 'download_v1/:%20API+name/service'
+            $Uri = $Site + 'download_v1/' + $ReputationAPI + '/service'
             $JsonData = "{}"
 
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
-            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" 
+            $Obj = $Response.Content | ConvertFrom-Json
             
             $Obj
 

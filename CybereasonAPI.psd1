@@ -36,16 +36,16 @@ Description = 'Collection of PowerShell cmdlets that can be used to interact wit
 PowerShellVersion = '5.0'
 
 # Name of the Windows PowerShell host required by this module
-# PowerShellHostName = ''
+PowerShellHostName = 'ConsoleHost'
 
 # Minimum version of the Windows PowerShell host required by this module
 # PowerShellHostVersion = ''
 
 # Minimum version of Microsoft .NET Framework required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
-# DotNetFrameworkVersion = ''
+DotNetFrameworkVersion = '3.5'
 
 # Minimum version of the common language runtime (CLR) required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
-# CLRVersion = ''
+CLRVersion = '3.5'
 
 # Processor architecture (None, X86, Amd64) required by this module
 ProcessorArchitecture = 'None'
@@ -95,10 +95,10 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'NGFW', 'EDR', 'Cybereason', 'API'
+        Tags = 'NGFW','EDR','Cybereason','API','BlueTeam','CyberSecurity','Analyst','Security','SOC'
 
         # A URL to the license for this module.
-        LicenseUri = 'https://github.com/tobor88/CybereasonAPI/LICENSE'
+        LicenseUri = 'https://github.com/tobor88/CybereasonAPI/blob/main/LICENSE'
 
         # A URL to the main website for this project.
         ProjectUri = 'https://github.com/tobor88/CybereasonAPI'
@@ -107,14 +107,14 @@ PrivateData = @{
         IconUri = 'https://raw.githubusercontent.com/tobor88/CybereasonAPI/main/images/cyberreason.jpg'
 
         # ReleaseNotes of this module
-        ReleaseNotes = 'https://raw.githubusercontent.com/tobor88/CybereasonAPI/main/CHANGELOG.txt'
+        ReleaseNotes = 'https://github.com/tobor88/CybereasonAPI/blob/main/CHANGELOG.txt'
 
     } # End of PSData hashtable
 
 } # End of PrivateData hashtable
 
 # HelpInfo URI of this module
-HelpInfoURI = 'https://github.com/tobor88/CybereasonAPI/README.md'
+HelpInfoURI = 'https://github.com/tobor88/CybereasonAPI/blob/main/README.md'
 
 # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
 # DefaultCommandPrefix = ''

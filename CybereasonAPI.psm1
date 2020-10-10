@@ -101,13 +101,13 @@ Function Get-ThreatIntel {
     [CmdletBinding()]
         param(
             [Parameter(
-                ParameterSetName='FileRep1',
+                ParameterSetName='Md5Hash',
                 Mandatory=$False,
                 ValueFromPipeline=$False)]  # End Parameter
             [String]$Md5Hash,
 
             [Parameter(
-                ParameterSetName='FileRep2',
+                ParameterSetName='FileToHash',
                 Mandatory=$False,
                 ValueFromPipeline=$False)]  # End Parameter
             [String]$FileToHash,
@@ -170,7 +170,7 @@ Function Get-ThreatIntel {
     Switch ($PSBoundParameters.Keys)
     {
 
-        'FileRep1' {
+        'Md5Hash' {
 
             $Uri = $Site + 'classification_v1/file_batch'
             $JsonData = '{"requestData": [{"requestKey": {"md5": "' + $Md5Hash + '"} }] }'
@@ -191,7 +191,7 @@ Function Get-ThreatIntel {
 
         }  # End Switch FileRep
 
-        'FileRep2' {
+        'FileToHash' {
 
             $Uri = $Site + 'classification_v1/file_batch'
             If (!(Test-Path -Path $FileToHash))

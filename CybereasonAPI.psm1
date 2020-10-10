@@ -1,5 +1,107 @@
 <#
 .SYNOPSIS
+This cmdlet is used to authenticate to the Cybereason API. Once this is done a global $Session variable is created that will be used for all other cmdlets in this module.
+
+
+.DESCRIPTION
+This cmdlet creates a $Session variable that will be used with all the other cmdlets in this module to authenticate requests made to the Cybereason API.
+
+
+.PARAMETER Server
+This parameter defines the server IP address or domain name and the port your Cybereason server is running on
+
+.PARAMETER Username
+This is the email address you use to sign into Cybereason
+
+.PARAMETER Passwd
+This is the password you use to sign into your Cybereason account. The session history gets cleared to attempt preventing the password from appearing in the session logs. This does not clear the events logs. I suggest only letting administrators view the PowerShell event logs.
+
+
+.EXAMPLE
+Connect-CybereasonAPI -Server 123.45.67.78:8443 -Username admin@cyberason.com -Passwd "Password123!"
+# This example authenticates to the Cybereason API and creates a $Session variable to be used by other cmdlets. This also clears the current PowerShell Session History.
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Connect-CybereasonAPI {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the IP address or hostname of your Cybereason server as well as the port. Spearate values with a : `n[E] EXAMPLE: 10.0.0.1:443 `n[E] EXAMPLE: asdf.cybereason.com:8443")]
+            [ValidateNotNullOrEmpty()]
+            [String]$Server,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the email you wish to sign in with `n[E] EXAMPLE: admin.user@domain.com")]  # End Parameter
+            [ValidateNotNullOrEmpty()]
+            [String]$Username,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False)]  # End Parameter
+            [ValidateNotNullOrEmpty()]
+            [String]$Passwd
+        )  # End param
+
+
+    $Uri = "https://$Server/login.html"
+
+    Write-Verbose "Ensuring TLS 1.2 is being used"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    $Body = @{
+        username="$Username"
+        password="$Passwd"
+    }
+
+    $Results = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $Body -SessionVariable 'Session'
+    
+    If ($Results.StatusCode -eq '200')
+    {
+
+        Write-Output "[*] Successfully created an authenticated session to the Cybereason API."
+
+    }  # End If
+
+    $Global:Session = $Session
+
+    Clear-History -Force -Verbose
+    Write-Warning "This PowerShells session history has just been cleared to prevent the clear text password from appearing in log files. This does not clear the PowerShell Event log. Only allow administrators to view that log."
+
+}  # End Function Connect-CybereasonAPI
+
+
+<#
+.SYNOPSIS
 This cmdlet was created to quickly and easily perform all Threat Intelligence tasks that the Cybereason API allows such as looking up a domain or IP address.
 
 
@@ -549,3 +651,143 @@ Function Get-CybereasonThreatIntel {
     }  # End Switch
 
 }  # End Function Get-CybereasonThreatIntel
+
+
+<#
+.SYNOPSIS
+Returns a CSV list of custom reputations for files, IP addresses, and domain names. These reputations are specific to your organization.
+
+
+.DESCRIPTION
+This cmdlet is used to download a CSV list of custom reputations for files, IP addresses, and domains that were manually set up in your environment.
+
+
+.PARAMETER Url
+This parameter defines the root URL of your Cybereason Server
+
+.PARAMETER Path
+This parameter defines the path and filename to save the CSV results.
+
+
+.EXAMPLE
+Get-CybereasonReputations -Url https://12.34.56.78/ -Path C:\Windows\Temp\CybereasonRepuations.csv
+# This example gets the current repuations of files, IP addresses, and domains configured in your environment and returns CSV related results.
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+System.String 
+The CSV list is sent to the file designated in the Path parameter.
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/get-reputation#getreputations
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Get-CybereasonReputations {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                Mandatory=$True,
+                HelpMessage="`n[H] Enterh the root URL of your Cybereason server `n[E] EXAMPLE: https://12.34.56.78:443")]  # End Parameter
+            [String]$URL,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [String]$Path
+        )  # End param
+
+    $Uri = 'https://' + $Server + '/rest/classification/download'
+    $JsonData = "{}"
+
+    Write-Verbose "Sending request to $Uri"
+    $Response = Invoke-WebRequest -Uri $Uri -Method GET -ContentType "application/json" -Body $JsonData -Headers (Get-Content $CookieFile | ConvertFrom-Json)
+
+    If (($Path) -and ($Response.StatusCode -eq '200'))
+    {
+
+        Invoke-RestMethod -URI $Uri -WebSession $Session -ContentType "application/json" -Method GET -OutFile $Path
+
+    }  # End If
+    Else
+    {
+        
+        Invoke-RestMethod -URI $Uri -WebSession $Session -ContentType "application/json" -Method GET
+
+    }  # End Else
+    
+}  # End Function Get-CybereasonReputations
+
+
+<#
+.SYNOPSIS
+
+
+.DESCRIPTION
+
+
+.PARAMETER Url
+This parameter defines the root URL of your Cybereason Server
+
+.PARAMETER Path
+This parameter defines the path and filename to save the CSV results.
+
+
+.EXAMPLE
+Set-CybereasonReputations -Url https://12.34.56.78/ -Path C:\Windows\Temp\CybereasonRepuations.csv
+# This example gets the current repuations of files, IP addresses, and domains configured in your environment and returns CSV related results.
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/get-reputation#getreputations
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Set-CybereasonReputations {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                Mandatory=$True,
+                HelpMessage="`n[H] Enterh the root URL of your Cybereason server `n[E] EXAMPLE: https://12.34.56.78:443")]  # End Parameter
+            [String]$URL,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [String]$Path
+        )  # End param
+
+    $Uri = $Url.TrimEnd('/') + '/rest/classification/download'
+    # $JsonData = "{}"
+
+    Write-Verbose "Sending request to $Uri"
+    $Response = Invoke-WebRequest -Uri $Uri -Method GET -ContentType "application/json" -WebSession $Session
+    
+    $Response.Content
+    
+}  # End Function Set-CybereasonReputations

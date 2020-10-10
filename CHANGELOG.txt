@@ -1,0 +1,22 @@
+*******************************************************************************************************
+#                              CHANGE LOG FOR CYBEREASON API MODULE                                   #
+*******************************************************************************************************
+Module Version 1.0.0
+    - Initial Creation of Module
+#--------------------------------------------------------------------------------------------------------
+
+=========================================================================================================
+#                              PSScriptAnalyzer Comments from Author                                    #
+=========================================================================================================
+NA
+
+**********************************************************************************************************
+#                                PSSCRIPT ANALYZER RESULTS                                               #
+**********************************************************************************************************
+RuleName                            Severity     ScriptName Line  Message
+--------                            --------     ---------- ----  -------
+NA
+
+#----------------------------------------------------------------------
+# Command for updating Module Manifest
+# New-ModuleManifest -Path .\CybereasonAPI.psd1 -Author 'Robert H. Osborne' -CompanyName 'OsbornePro' -RootModule .\CybereasonAPI.psm1 -ModuleVersion 1.0 -Description "Collection of PowerShell cmdlets that can be used to interact with the Cybereason API." -PowerShellVersion "5.0" -ProcessorArchitecture None -FunctionsToExport "Get-ThreatIntel" -CmdletsToExport "Get-ThreatIntel" -ProjectUri "https://github.com/tobor88/CybereasonAPI" -LicenseUri "https://github.com/tobor88/CybereasonAPI/LICENSE" -HelpInfoUri "https://github.com/tobor88/CybereasonAPI/README.md" -Tags 'NGFW','EDR','Cybereason','API'

@@ -69,10 +69,10 @@ ProcessorArchitecture = 'None'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = @(‘Get-ThreatIntel’)
+FunctionsToExport = @('Get-ThreatIntel')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = @(‘Get-ThreatIntel')
+CmdletsToExport = @('Get-ThreatIntel')
 
 # Variables to export from this module
 VariablesToExport = '*'
@@ -104,10 +104,10 @@ PrivateData = @{
         ProjectUri = 'https://github.com/tobor88/CybereasonAPI'
 
         # A URL to an icon representing this module.
-        # IconUri = ''
+        IconUri = 'https://raw.githubusercontent.com/tobor88/CybereasonAPI/main/images/cyberreason.jpg'
 
         # ReleaseNotes of this module
-        # ReleaseNotes = ''
+        ReleaseNotes = 'https://raw.githubusercontent.com/tobor88/CybereasonAPI/main/CHANGELOG.txt'
 
     } # End of PSData hashtable
 

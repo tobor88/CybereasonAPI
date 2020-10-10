@@ -3,7 +3,7 @@
  __RESOURCE:__ [Cybereason API Documentation](https://nest.cybereason.com/documentation/api-documentation)
 
 ### Current Cmdlets
-- __Get-ThreatIntel__: This cmdlet is used to communicate with every link under the "Get Threat Intel" section of the API documentation. 
+__Get-ThreatIntel__: This cmdlet is used to communicate with every link under the "Get Threat Intel" section of the API documentation. 
 It can perform the following actions.
  - Get a file reputation	
  - Get reputation for a domain	

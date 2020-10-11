@@ -701,7 +701,7 @@ Function Get-CybereasonReputations {
             [Parameter(
                 Mandatory=$True,
                 HelpMessage="`n[H] Enterh the root URL of your Cybereason server `n[E] EXAMPLE: https://12.34.56.78:443")]  # End Parameter
-            [String]$URL,
+            [String]$Server,
 
             [Parameter(
                 Mandatory=$False)]  # End Parameter

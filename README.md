@@ -6,11 +6,29 @@
 
 ## Current Cmdlets
 __Connect-CybereasonAPI__: This cmdlet is used to authenticate to the Cybereason API. This will create a global variable called $Session that will get used with the rest of the cmdletts in this module that need it.
+```powershell
+Connect-CybereasonAPI -Username 'admin@cybereason.com' -Passwd 'Password123!' -Server 'aaaaaaaa.cybereason.net' -Port '8443' -ClearHistory -Verbose
+```
 
 __Get-CybereasonReputations__: This cmdlet is used to view or download a CSV list of reputation informatino that have been manually configured on your environments Cybereason server.
 [Documentation for Manage Reputations](https://nest.cybereason.com/documentation/api-documentation/all-versions/manage-reputations)
+- Return a list of reputations that have been configured on Cybereason for your environment and view it in CSV format in your terminal window
+- Return a list of reputations that have been configured on Cybereason for your environment and view it in CSV format and save it to a file
+```powershell
+Get-CybereasonReputations -Server aaaaaaaa.cybereason.net -Port '8443' -Verbose
+# OR TO SAVE TO CSV FILE
+Get-CybereasonReputations -Server aaaaaaaa.cybereason.net -Port '8443' -Path C:\Windows\Temp\CybereasonReputations.csv
+```
 
 __Set-CybereasonReputations__: This cmdlet is used to add or update a custom reputation on the Cybereason server instance. Using the Cybereason Reputation Management API, you can integrate and update threat intelligence from various sources to improve detections, view and update file reputations, and add items to the whitelist based on behavioral characteristics.
+- Add or remove reputations for a file using its hash or filename by adding it to a whitelist or blacklist. You can also prevent execution of the file throughout your environment
+- Add or remove reputations for an IP address by adding it to a whitelist or blacklist
+- Add or remove reputations for a domain by adding it to a whitelist or blacklist
+```powershell
+Set-CybereasonReputations -Server 'aaaaaaaa.cybereason.net' -Port '8443' -Keys '1.1.1.1' -Modify whitelist -Action Add -PreventExecution false -Verbose
+Set-CybereasonReputations -Server 'aaaaaaaa.cybereason.net' -Port '8443' -Keys '8.8.8.8','www.cybereason.com' -Modify whitelist -Action Remove -PreventExecution false -Verbose
+Set-CybereasonReputations -Server 'aaaaaaaa.cybereason.net' -Port '8443' -File 'C:\Users\Enemy\badFile.exe','C:\Users\Enemy\persistence.exe' -Modify blacklist -Action Add -PreventExecution true -Verbose
+```
 
 __Get-CybereasonThreatIntel__: This cmdlet is used to communicate with every link under the "Get Threat Intel" section of the API documentation. 
 It can perform the following actions.
@@ -27,6 +45,12 @@ It can perform the following actions.
  - Retrieve a list of domain reputations
  - Check for database updates <br>
 [Documentation for Get Threat Intel](https://nest.cybereason.com/documentation/api-documentation/all-versions/get-threat-intel#get-threat-intel)
+```powershell
+Get-CybereasonThreatIntel -Domain 'www.cybereason.com','cybereason.com'
+Get-CybereasonThreatIntel -IPAddress '1.1.1.1','1.0.0.1'
+Get-CybereasonThreatIntel -MD5Hash FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI product_classification
+```
 
 ## Still To Come Cmdlets
 __Invoke-HuntAndInvestigate__: Using hunting queries and file search capabilities in the API, further your investigation of malicious behavior in your organization, including:

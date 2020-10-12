@@ -69,10 +69,10 @@ ProcessorArchitecture = 'None'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = @('Connect-CybereasonAPI','Get-CybereasonThreatIntel','Get-CybereasonReputations','Set-CybereasonReputations')
+FunctionsToExport = @('Connect-CybereasonAPI','Get-CybereasonThreatIntel','Get-CybereasonReputations','Set-CybereasonReputations','Invoke-CybereasonRemediateItem','Get-CybereasonRemediationProgress','Stop-CybereasonMalopRemediation','Get-CybereasonRemediationStatus','Get-CybereasonIsolationRules','New-CybereasonIsolationRule','Set-CybereasonIsolationRule','Remove-CybereasonIsolationRule')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = @('Connect-CybereasonAPI','Get-CybereasonThreatIntel','Get-CybereasonReputations','Set-CybereasonReputations')
+CmdletsToExport = @('Connect-CybereasonAPI','Get-CybereasonThreatIntel','Get-CybereasonReputations','Set-CybereasonReputations','Invoke-CybereasonRemediateItem','Get-CybereasonRemediationProgress','Stop-CybereasonMalopRemediation','Get-CybereasonRemediationStatus','Get-CybereasonIsolationRules','New-CybereasonIsolationRule','Set-CybereasonIsolationRule','Remove-CybereasonIsolationRule')
 
 # Variables to export from this module
 VariablesToExport = '*'

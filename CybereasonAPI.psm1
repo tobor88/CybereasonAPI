@@ -1250,7 +1250,7 @@ Function Get-CybereasonRemediationProgress {
     
     $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/progress/" + $Username + "/" + $MalopID + "/" + $RemediationID 
 
-    $Response = Invoke-WebRequest -Method GET -Content-Type 'application/json' -Uri $Uri -WebSession $Session
+    $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
 
     $Response.Content | ConvertFrom-Json | `
     ForEach-Object {
@@ -1339,7 +1339,7 @@ Function Stop-CybereasonMalopRemediation {
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/abort/" + $MalopID + "/" + $RemediationID 
 
-    $Response = Invoke-WebRequest -Method POST -Content-Type 'application/json' -Uri $Uri -WebSession $Session
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session
 
     $Response.Content | ConvertFrom-Json | `
     ForEach-Object {
@@ -1420,7 +1420,7 @@ Function Get-CybereasonRemediationStatus {
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/status/" + $MalopID
 
-    $Response = Invoke-WebRequest -Method GET -Content-Type 'application/json' -Uri $Uri -WebSession $Session
+    $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
     
     $Response.Content | ConvertFrom-Json | `
     ForEach-Object {
@@ -1443,3 +1443,527 @@ Function Get-CybereasonRemediationStatus {
     $Obj
 
 }  # End Function Get-CybereasonRemediationStatus
+
+
+<#
+.SYNOPSIS
+This cmdlet retrieves a list of all rules for isolating specific machines.
+
+.DESCRIPTION
+Retrieves a list of all rules for isolating specific machines.
+
+
+.EXAMPLE
+Get-CybereasonIsolationRules
+# This example retrieves a list of all rules for isolating specific machines
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/retrieveRules.html#getisolationrules
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Get-CybereasonIsolationRules {
+    [CmdletBinding()]
+        param()
+
+    $Obj = @()
+    $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
+    $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+    
+    Try 
+    {
+
+        $Response.Content | ConvertFrom-Json | `
+        ForEach-Object {
+            $RuleId = ($_.ruleId | Out-String).Trim()
+            $IpAddress = ($_.ipAddress | Out-String).Trim()
+            $IpAddressString = ($_.ipAddressString | Out-String).Trim()
+            $Domain = ($_.domain | Out-String).Trim()
+            $PortNumber = ($_.port | Out-String).Trim()
+            $Direction = ($_.direction | Out-String).Trim()
+            $LastUpdated = Get-Date -Date ($_.lastUpdated)
+            $Blocking = ($_.blocking | Out-String).Trim()
+        
+            $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking} 
+        
+        }  # End ForEach-Object
+        
+        $Obj
+
+    }  # End Try
+    Catch 
+    {
+        
+        Write-Output "No isolation rules were found"
+
+    }  # End Catch
+
+}  # End Function Get-CybereasonIsolationRules
+
+
+<#
+.SYNOPSIS
+This cmdlet is used to create an isolation exception rule.
+
+
+.DESCRIPTION
+Creates an isolation exception rule.
+
+
+.PARAMETER IPAddressString
+The IP address of the machine to which the rule applies.
+
+.PARAMETER PortNumber
+Optional if the ipAddressString parameter exists. The port by which Cybereason communicates with an isolated machine, according to the rule.
+
+.PARAMETER Blocking
+States whether communication with the given IP or port is allowed. Set to true if communication is blocked.
+
+.PARAMETER Direction
+The direction of the allowed communication. Values include ALL, INCOMING, or OUTGOING.
+
+
+.EXAMPLE
+New-CybereasonIsolationRule -IPAddressString '123.45.67.89' -PortNumber 8443 -Blocking -Direction ALL
+# This example creates a new isolation rule that blocks All communication to 123.45.67.89
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/createRule.html#createisolationrule
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function New-CybereasonIsolationRule {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the IP Address of the machine for which the rule should apply.`n[E] EXAMPLE: 123.45.67.89")]  # End Parameter
+            [String[]]$IpAddressString,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [ValidateRange(1,65535)]
+            [Int16]$PortNumber,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False)]
+             [Switch][Bool]$Blocking,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Define the direction the rule should be applied too.`n[E] EXAMPLE: INCOMING")]  # End Parameter
+            [ValidateSet('ALL','INCOMING','OUTGOING')]
+            [String]$Direction
+        )  # End param
+
+    $Obj = @()
+    If ($Blocking.IsPresent)
+    {
+
+        $Block = 'true'
+
+    }  # End If
+    Else
+    {
+        
+        $Block = 'false'
+
+    }  # End Else
+
+    ForEach ($I in $IpAddressString)
+    {
+
+        $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
+
+        $JsonData = '{"ipAddressString":' + $I + ',"port":' + $PortNumber + ',"blocking":"' + $Block + '","direction":' + $Direction + '}'
+
+        $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+
+            $Response.Content | ConvertFrom-Json | `
+            ForEach-Object {
+                $RuleId = ($_.ruleId | Out-String).Trim()
+                $IpAddress = ($_.ipAddress | Out-String).Trim()
+                $IpAddressString = ($_.ipAddressString | Out-String).Trim()
+                $Domain = ($_.domain | Out-String).Trim()
+                $PortNumber = ($_.port | Out-String).Trim()
+                $Direction = ($_.direction | Out-String).Trim()
+                $LastUpdated = Get-Date -Date ($_.lastUpdated)
+                $Blocking = ($_.blocking | Out-String).Trim()
+                    
+                $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking} 
+                
+            }  # End ForEach-Object
+
+    }  # End ForEach
+                
+    $Obj
+
+}  # End Function New-CybereasonIsolationRule
+
+
+<#
+.SYNOPSIS
+This cmdlet is used to updates an isolation exception rule.
+
+
+.DESCRIPTION
+Updates an isolation exception rule.
+
+
+.PARAMETER RuleID
+A unique identifier for the rule
+
+.PARAMETER IPAddressString
+The IP address of the machine to which the rule applies.
+
+.PARAMETER PortNumber
+Optional if the ipAddressString parameter exists. The port by which Cybereason communicates with an isolated machine, according to the rule.
+
+.PARAMETER Blocking
+States whether communication with the given IP or port is allowed. Set to true if communication is blocked.
+
+.PARAMETER Direction
+The direction of the allowed communication. Values include ALL, INCOMING, or OUTGOING.
+
+
+.EXAMPLE 
+Set-CybereasonIsolationRule -RuleID "5a7b2e95e4b082f2e909a4f3" -IPAddressString '123.45.67.89' -PortNumber 8443 -Blocking -Direction ALL
+# This example creates a new isolation rule that blocks All communication to 123.45.67.89
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/updateRule.html#updateisolationrule
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Set-CybereasonIsolationRule {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False)]  # End Parameter
+            [String]$RuleID,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the IP Address of the machine for which the rule should apply.`n[E] EXAMPLE: 123.45.67.89")]  # End Parameter
+            [String]$IpAddressString,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [ValidateRange(1,65535)]
+            [Int16]$PortNumber,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False)]
+             [Switch][Bool]$Blocking,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Define the direction the rule should be applied too.`n[E] EXAMPLE: INCOMING")]  # End Parameter
+            [ValidateSet('ALL','INCOMING','OUTGOING')]
+            [String]$Direction,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Using the Tick format, define the last update value to specifiy the rule you wish to modify the info on `n[E] EXAMPLE: 1525594605852")]  # End Parameter
+            [String]$LastUpdated
+        )  # End param
+
+    $Obj = @()
+    If ($Blocking.IsPresent)
+    {
+
+        $Block = 'true'
+        $StringThree = ',"blocking":"' + $Block + '"'
+
+    }  # End If
+    Else 
+    {
+
+        $Block = 'false'
+        $StringThree = ',"blocking":"' + $Block + '"'
+
+    }  # End If
+
+    $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
+
+    If ($IpAddressString.Length -gt 0)
+    {
+
+        $StringOne = ',"ipAddressString":' + $IpAddressString
+
+    }  # End If
+
+    If ($PortNumber.Length -gt 0)
+    {
+
+        $StringTwo = ',"port":' + $PortNumber
+
+    }  # End If
+
+    If ($Direction.Length -gt 0)
+    {
+
+        $StringFour = ',"direction":' + $Direction
+
+    }  # End If
+
+    If ($LastUpdated.Length -gt 0)
+    {
+
+        $StringFive = ',"lastUpdated":' + $LasUpdated
+
+    }  # End If
+    
+    $JsonData = '{"ruleId":' + $RuleID + $StringOne + $StringTwo + $StringThree + $StringFour + $StringFive + '}'
+    
+    $Response = Invoke-WebRequest -Method PUT -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+
+    $Response.Content | ConvertFrom-Json | `
+    ForEach-Object {
+        $RuleId = ($_.ruleId | Out-String).Trim()
+        $IpAddress = ($_.ipAddress | Out-String).Trim()
+        $IpAddressString = ($_.ipAddressString | Out-String).Trim()
+        $Domain = ($_.domain | Out-String).Trim()
+        $PortNumber = ($_.port | Out-String).Trim()
+        $Direction = ($_.direction | Out-String).Trim()
+        $LastUpdated = Get-Date -Date ($_.lastUpdated)
+        $Blocking = ($_.blocking | Out-String).Trim()
+
+        $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking} 
+
+    }  # End ForEach-Object 
+
+    $Obj
+
+}  # End Function Set-CybereasonIsolationRule
+
+
+<#
+.SYNOPSIS
+This cmdlet is used too delete an isolation exception rule.
+
+
+.DESCRIPTION
+Deletes an isolation exception rule.
+
+
+.PARAMETER RuleID
+A unique identifier for the rule
+
+.PARAMETER IPAddressString
+The IP address of the machine to which the rule applies.
+
+.PARAMETER PortNumber
+Optional if the ipAddressString parameter exists. The port by which Cybereason communicates with an isolated machine, according to the rule.
+
+.PARAMETER Blocking
+States whether communication with the given IP or port is allowed. Set to true if communication is blocked.
+
+.PARAMETER Direction
+The direction of the allowed communication. Values include ALL, INCOMING, or OUTGOING.
+
+.PARAMETER LastUpdate
+The epoch timestamp for the last update time for the rule.
+
+
+.EXAMPLE
+Remove-CybereasonIsolationRule -RuleID '5859b3d0ae8eeb920e9d2f4e' -IPAddressString '1.1.1.1' -PortNumber 8443 -Direction ALL -LastUpdated 1525594605852
+# This example deletes the isolation rule that is blocking all traffic to 1.1.1.1
+
+.EXAMPLE
+Remove-CybereasonIsolationRule -RuleID '5859b3d0ae8eeb920e9d2f4e' -IPAddressString '10.10.10.10' -PortNumber 8443 -Blocking -Direction OUTGOING -LastUpdated 1525594605852
+# This example deletes the rule ID that has IP address 10.10.10.10 outbound traffic blocked
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/deleteRule.html#deleteisolationrule
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Remove-CybereasonIsolationRule {
+    [CmdletBinding()]
+        param(
+        [Parameter(
+            Mandatory=$True,
+            ValueFromPipeline=$False)]  # End Parameter
+        [String]$RuleID,
+
+        [Parameter(
+            Mandatory=$False,
+            ValueFromPipeline=$False,
+            HelpMessage="`n[H] Enter the IP Address of the machine in the rule to delete.`n[E] EXAMPLE: 123.45.67.89")]  # End Parameter
+        [String]$IpAddressString,
+
+        [Parameter(
+            Mandatory=$False,
+            ValueFromPipeline=$False)]  # End Parameter
+        [ValidateRange(1,65535)]
+        [Int16]$PortNumber,
+
+        [Parameter(
+            Mandatory=$False,
+            ValueFromPipeline=$False)]
+         [Switch][Bool]$Blocking,
+
+        [Parameter(
+            Mandatory=$False,
+            ValueFromPipeline=$False,
+            HelpMessage="`n[H] Define the direction the rule should be applied too.`n[E] EXAMPLE: INCOMING")]  # End Parameter
+        [ValidateSet('ALL','INCOMING','OUTGOING')]
+        [String]$Direction,
+
+        [Parameter(
+            Mandatory=$True,
+            ValueFromPipeline=$False,
+            HelpMessage="`n[H] Using the Tick format, define the last update value to specifiy the rule you wish to modify the info on `n[E] EXAMPLE: 1525594605852")]  # End Parameter
+        [String]$LastUpdated)
+
+
+    $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule/delete"
+
+    If ($Blocking.IsPresent)
+    {
+    
+        $Block = 'true'
+        $StringThree = ',"blocking":"' + $Block + '"'
+    
+    }  # End If
+    Else 
+    {
+    
+        $Block = 'false'
+        $StringThree = ',"blocking":"' + $Block + '"'
+    
+    }  # End If
+
+    If ($IpAddressString.Length -gt 0)
+    {
+    
+        $StringOne = ',"ipAddressString":' + $IpAddressString
+    
+    }  # End If
+    
+    If ($PortNumber.Length -gt 0)
+    {
+    
+        $StringTwo = ',"port":' + $PortNumber
+    
+    }  # End If
+    
+    If ($Direction.Length -gt 0)
+    {
+    
+        $StringFour = ',"direction":' + $Direction
+    
+    }  # End If
+    
+    If ($LastUpdated.Length -gt 0)
+    {
+    
+        $StringFive = ',"lastUpdated":' + $LasUpdated
+    
+    }  # End If
+        
+    $JsonData = '{"ruleId":' + $RuleID + $StringOne + $StringTwo + $StringThree + $StringFour + $StringFive + '}'
+
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+    $Response.Content | ConvertFrom-Json
+
+}  # End Function Remove-CybereasonIsolationRule

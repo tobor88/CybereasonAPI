@@ -89,8 +89,39 @@ Get-CybereasonRemediationStatus -MalopID '11.2718161727221199870'
 # This example gets the current status for the defined Malop
 ```
 
+__Set-MachineIsolationRules__: <br>
+Normally, when a machine is isolated, there is absolutely no communication allowed with the machine. This can sometimes limit the ability of an analyst or administrator to perform investigation or triage on that machine. However, you can add isolation exception rules to help you allow limited communication to an isolated machine
+
+- __Get-CybereasonIsolationRules__ Retrieve a list of isolation rules 
+```powershell
+Get-CybereasonIsolationRules
+# This example retrieves a list of all rules for isolating specific machines
+```
+
+- __New-CybereasonIsolationRule__ Create an isolation rule
+```powershell
+New-CybereasonIsolationRule -IPAddressString '123.45.67.89' -PortNumber 8443 -Blocking -Direction ALL
+# This example creates a new isolation rule that blocks All communication to 123.45.67.89
+```
+
+- __Set-CybereasonIsolationRule__ Update an isolation rule
+```powershell
+Set-CybereasonIsolationRule -RuleID "5a7b2e95e4b082f2e909a4f3" -IPAddressString '123.45.67.89' -PortNumber 8443 -Blocking -Direction ALL
+# This example creates a new isolation rule that blocks All communication to 123.45.67.89
+```
+
+- __Remove-CybereasonIsolationRule__ Delete an isolation rule
+```powershell
+Remove-CybereasonIsolationRule -RuleID '5859b3d0ae8eeb920e9d2f4e' -IPAddressString '1.1.1.1' -PortNumber 8443 -Direction ALL -LastUpdated 1525594605852
+# This example deletes the isolation rule that is blocking all traffic to 1.1.1.1
+
+Remove-CybereasonIsolationRule -RuleID '5859b3d0ae8eeb920e9d2f4e' -IPAddressString '10.10.10.10' -PortNumber 8443 -Blocking -Direction OUTGOING -LastUpdated 1525594605852
+# This example deletes the rule ID that has IP address 10.10.10.10 outbound traffic blocked
+```
+[Documentation for Machine Isolation Rules](https://nest.cybereason.com/documentation/api-documentation/all-versions/set-machine-isolation-rules)
+
 ## Still To Come Cmdlets
-__Invoke-HuntAndInvestigate__: Using hunting queries and file search capabilities in the API, further your investigation of malicious behavior in your organization, including:
+__Hunt And Investigate__: Using hunting queries and file search capabilities in the API, further your investigation of malicious behavior in your organization, including:
 - Run investigative queries
 - Search for files
 - Get results of a previous file search
@@ -102,7 +133,7 @@ __Invoke-HuntAndInvestigate__: Using hunting queries and file search capabilitie
 All of these capabilities help you improve security, uncover bad practices and deficiencies, and gain insight on tactical and strategic methods for threat prevention in your environment <br>
 [Documentation for Hunt and Investigate](https://nest.cybereason.com/documentation/api-documentation/all-versions/hunt-and-investigate)
 
-__Invoke-RespondToMalops__: By using the API you can retrieve Malops or isolate machines involved in a specific Malop. This can prove to be very useful in situations where you are remediating Malops in your ticketing system and you would like to synchronize that system with Cybereason Malop inbox.
+__Respond To Malops__: By using the API you can retrieve Malops or isolate machines involved in a specific Malop. This can prove to be very useful in situations where you are remediating Malops in your ticketing system and you would like to synchronize that system with Cybereason Malop inbox.
 - Get all Malops currently active
 - Retrieve all Malops of all types
 - Retrieve details on a specific Malop
@@ -118,12 +149,12 @@ __Invoke-RespondToMalops__: By using the API you can retrieve Malops or isolate 
 - Update Malop labels <br>
 [Documentation for Respond to Malops](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malops)
 
-__Invoke-RespondToMalware__: By using the API you can retrieve details on malware. This enables you to address and investigate malware to prevent additional damage.
+__Respond To Malware__: By using the API you can retrieve details on malware. This enables you to address and investigate malware to prevent additional damage.
 - Get a count of all Malware per type
 - Query a specific type of Malware <br>
 [Documentation for Respond to Malware](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malware)
 
-__Add-CustomDetectionRule__: Custom detection rules created via API should be created only after adequate research regarding precision and coverage has been completed. Creating a custom detection rule that is not specific enough can have detrimental impact on retention and overall performance of the environment.
+__Add Custom Detection Rule__: Custom detection rules created via API should be created only after adequate research regarding precision and coverage has been completed. Creating a custom detection rule that is not specific enough can have detrimental impact on retention and overall performance of the environment.
 - Retrieve a list of all active custom detection rules
 - Retrieve a list of all disabled custom detection rules
 - Retrieve a list of all available root causes
@@ -133,13 +164,6 @@ __Add-CustomDetectionRule__: Custom detection rules created via API should be cr
 - Update a custom rule
 - Get the modification history <br>
 [Documentation for Add Custom Detection Rules](https://nest.cybereason.com/documentation/api-documentation/all-versions/add-custom-detection-rules)
-
-__Set-MachineIsolationRules__: Normally, when a machine is isolated, there is absolutely no communication allowed with the machine. This can sometimes limit the ability of an analyst or administrator to perform investigation or triage on that machine. However, you can add isolation exception rules to help you allow limited communication to an isolated machine
-- Retrieve a list of isolation rules 
-- Create an isolation rule
-- Update an isolation rule
-- Delete an isolation rule <br>
-[Documentation for Machine Isolation Rules](https://nest.cybereason.com/documentation/api-documentation/all-versions/set-machine-isolation-rules)
 
 __Manage Sensors (Multiple Cmdlets)__: Cybereason enables you to manage your Sensors from the API, including configuring NGAV settings for the sensors, starting and stopping collection on the Sensors, restarting Sensors, deleting or removing Sensors, archiving Sensors, and upgrading Sensors. _(Get-Sensor, Set-Sensor, Remove-Sensor, Restart-Sensor, Create-Sensor, Add-Sensor, Update-Sensor, Save-Sensor)_
 - Get a list of all Sensors

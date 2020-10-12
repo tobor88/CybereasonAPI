@@ -8,7 +8,10 @@ This cmdlet creates a $Session variable that will be used with all the other cmd
 
 
 .PARAMETER Server
-This parameter defines the server IP address or domain name and the port your Cybereason server is running on
+This parameter defines the server IP address or domain name your Cybereason server is running on
+
+.PARAMETER Port
+This parameter is used to define the port your Cybereason server is on. This is usually 443 or 8443. The default value is 443.
 
 .PARAMETER Username
 This is the email address you use to sign into Cybereason
@@ -18,7 +21,7 @@ This is the password you use to sign into your Cybereason account. The session h
 
 
 .EXAMPLE
-Connect-CybereasonAPI -Server 123.45.67.78:8443 -Username admin@cyberason.com -Passwd "Password123!"
+Connect-CybereasonAPI -Server 123.45.67.78 -Port 8443 -Username admin@cyberason.com -Passwd "Password123!"
 # This example authenticates to the Cybereason API and creates a $Session variable to be used by other cmdlets. This also clears the current PowerShell Session History.
 
 
@@ -122,6 +125,8 @@ Function Connect-CybereasonAPI {
     }  # End If
 
     $Global:Session = $Session
+    $Global:Server = $Server
+    $Global:Port = $Port
 
     If ($ClearHistory.IsPresent)
     {
@@ -782,21 +787,6 @@ Function Get-CybereasonReputations {
     [CmdletBinding()]
         param(
             [Parameter(
-                Position=0,
-                Mandatory=$True,
-                ValueFromPipeline=$False,
-                HelpMessage="`n[H] Enter the root URL of your Cybereason server `n[E] EXAMPLE: https://12.34.56.78:443")]  # End Parameter
-            [ValidateNotNullOrEmpty()]
-            [String]$Server,
-
-            [Parameter(
-                Position=1,
-                Mandatory=$False,
-                ValueFromPipeline=$False)]  # End Parameter
-            [ValidateRange(1,65535)]
-            [String]$Port = 443,
-
-            [Parameter(
                 Position=1,
                 Mandatory=$False)]  # End Parameter
             [String]$Path
@@ -893,20 +883,6 @@ https://www.hackthebox.eu/profile/52286
 Function Set-CybereasonReputations {
     [CmdletBinding()]
         param(
-            [Parameter(
-                Position=0,
-                Mandatory=$True,
-                ValueFromPipeline=$False,
-                HelpMessage="`n[H] Enter the root URL of your Cybereason server `n[E] EXAMPLE: https://12.34.56.78:443")]  # End Parameter
-            [String]$Server,
-
-            [Parameter(
-                Position=1,
-                Mandatory=$False,
-                ValueFromPipeline=$False)]  # End Parameter
-            [ValidateRange(1,65535)]
-            [String]$Port = 443,
-
             [Parameter(
                 ParameterSetName='Keys',
                 Mandatory=$True,

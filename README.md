@@ -16,9 +16,9 @@ __Get-CybereasonReputations__: This cmdlet is used to view or download a CSV lis
 - Return a list of reputations that have been configured on Cybereason for your environment and view it in CSV format in your terminal window
 - Return a list of reputations that have been configured on Cybereason for your environment and view it in CSV format and save it to a file
 ```powershell
-Get-CybereasonReputations -Server aaaaaaaa.cybereason.net -Port '8443' -Verbose
+Get-CybereasonReputations -Verbose
 # OR TO SAVE TO CSV FILE
-Get-CybereasonReputations -Server aaaaaaaa.cybereason.net -Port '8443' -Path C:\Windows\Temp\CybereasonReputations.csv
+Get-CybereasonReputations -Path C:\Windows\Temp\CybereasonReputations.csv
 ```
 
 __Set-CybereasonReputations__: This cmdlet is used to add or update a custom reputation on the Cybereason server instance. Using the Cybereason Reputation Management API, you can integrate and update threat intelligence from various sources to improve detections, view and update file reputations, and add items to the whitelist based on behavioral characteristics.
@@ -26,9 +26,9 @@ __Set-CybereasonReputations__: This cmdlet is used to add or update a custom rep
 - Add or remove reputations for an IP address by adding it to a whitelist or blacklist
 - Add or remove reputations for a domain by adding it to a whitelist or blacklist
 ```powershell
-Set-CybereasonReputations -Server 'aaaaaaaa.cybereason.net' -Port '8443' -Keys '1.1.1.1' -Modify whitelist -Action Add -PreventExecution false -Verbose
-Set-CybereasonReputations -Server 'aaaaaaaa.cybereason.net' -Port '8443' -Keys '8.8.8.8','www.cybereason.com' -Modify whitelist -Action Remove -PreventExecution false -Verbose
-Set-CybereasonReputations -Server 'aaaaaaaa.cybereason.net' -Port '8443' -File 'C:\Users\Enemy\badFile.exe','C:\Users\Enemy\persistence.exe' -Modify blacklist -Action Add -PreventExecution true -Verbose
+Set-CybereasonReputations -Keys '1.1.1.1' -Modify whitelist -Action Add -PreventExecution false -Verbose
+Set-CybereasonReputations -Keys '8.8.8.8','www.cybereason.com' -Modify whitelist -Action Remove -PreventExecution false -Verbose
+Set-CybereasonReputations -File 'C:\Users\Enemy\badFile.exe','C:\Users\Enemy\persistence.exe' -Modify blacklist -Action Add -PreventExecution true -Verbose
 ```
 
 __Get Threat Intel__: <br>

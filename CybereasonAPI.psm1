@@ -955,35 +955,63 @@ Function Set-CybereasonReputations {
     If ($PSBoundParameters.Keys -eq 'File')
     {
 
-        $Hash = @()
         ForEach ($F in $File)
         {
 
-            $Hash += (Get-FileHash -Algorithm MD5 -Path $F).Hash
+            $Hash = (Get-FileHash -Algorithm MD5 -Path $F).Hash
+            If ($PreventExecution -like 'true')
+            {
+
+                Write-Warning "You are about to prevent the execution of this file on all devices in your environment"
+                $Answer = Read-Host -Prompt "Are you sure you wish to perform this action? [Y/n]"
+
+                If ($Answer -like 'n')
+                {
+
+                    $PreventExecution = 'false'
+
+                }  # End If
+                Else 
+                {
+
+                    Write-Output "[*] Preventing the execution of the file with hash : $F"
+
+                }  # End Else
+
+            }  # End If
+
+            $JsonData = '[{"keys": ["' + $Hash + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
+            
+            Write-Verbose "Sending request to $Uri"
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $Session
+            $Response.Content | ConvertFrom-Json
 
         }  # End ForEach
 
     }  # End Switch File
-
-
-    $IPv4Regex = '(((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))'
-    ForEach ($Key in $Keys)
+    Else 
     {
-            
-        Write-Verbose "Ensuring the Prevent Execution value is set to false when the Key value defined is an IP address or domain name"
-        If ((!($Key.Length -eq 32)) -or (!($Key.Length -eq 40)) -or ($Key -Match $IPv4Regex) -or ($Key -like "*.*"))
+
+        $IPv4Regex = '(((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))'
+        ForEach ($Key in $Keys)
         {
+                
+            Write-Verbose "Ensuring the Prevent Execution value is set to false when the Key value defined is an IP address or domain name"
+            If ((!($Key.Length -eq 32)) -or (!($Key.Length -eq 40)) -or ($Key -Match $IPv4Regex) -or ($Key -like "*.*"))
+            {
 
-            $PreventExecution = 'false'
+                $PreventExecution = 'false'
 
-        }  # End If
+            }  # End If
 
-        $JsonData = '[{"keys": ["' + $Key + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
-       
-        Write-Verbose "Sending request to $Uri"
-        $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $Session
-        $Response.Content | ConvertFrom-Json
+            $JsonData = '[{"keys": ["' + $Key + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
+        
+            Write-Verbose "Sending request to $Uri"
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $Session
+            $Response.Content | ConvertFrom-Json
 
-    }  # End ForEach
+        }  # End ForEach
+
+    }  # End Else
     
 }  # End Function Set-CybereasonReputations

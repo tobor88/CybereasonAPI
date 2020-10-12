@@ -742,15 +742,18 @@ Returns a CSV list of custom reputations for files, IP addresses, and domain nam
 This cmdlet is used to download a CSV list of custom reputations for files, IP addresses, and domains that were manually set up in your environment.
 
 
-.PARAMETER Url
+.PARAMETER Server
 This parameter defines the root URL of your Cybereason Server
+
+.PARAMETER Port
+This parameter defines the port your Cybereason server is hosted on. Usually this is port 443 or 8443. The default value is 443
 
 .PARAMETER Path
 This parameter defines the path and filename to save the CSV results.
 
 
 .EXAMPLE
-Get-CybereasonReputations -Url https://12.34.56.78/ -Path C:\Windows\Temp\CybereasonRepuations.csv
+Get-CybereasonReputations -Server 12.34.56.78 -Port 8443 -Path C:\Windows\Temp\CybereasonRepuations.csv
 # This example gets the current repuations of files, IP addresses, and domains configured in your environment and returns CSV related results.
 
 
@@ -782,7 +785,7 @@ Function Get-CybereasonReputations {
                 Position=0,
                 Mandatory=$True,
                 ValueFromPipeline=$False,
-                HelpMessage="`n[H] Enterh the root URL of your Cybereason server `n[E] EXAMPLE: https://12.34.56.78:443")]  # End Parameter
+                HelpMessage="`n[H] Enter the root URL of your Cybereason server `n[E] EXAMPLE: https://12.34.56.78:443")]  # End Parameter
             [ValidateNotNullOrEmpty()]
             [String]$Server,
 
@@ -822,22 +825,50 @@ Function Get-CybereasonReputations {
 
 <#
 .SYNOPSIS
+This cmdlet is used to update the custom set reputations of files, IP addresses, or domain names in an environment with Cybereason.
 
 
 .DESCRIPTION
+This cmdlet can add or remove IP addresses, domains, and file hashes to a blacklisit or whitelist to change the reputation of that item in the eyes of Cybereason.
 
 
-.PARAMETER Url
+.PARAMETER Server
 This parameter defines the root URL of your Cybereason Server
 
-.PARAMETER Path
-This parameter defines the path and filename to save the CSV results.
+.PARAMETER Port
+This parameter defines the port your Cybereason server is hosted on. Usually this is port 443 or 8443
+
+.PARAMETER Keys
+The file hash value (either MD5 or SHA1), IP address, or domain name for which to set a custom reputation.
+
+.PARAMETER File
+If you do not know the hash of a file or files you wish to modify the reputations of, you can simply enter the path to the file here and this will obtain the hash automatically for you. This can be used to replace the -Keys parameter.
+
+.PARAMETER Modify
+Modify the reputation of an item by adding a rule to the blacklist or whitelist
+
+.PARAMETER Action
+Instructs Cybereason to add or remove a reputation. Set the value to Add or Remove to modify the defined reputations.
+
+.PARAMETER PreventExecution
+This parameter indicates whether to prevent the file’s execution with Application Control. Note this option is applicable for the File type. If your request includes IP addresses or domain names to update, you must set this parameter to false.
 
 
 .EXAMPLE
-Set-CybereasonReputations -Url https://12.34.56.78/ -Path C:\Windows\Temp\CybereasonRepuations.csv
-# This example gets the current repuations of files, IP addresses, and domains configured in your environment and returns CSV related results.
+Set-CybereasonReputations -Server 12.34.56.78 -Port 8443 -Keys '1.1.1.1' -Modify Whitelist -Action Add -PreventExecution False
+# This example sets the Cybereason repuations of IP address 1.1.1.1 by adding it to the whitelist. Because this is an IP address the -PreventExecution parameter needs to be false. This will be modified automatically in the script if set incorrectly.
 
+.EXAMPLE
+Set-CybereasonReputations -Server 12.34.56.78 -Port 443 -Keys 'maliciousdomain.com' -Modify Blacklist -Action Add -PreventExecution False
+# This example sets the Cybereason repuations of domain maliciousdomain.com by adding it to the blacklist. Because this is not a file hash the -PreventExecution parameter needs to be false. This will be modified automatically in the script if set incorrectly.
+
+.EXAMPLE
+Set-CybereasonReputations -Server 12.34.56.78 -Keys 'badguy.com','badperson.com' -Modify Blacklist -Action Add -PreventExecution False
+# This example sets the Cybereason repuations of domain badguy.com and badperson.com by adding them to the blacklist. Because this is not a file hash the -PreventExecution parameter needs to be false. This will be modified automatically in the script if set incorrectly.
+
+.EXAMPLE
+Set-CybereasonReputations -Server 12.34.56.78 -Port 8443 -Keys 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' -Modify 'Blacklist' -Action 'Add' -PreventExecution 'True'
+# This example sets the Cybereason repuations of a file with the defined SHA1 hash value and adds it to the blacklist. Prevent Execution is set to true which will prevent all devices in an environment from executing this file when App Control is enabled in Cybereason.
 
 .INPUTS
 None
@@ -863,21 +894,96 @@ Function Set-CybereasonReputations {
     [CmdletBinding()]
         param(
             [Parameter(
+                Position=0,
                 Mandatory=$True,
-                HelpMessage="`n[H] Enterh the root URL of your Cybereason server `n[E] EXAMPLE: https://12.34.56.78:443")]  # End Parameter
-            [String]$URL,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the root URL of your Cybereason server `n[E] EXAMPLE: https://12.34.56.78:443")]  # End Parameter
+            [String]$Server,
 
             [Parameter(
-                Mandatory=$False)]  # End Parameter
-            [String]$Path
+                Position=1,
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [ValidateRange(1,65535)]
+            [String]$Port = 443,
+
+            [Parameter(
+                ParameterSetName='Keys',
+                Mandatory=$True,
+                ValueFromPipeline=$False)]  # End Parameter
+            [String[]]$Keys,
+
+            [Parameter(
+                ParameterSetName='File',
+                Mandatory=$True,
+                ValueFromPipeline=$False)]
+            [Alias('f','Path','FilePath')]
+            [ValidateScript({Test-Path -Path $_})]
+            [String[]]$File,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False)]  # End Parameter
+            [ValidateSet('blacklist','whitelist')]
+            [String]$Modify,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False)]
+            [ValidateSet('Add','Remove')]
+            [String]$Action,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [Alias('Prevent')]
+            [ValidateSet('true','false')]
+            [String]$PreventExecution = 'false'
         )  # End param
 
-    $Uri = $Url.TrimEnd('/') + '/rest/classification/download'
-    # $JsonData = "{}"
 
-    Write-Verbose "Sending request to $Uri"
-    $Response = Invoke-WebRequest -Uri $Uri -Method GET -ContentType "application/json" -WebSession $Session
-    
-    $Response.Content
+    $Uri = "https://" + $Server + ":" + $Port + '/rest/classification/update '
+    Switch ($Action)
+    {
+
+        'Add' { $Remove = 'false' }
+        'Remove' { $Remove = 'true' }
+
+    }  # End Switch
+
+
+    If ($PSBoundParameters.Keys -eq 'File')
+    {
+
+        $Hash = @()
+        ForEach ($F in $File)
+        {
+
+            $Hash += (Get-FileHash -Algorithm MD5 -Path $F).Hash
+
+        }  # End ForEach
+
+    }  # End Switch File
+
+
+    $IPv4Regex = '(((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))'
+    ForEach ($Key in $Keys)
+    {
+            
+        Write-Verbose "Ensuring the Prevent Execution value is set to false when the Key value defined is an IP address or domain name"
+        If ((!($Key.Length -eq 32)) -or (!($Key.Length -eq 40)) -or ($Key -Match $IPv4Regex) -or ($Key -like "*.*"))
+        {
+
+            $PreventExecution = 'false'
+
+        }  # End If
+
+        $JsonData = '[{"keys": ["' + $Key + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
+       
+        Write-Verbose "Sending request to $Uri"
+        $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $Session
+        $Response.Content | ConvertFrom-Json
+
+    }  # End ForEach
     
 }  # End Function Set-CybereasonReputations

@@ -756,6 +756,12 @@ Get-CybereasonReputations -Path C:\Windows\Temp\CybereasonRepuations.csv
 # This example gets the current repuations of files, IP addresses, and domains configured in your environment and returns CSV related results.
 
 
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
 .INPUTS
 None
 
@@ -847,6 +853,13 @@ Set-CybereasonReputations -Keys 'badguy.com','badperson.com' -Modify Blacklist -
 .EXAMPLE
 Set-CybereasonReputations -Keys 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' -Modify 'Blacklist' -Action 'Add' -PreventExecution 'True'
 # This example sets the Cybereason repuations of a file with the defined SHA1 hash value and adds it to the blacklist. Prevent Execution is set to true which will prevent all devices in an environment from executing this file when App Control is enabled in Cybereason.
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
 
 .INPUTS
 None
@@ -979,3 +992,454 @@ Function Set-CybereasonReputations {
     }  # End Else
     
 }  # End Function Set-CybereasonReputations
+
+
+<#
+.SYNOPSIS
+This cmdlet is used to perform remediation actions on a specific process, file, or registry key
+
+
+.DESCRIPTION
+This uses the Cybereason API to perform a remediation action on a specific file, process, or registry key.
+
+
+.PARAMETER MalopID
+The unique ID assigned by the Cybereason platform for the Malop. This ID is found when you retrieve the list of Malops. For details on getting this ID, see, Get Malops. You can perform remediation without this malop ID.
+
+.PARAMETER InitiatorUserName
+The Cybereason user name for the user performing the remediation.
+
+.PARAMETER MachineId
+The unique GUID for the machine. Note this is different from the sensor ID (pylumID) value.
+
+.PARAMETER TargetID
+The unique GUID for the process or file to remediate. You can find this GUID in the response when you perform an investigation query for a process. If you provide a Malop ID in the request, do not add this field in the request. Note that using the targetId parameter is supported only for processes (the KILL_PROCESS action) and files (the QUARANTINE_FILE or UNQUARANTINE_FILE action). If you use the UNQUARANTINE_FILE action, the targetId (GUID) value is different than the GUID of the original file for the QUARANTINE_FILE action. You can find this GUID for the quarantined file by running a query with the Quarantine File Element.
+
+.PARAMETER ActionType
+The remediation action to perform. Possible values include:
+KILL_PROCESS. Use this option to immediately stop the process associated with the root cause of the Malop.
+DELETE_REGISTRY_KEY. Use this option to remove any registry keys detected as malicious as part of the Malop.
+QUARANTINE_FILE. Use this option to quarantine the detected malicious file in a secure location.
+UNQUARANTINE_FILE. Use this option to enable the Cybereason platform to remove a file from quarantine. This option is available in version 20.1.120 and later.
+BLOCK_FILE. Use this to enable Application Control to block the file(s) associated with the Malop when it they are detected in the future.
+KILL_PREVENT_UNSUSPEND. Use this option to prevent detected ransomware from running on the machine.
+UNSUSPEND_PROCESS. Use this option to prevent a file associated with ransomware.
+ISOLATE_MACHINE: Use this option to isolate a specific machine.
+
+
+.EXAMPLE
+Invoke-RemediateItem -MalopID "11.2718161727221199870" -InitiatorUserName "admin@yourserver.com" -MachineID "-1632138521.1198775089551518743" -ActionType KILL_PROCESS
+# This example remediates a process by killing it after it was discovered by a Malop
+
+.EXAMPLE
+Invoke-RemediateItem -InitiatorUserName "admin@yourserver.com" -MachineID "-1632138521.1198775089551518743" -TargetID "-2095200899.6557717220054083334" -ActionType KILL_PROCESS
+# This example remediates a process that was not involved in a Malop
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/remediate-items#remediatemalops
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Invoke-RemediateItem {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                ParameterSetName='MalopID',
+                Mandatory=$True,
+                ValueFromPipeline=$False)]  # End Parameter
+            [Alias('Malop','Id')]
+            [String]$MalopID,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Define the Cybereason user name for the user performing the remediation`n[E] EXAMPLE: admin@cyberason.com")]  # End Parameter
+            [Alias('User','Username','Initiator')]
+            [String]$InitiatorUserName,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the unique GUID number of the machine. NOTE: This is different from the sensor ID (pylumID) value.`n[E] EXAMPLE: -1632138521.1198775089551518743")]  # End Parameter
+            [Int64]$MachineId,
+
+            [Parameter(
+                ParameterSetName='TargetID',
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The unique GUID for the process or file to remediate. You can find this GUID in the response when you perform an investigation query for a process. Note that using the targetId parameter is supported only for processes (the KILL_PROCESS action) and files (the QUARANTINE_FILE or UNQUARANTINE_FILE action). If you use the UNQUARANTINE_FILE action, the targetId (GUID) value is different than the GUID of the original file for the QUARANTINE_FILE action. You can find this GUID for the quarantined file by running a query with the Quarantine File Element.`n[E] EXAMPLE: null")]
+            [String]$TargetID,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False)]  # End Parameter
+            [ValidateSet('KILL_PROCESS','DELETE_REGISTRY_KEY','QUARANTINE_FILE','UNQUARANTINE_FILE','BLOCK_FILE','KILL_PREVENT_UNSUSPEND','UNSUSPEND_PROCESS','ISOLATE_MACHINE')]
+            [String]$ActionType
+        )  # End param
+
+
+    $Obj = @()
+    Write-Verbose "Validating -InitiatorUserName parameter is in email address format"
+    Try 
+    {
+    
+        $Null = [MailAddress]$InitiatorUserName
+    
+    }  # End Try
+    Catch 
+    {
+
+        Throw "[x] The username you defined, $InitiatorUserName, is not a valid email address."
+        
+    }  # End Catch
+
+    $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate"
+
+    Switch ($PSBoundParameters.Keys)
+    {
+
+        'MalopID' {
+
+            $JsonData = '{"malopId":' + $MalopID + ',"initiatorUserName":' + $InitiatorUserName + ',"actionsByMachine":{' + $MachineId + ':[{"actionType":' + $ActionType + '}]}}'
+        
+        }  # End Switch MalopID
+
+        'TargetID' {
+
+            $JsonData = '{"initiatorUserName":' + $InitiatorUserName + ',"actionsByMachine":{' + $MachineId + ':[{"targetId":' + $TargetID + ',"actionType":' + $ActionType + '}]}}'
+
+        }  # End Switch TargetID
+
+    }  # End Switch
+    
+    Write-Verbose "Sending request to $Uri"
+    $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $Session
+    $Response.Content | ConvertFrom-Json | `
+        ForEach-Object {
+                $MalopId = ($_.malopId | Out-String).Trim()
+                $RemediationId = ($_.remediationId | Out-String).Trim()
+                $Start = Get-Date -Date ($_.start)
+                $End = Get-Date ($_.end)
+                $InitiatingUser = ($_.initiatingUser | Out-String).Trim()
+                $MachineId = ($_.statusLog.machineID | Out-String).Trim()
+                $TargetId = ($_.statusLog.targetId | Out-String).Trim()
+                $Status = ($_.statusLog.status | Out-String).Trim()
+                $ActionType = ($_.statusLog.actionType | Out-String).Trim()
+                $ErrorMessage = $_.statusLog.error
+                $TimeStamp = Get-Date -Date ($_.statusLog.timestamp)
+
+                $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage} 
+
+        }  # End ForEach-Object
+
+    $Obj
+
+}  # End Function Invoke-CybereasonRemediateItem
+
+
+<#
+.SYNOPSIS
+This cmdlet is used too return details on the progress of a specific remediation operation.
+
+
+.DESCRIPTION
+Returns details on the progress of a specific remediation operation.
+
+
+.PARAMETER Username
+The Cybereason user name of the user performing the remediation operation.
+
+.PARAMETER MalopID
+The unique Malop ID for the Malop for which you are performing remediation.
+
+.PARAMETER RemediationID
+This parameter defines the Cybereason remediation Id to check the progress of. The remediation ID returned in a previous remediation request. For details on finding this remediation ID, see https://nest.cybereason.com/api-documentation/all-versions/APIReference/RemediationAPI/remediateMalop.html#remediate-items.
+
+
+.EXAMPLE
+Get-CybereasonRemediationProgress -Username 'admin@cyberason.com' -MalopID '11.2718161727221199870' -RemediationID '86f3faa1-bac0-4a17-9192-9d106b734664'
+# This example gets the current status on a Malop that was remediated by the user admin@cyberason.com
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/check-remediation-progress
+https://nest.cybereason.com/api-documentation/all-versions/APIReference/RemediationAPI/remediateMalop.html#remediate-items
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Get-CybereasonRemediationProgress {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the username you are querying to view the status of their Malops request `n[E] EXAMPLE: admin@cybereason.com")]  # End Parameter
+            [String]$Username,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the Malops ID you are querying to view the progress of in this query `n[E] EXAMPLE: 11.2718161727221199870")]  # End Parameter
+            [String]$MalopID,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the Remediation ID you are querying to view the progress of the request `n[E] EXAMPLE: 86f3faa1-bac0-4a17-9192-9d106b734664")]  # End Parameter
+            [String]$RemediationID
+        )  # End param
+
+
+    $Obj = @()
+    Write-Verbose "Validating -InitiatorUserName parameter is in email address format"
+    Try 
+    {
+        
+        $Null = [MailAddress]$InitiatorUserName
+       
+    }  # End Try
+    Catch 
+    {
+    
+        Throw "[x] The username you defined, $InitiatorUserName, is not a valid email address."
+            
+    }  # End Catch
+    
+    $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/progress/" + $Username + "/" + $MalopID + "/" + $RemediationID 
+
+    $Response = Invoke-WebRequest -Method GET -Content-Type 'application/json' -Uri $Uri -WebSession $Session
+
+    $Response.Content | ConvertFrom-Json | `
+    ForEach-Object {
+        $MalopId = ($_.malopId | Out-String).Trim()
+        $RemediationId = ($_.remediationId | Out-String).Trim()
+        $Start = Get-Date -Date ($_.start)
+        $End = Get-Date ($_.end)
+        $InitiatingUser = ($_.initiatingUser | Out-String).Trim()
+        $MachineId = ($_.statusLog.machineID | Out-String).Trim()
+        $TargetId = ($_.statusLog.targetId | Out-String).Trim()
+        $Status = ($_.statusLog.status | Out-String).Trim()
+        $ActionType = ($_.statusLog.actionType | Out-String).Trim()
+        $ErrorMessage = $_.statusLog.error
+        $TimeStamp = Get-Date -Date ($_.statusLog.timestamp)
+
+        $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage} 
+
+    }  # End ForEach-Object
+
+    $Obj
+    
+}  # End Function Get-CybereasonRemediationProgress
+
+<#
+.SYNOPSIS 
+This cmdlet aborts a remediation operation on a specific Malop.
+
+
+.DESCRIPTION
+This aborts a remediation operation for the Malop and Remediation ID you define
+
+
+.PARAMETER MalopID
+The unique Malop ID for the Malop for which you are performing remediation.
+
+.PARAMETER RemediationID
+This parameter defines the Cybereason remediation Id to check the progress of. The remediation ID returned in a previous remediation request. For details on finding this remediation ID, see https://nest.cybereason.com/api-documentation/all-versions/APIReference/RemediationAPI/remediateMalop.html#remediate-items.
+
+
+.EXAMPLE
+Stop-CybereasonMalopRemediation -MalopID '11.2718161727221199870' -RemediationID '86f3faa1-bac0-4a17-9192-9d106b734664'
+# This example aborts the remediation action take on the defined Malop
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/abort-malop-remediation
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Stop-CybereasonMalopRemediation {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the Malops ID you are querying to view the progress of in this query `n[E] EXAMPLE: 11.2718161727221199870")]  # End Parameter
+            [String]$MalopID,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the Remediation ID you are querying to view the progress of the request `n[E] EXAMPLE: 86f3faa1-bac0-4a17-9192-9d106b734664")]  # End Parameter
+            [String]$RemediationID
+        )  # End parm
+
+    $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/abort/" + $MalopID + "/" + $RemediationID 
+
+    $Response = Invoke-WebRequest -Method POST -Content-Type 'application/json' -Uri $Uri -WebSession $Session
+
+    $Response.Content | ConvertFrom-Json | `
+    ForEach-Object {
+        $MalopId = ($_.malopId | Out-String).Trim()
+        $RemediationId = ($_.remediationId | Out-String).Trim()
+        $Start = Get-Date -Date ($_.start)
+        $End = Get-Date ($_.end)
+        $InitiatingUser = ($_.initiatingUser | Out-String).Trim()
+        $MachineId = ($_.statusLog.machineID | Out-String).Trim()
+        $TargetId = ($_.statusLog.targetId | Out-String).Trim()
+        $Status = ($_.statusLog.status | Out-String).Trim()
+        $ActionType = ($_.statusLog.actionType | Out-String).Trim()
+        $ErrorMessage = $_.statusLog.error
+        $TimeStamp = Get-Date -Date ($_.statusLog.timestamp)
+
+        $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage} 
+
+    }  # End ForEach-Object
+
+    $Obj
+
+}  # End Function Stop-CybereasonMalopRemediation
+
+<#
+.SYNOPSIS 
+This cmdlet retrieves details about remediation actions performed on a particular Malop.
+
+
+.DESCRIPTION
+This retrieves details about remediation actions performed on a particular Malop you define
+
+
+.PARAMETER MalopID
+The unique Malop ID for the Malop for which you are performing remediation.
+
+
+.EXAMPLE
+Get-CybereasonRemediationStatus -MalopID '11.2718161727221199870'
+# This example gets the current status for the defined Malop
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/get-remediation-statuses
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Get-CybereasonRemediationStatus {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the Malops ID you are querying to view the progress of in this query `n[E] EXAMPLE: 11.2718161727221199870")]  # End Parameter
+            [String]$MalopID
+        )  # End param
+
+
+    $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/status/" + $MalopID
+
+    $Response = Invoke-WebRequest -Method GET -Content-Type 'application/json' -Uri $Uri -WebSession $Session
+    
+    $Response.Content | ConvertFrom-Json | `
+    ForEach-Object {
+        $MalopId = ($_.malopId | Out-String).Trim()
+        $RemediationId = ($_.remediationId | Out-String).Trim()
+        $Start = Get-Date -Date ($_.start)
+        $End = Get-Date ($_.end)
+        $InitiatingUser = ($_.initiatingUser | Out-String).Trim()
+        $MachineId = ($_.statusLog.machineID | Out-String).Trim()
+        $TargetId = ($_.statusLog.targetId | Out-String).Trim()
+        $Status = ($_.statusLog.status | Out-String).Trim()
+        $ActionType = ($_.statusLog.actionType | Out-String).Trim()
+        $ErrorMessage = $_.statusLog.error
+        $TimeStamp = Get-Date -Date ($_.statusLog.timestamp)
+    
+        $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage} 
+    
+    }  # End ForEach-Object
+    
+    $Obj
+
+}  # End Function Get-CybereasonRemediationStatus

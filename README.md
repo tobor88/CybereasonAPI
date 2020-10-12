@@ -8,6 +8,7 @@
 __Connect-CybereasonAPI__: This cmdlet is used to authenticate to the Cybereason API. This will create a global variable called $Session that will get used with the rest of the cmdletts in this module that need it.
 ```powershell
 Connect-CybereasonAPI -Username 'admin@cybereason.com' -Passwd 'Password123!' -Server 'aaaaaaaa.cybereason.net' -Port '8443' -ClearHistory -Verbose
+# This authenticates to the Cybereason API creating a session that gets used with all cmdlets in this module
 ```
 
 __Get-CybereasonReputations__: This cmdlet is used to view or download a CSV list of reputation informatino that have been manually configured on your environments Cybereason server.
@@ -30,8 +31,9 @@ Set-CybereasonReputations -Server 'aaaaaaaa.cybereason.net' -Port '8443' -Keys '
 Set-CybereasonReputations -Server 'aaaaaaaa.cybereason.net' -Port '8443' -File 'C:\Users\Enemy\badFile.exe','C:\Users\Enemy\persistence.exe' -Modify blacklist -Action Add -PreventExecution true -Verbose
 ```
 
-__Get-CybereasonThreatIntel__: This cmdlet is used to communicate with every link under the "Get Threat Intel" section of the API documentation. 
-It can perform the following actions.
+__Get Threat Intel__: <br>
+This cmdlet is used to communicate with every link under the "Get Threat Intel" section of the API documentation. 
+__Get-CybereasonThreatIntel__ can perform the following actions.
  - Get a file reputation	
  - Get reputation for a domain	
  - Get reputation for an IP address	
@@ -50,6 +52,41 @@ Get-CybereasonThreatIntel -Domain 'www.cybereason.com','cybereason.com'
 Get-CybereasonThreatIntel -IPAddress '1.1.1.1','1.0.0.1'
 Get-CybereasonThreatIntel -MD5Hash FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI product_classification
+```
+
+__Remediate Items__ <br>
+ By using the API you can take remediation actions on Malops to limit or prevent additional damage.
+- Remediate an item
+- Check the status of a remediation
+- Abort a remediation operation
+- Get remediation statuses for a particular Malop <br>
+[Documentation for Remediate Items](https://nest.cybereason.com/documentation/api-documentation/all-versions/remediate-items-0)
+
+__Invoke-CybereasonRemediateItem__: This uses the Cybereason API to perform a remediation action on a specific file, process, or registry key.
+```powershell
+Invoke-CybereasonRemediateItem -MalopID "11.2718161727221199870" -InitiatorUserName "admin@yourserver.com" -MachineID "-1632138521.1198775089551518743" -ActionType KILL_PROCESS
+# This example remediates a process by killing it after it was discovered by a Malop
+
+Invoke-CybereasonRemediateItem -InitiatorUserName "admin@yourserver.com" -MachineID "-1632138521.1198775089551518743" -TargetID "-2095200899.6557717220054083334" -ActionType KILL_PROCESS
+# This example remediates a process that was not involved in a Malop
+```
+
+__Get-CybereasonRemediationProgress__: This cmdlet is used too return details on the progress of a specific remediation operation.
+```powershell
+Get-CybereasonRemediationProgress -Username 'admin@cyberason.com' -MalopID '11.2718161727221199870' -RemediationID '86f3faa1-bac0-4a17-9192-9d106b734664'
+# This example gets the current status on a Malop that was remediated by the user admin@cyberason.com
+```
+
+__Stop-CybereasonMalopRemediation__: This cmdlet aborts a remediation operation on a specific Malop.
+```powershell
+Stop-CybereasonMalopRemediation -MalopID '11.2718161727221199870' -RemediationID '86f3faa1-bac0-4a17-9192-9d106b734664'
+# This example aborts the remediation action take on the defined Malop
+```
+
+__Get-CybereasonRemediationStatus__: This cmdlet retrieves details about remediation actions performed on a particular Malop.
+```powershell
+Get-CybereasonRemediationStatus -MalopID '11.2718161727221199870'
+# This example gets the current status for the defined Malop
 ```
 
 ## Still To Come Cmdlets
@@ -85,13 +122,6 @@ __Invoke-RespondToMalware__: By using the API you can retrieve details on malwar
 - Get a count of all Malware per type
 - Query a specific type of Malware <br>
 [Documentation for Respond to Malware](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malware)
-
-__Invoke-RemediateItems__: By using the API you can take remediation actions on Malops to limit or prevent additional damage.
-- Remediate an item
-- Check the status of a remediation
-- Abort a remediation operation
-- Get remediation statuses for a particular Malop <br>
-[Documentation for Remediate Items](https://nest.cybereason.com/documentation/api-documentation/all-versions/remediate-items-0)
 
 __Add-CustomDetectionRule__: Custom detection rules created via API should be created only after adequate research regarding precision and coverage has been completed. Creating a custom detection rule that is not specific enough can have detrimental impact on retention and overall performance of the environment.
 - Retrieve a list of all active custom detection rules

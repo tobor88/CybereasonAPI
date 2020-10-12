@@ -747,18 +747,12 @@ Returns a CSV list of custom reputations for files, IP addresses, and domain nam
 This cmdlet is used to download a CSV list of custom reputations for files, IP addresses, and domains that were manually set up in your environment.
 
 
-.PARAMETER Server
-This parameter defines the root URL of your Cybereason Server
-
-.PARAMETER Port
-This parameter defines the port your Cybereason server is hosted on. Usually this is port 443 or 8443. The default value is 443
-
 .PARAMETER Path
 This parameter defines the path and filename to save the CSV results.
 
 
 .EXAMPLE
-Get-CybereasonReputations -Server 12.34.56.78 -Port 8443 -Path C:\Windows\Temp\CybereasonRepuations.csv
+Get-CybereasonReputations -Path C:\Windows\Temp\CybereasonRepuations.csv
 # This example gets the current repuations of files, IP addresses, and domains configured in your environment and returns CSV related results.
 
 
@@ -822,12 +816,6 @@ This cmdlet is used to update the custom set reputations of files, IP addresses,
 This cmdlet can add or remove IP addresses, domains, and file hashes to a blacklisit or whitelist to change the reputation of that item in the eyes of Cybereason.
 
 
-.PARAMETER Server
-This parameter defines the root URL of your Cybereason Server
-
-.PARAMETER Port
-This parameter defines the port your Cybereason server is hosted on. Usually this is port 443 or 8443
-
 .PARAMETER Keys
 The file hash value (either MD5 or SHA1), IP address, or domain name for which to set a custom reputation.
 
@@ -845,19 +833,19 @@ This parameter indicates whether to prevent the file’s execution with Applicat
 
 
 .EXAMPLE
-Set-CybereasonReputations -Server 12.34.56.78 -Port 8443 -Keys '1.1.1.1' -Modify Whitelist -Action Add -PreventExecution False
+Set-CybereasonReputations -Keys '1.1.1.1' -Modify Whitelist -Action Add -PreventExecution False
 # This example sets the Cybereason repuations of IP address 1.1.1.1 by adding it to the whitelist. Because this is an IP address the -PreventExecution parameter needs to be false. This will be modified automatically in the script if set incorrectly.
 
 .EXAMPLE
-Set-CybereasonReputations -Server 12.34.56.78 -Port 443 -Keys 'maliciousdomain.com' -Modify Blacklist -Action Add -PreventExecution False
+Set-CybereasonReputations -Keys 'maliciousdomain.com' -Modify Blacklist -Action Add -PreventExecution False
 # This example sets the Cybereason repuations of domain maliciousdomain.com by adding it to the blacklist. Because this is not a file hash the -PreventExecution parameter needs to be false. This will be modified automatically in the script if set incorrectly.
 
 .EXAMPLE
-Set-CybereasonReputations -Server 12.34.56.78 -Keys 'badguy.com','badperson.com' -Modify Blacklist -Action Add -PreventExecution False
+Set-CybereasonReputations -Keys 'badguy.com','badperson.com' -Modify Blacklist -Action Add -PreventExecution False
 # This example sets the Cybereason repuations of domain badguy.com and badperson.com by adding them to the blacklist. Because this is not a file hash the -PreventExecution parameter needs to be false. This will be modified automatically in the script if set incorrectly.
 
 .EXAMPLE
-Set-CybereasonReputations -Server 12.34.56.78 -Port 8443 -Keys 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' -Modify 'Blacklist' -Action 'Add' -PreventExecution 'True'
+Set-CybereasonReputations -Keys 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' -Modify 'Blacklist' -Action 'Add' -PreventExecution 'True'
 # This example sets the Cybereason repuations of a file with the defined SHA1 hash value and adds it to the blacklist. Prevent Execution is set to true which will prevent all devices in an environment from executing this file when App Control is enabled in Cybereason.
 
 .INPUTS

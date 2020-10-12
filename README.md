@@ -31,7 +31,7 @@ Set-CybereasonReputations -Keys '8.8.8.8','www.cybereason.com' -Modify whitelist
 Set-CybereasonReputations -File 'C:\Users\Enemy\badFile.exe','C:\Users\Enemy\persistence.exe' -Modify blacklist -Action Add -PreventExecution true -Verbose
 ```
 
-__Get Threat Intel__: <br>
+### Get Threat Intel
 This cmdlet is used to communicate with every link under the "Get Threat Intel" section of the API documentation. 
 __Get-CybereasonThreatIntel__ can perform the following actions.
  - Get a file reputation	
@@ -54,7 +54,7 @@ Get-CybereasonThreatIntel -MD5Hash FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI product_classification
 ```
 
-__Remediate Items__ <br>
+### Remediate Items
  By using the API you can take remediation actions on Malops to limit or prevent additional damage.
 - Remediate an item
 - Check the status of a remediation
@@ -89,7 +89,7 @@ Get-CybereasonRemediationStatus -MalopID '11.2718161727221199870'
 # This example gets the current status for the defined Malop
 ```
 
-__Set-MachineIsolationRules__: <br>
+### Isolation Rules
 Normally, when a machine is isolated, there is absolutely no communication allowed with the machine. This can sometimes limit the ability of an analyst or administrator to perform investigation or triage on that machine. However, you can add isolation exception rules to help you allow limited communication to an isolated machine
 
 - __Get-CybereasonIsolationRules__ Retrieve a list of isolation rules 
@@ -121,7 +121,7 @@ Remove-CybereasonIsolationRule -RuleID '5859b3d0ae8eeb920e9d2f4e' -IPAddressStri
 [Documentation for Machine Isolation Rules](https://nest.cybereason.com/documentation/api-documentation/all-versions/set-machine-isolation-rules)
 
 ## Still To Come Cmdlets
-__Hunt And Investigate__: Using hunting queries and file search capabilities in the API, further your investigation of malicious behavior in your organization, including:
+### Hunt And Investigate Using hunting queries and file search capabilities in the API, further your investigation of malicious behavior in your organization, including:
 - Run investigative queries
 - Search for files
 - Get results of a previous file search
@@ -133,7 +133,8 @@ __Hunt And Investigate__: Using hunting queries and file search capabilities in 
 All of these capabilities help you improve security, uncover bad practices and deficiencies, and gain insight on tactical and strategic methods for threat prevention in your environment <br>
 [Documentation for Hunt and Investigate](https://nest.cybereason.com/documentation/api-documentation/all-versions/hunt-and-investigate)
 
-__Respond To Malops__: By using the API you can retrieve Malops or isolate machines involved in a specific Malop. This can prove to be very useful in situations where you are remediating Malops in your ticketing system and you would like to synchronize that system with Cybereason Malop inbox.
+### Respond To Malops
+By using the API you can retrieve Malops or isolate machines involved in a specific Malop. This can prove to be very useful in situations where you are remediating Malops in your ticketing system and you would like to synchronize that system with Cybereason Malop inbox.
 - Get all Malops currently active
 - Retrieve all Malops of all types
 - Retrieve details on a specific Malop
@@ -149,12 +150,14 @@ __Respond To Malops__: By using the API you can retrieve Malops or isolate machi
 - Update Malop labels <br>
 [Documentation for Respond to Malops](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malops)
 
-__Respond To Malware__: By using the API you can retrieve details on malware. This enables you to address and investigate malware to prevent additional damage.
+### Respond To Malware
+By using the API you can retrieve details on malware. This enables you to address and investigate malware to prevent additional damage.
 - Get a count of all Malware per type
 - Query a specific type of Malware <br>
 [Documentation for Respond to Malware](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malware)
 
-__Add Custom Detection Rule__: Custom detection rules created via API should be created only after adequate research regarding precision and coverage has been completed. Creating a custom detection rule that is not specific enough can have detrimental impact on retention and overall performance of the environment.
+### Add Custom Detection Rule
+Custom detection rules created via API should be created only after adequate research regarding precision and coverage has been completed. Creating a custom detection rule that is not specific enough can have detrimental impact on retention and overall performance of the environment.
 - Retrieve a list of all active custom detection rules
 - Retrieve a list of all disabled custom detection rules
 - Retrieve a list of all available root causes
@@ -165,7 +168,8 @@ __Add Custom Detection Rule__: Custom detection rules created via API should be 
 - Get the modification history <br>
 [Documentation for Add Custom Detection Rules](https://nest.cybereason.com/documentation/api-documentation/all-versions/add-custom-detection-rules)
 
-__Manage Sensors (Multiple Cmdlets)__: Cybereason enables you to manage your Sensors from the API, including configuring NGAV settings for the sensors, starting and stopping collection on the Sensors, restarting Sensors, deleting or removing Sensors, archiving Sensors, and upgrading Sensors. _(Get-Sensor, Set-Sensor, Remove-Sensor, Restart-Sensor, Create-Sensor, Add-Sensor, Update-Sensor, Save-Sensor)_
+### Manage Sensors (Multiple Cmdlets)
+Cybereason enables you to manage your Sensors from the API, including configuring NGAV settings for the sensors, starting and stopping collection on the Sensors, restarting Sensors, deleting or removing Sensors, archiving Sensors, and upgrading Sensors. _(Get-Sensor, Set-Sensor, Remove-Sensor, Restart-Sensor, Create-Sensor, Add-Sensor, Update-Sensor, Save-Sensor)_
 - Get a list of all Sensors
 - Retrieve a list of all actions on Sensors
 - Set the Anti-Ransomware mode for a Sensor

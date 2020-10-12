@@ -5,13 +5,13 @@
  __RESOURCE:__ [Cybereason API Documentation](https://nest.cybereason.com/documentation/api-documentation)
 
 ## Current Cmdlets
-__Connect-CybereasonAPI__: This cmdlet is used to authenticate to the Cybereason API. This will create a global variable called $Session that will get used with the rest of the cmdletts in this module that need it.
+__Connect-CybereasonAPI__: This cmdlet is used to authenticate to the Cybereason API. This will create a global variable called $Session that will get used with the rest of the cmdlets in this module that need it.
 ```powershell
 Connect-CybereasonAPI -Username 'admin@cybereason.com' -Passwd 'Password123!' -Server 'aaaaaaaa.cybereason.net' -Port '8443' -ClearHistory -Verbose
 # This authenticates to the Cybereason API creating a session that gets used with all cmdlets in this module
 ```
 
-__Get-CybereasonReputations__: This cmdlet is used to view or download a CSV list of reputation informatino that have been manually configured on your environments Cybereason server.
+__Get-CybereasonReputations__: This cmdlet is used to view or download a CSV list of reputation information that have been manually configured on your environments Cybereason server.
 [Documentation for Manage Reputations](https://nest.cybereason.com/documentation/api-documentation/all-versions/manage-reputations)
 - Return a list of reputations that have been configured on Cybereason for your environment and view it in CSV format in your terminal window
 - Return a list of reputations that have been configured on Cybereason for your environment and view it in CSV format and save it to a file

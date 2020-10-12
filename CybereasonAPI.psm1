@@ -52,13 +52,7 @@ Function Connect-CybereasonAPI {
     [CmdletBinding()]
         param(
             [Parameter(
-                Mandatory=$True,
-                ValueFromPipeline=$False,
-                HelpMessage="`n[H] Enter the IP address or hostname of your Cybereason server as well as the port. Spearate values with a : `n[E] EXAMPLE: 10.0.0.1:443 `n[E] EXAMPLE: asdf.cybereason.com:8443")]
-            [ValidateNotNullOrEmpty()]
-            [String]$Server,
-
-            [Parameter(
+                Position=0,
                 Mandatory=$True,
                 ValueFromPipeline=$False,
                 HelpMessage="`n[H] Enter the email you wish to sign in with `n[E] EXAMPLE: admin.user@domain.com")]  # End Parameter
@@ -66,14 +60,48 @@ Function Connect-CybereasonAPI {
             [String]$Username,
 
             [Parameter(
+                Position=1,
                 Mandatory=$True,
                 ValueFromPipeline=$False)]  # End Parameter
             [ValidateNotNullOrEmpty()]
-            [String]$Passwd
+            [String]$Passwd,
+
+            [Parameter(
+                Position=2,
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the IP address or hostname of your Cybereason server as well as the port. Spearate values with a : `n[E] EXAMPLE: 10.0.0.1:443 `n[E] EXAMPLE: asdf.cybereason.com:8443")]
+            [ValidateNotNullOrEmpty()]
+            [String]$Server,
+
+            [Parameter(
+                Position=3,
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [ValidateRange(1,65535)]
+            [String]$Port = "443",
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch][Bool]$ClearHistory
         )  # End param
 
+    Write-Verbose "Validating username parameter is in email address format"
+    Try 
+    {
+    
+        $Null = [MailAddress]$Username
+    
+    }  # End Try
+    Catch 
+    {
 
-    $Uri = "https://$Server/login.html"
+        Throw "[x] The username you defined is not a valid email address."
+        
+    }  # End Catch
+
+
+    $Uri = "https://" + $Server + ":" + $Port + "/login.html"
 
     Write-Verbose "Ensuring TLS 1.2 is being used"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -81,8 +109,9 @@ Function Connect-CybereasonAPI {
     $Body = @{
         username="$Username"
         password="$Passwd"
-    }
+    }  # End Body
 
+    Write-Verbose "Sending request to $Uri"
     $Results = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $Body -SessionVariable 'Session'
     
     If ($Results.StatusCode -eq '200')
@@ -94,8 +123,19 @@ Function Connect-CybereasonAPI {
 
     $Global:Session = $Session
 
-    Clear-History -Force -Verbose
-    Write-Warning "This PowerShells session history has just been cleared to prevent the clear text password from appearing in log files. This does not clear the PowerShell Event log. Only allow administrators to view that log."
+    If ($ClearHistory.IsPresent)
+    {
+
+        Clear-History -Verbose
+        Write-Warning "This PowerShells session history has just been cleared to prevent the clear text password from appearing in log files. This does not clear the PowerShell Event log. Only allow administrators to view that log."
+    
+    }  # End If
+    Else 
+    {
+
+        Write-Warning "The -ClearHistory parameter was not specified. If you wish to remove the clear text password from this session command history you will need to manually issue the command Clear-History"
+
+    }  # End Else
 
 }  # End Function Connect-CybereasonAPI
 
@@ -154,6 +194,10 @@ Get-CybereasonThreatIntel -Md5Hash 'D7AB69FAD18D4A643D84A271DFC0DBDF'
 # This example returns details on a file’s reputation based on the Cybereason threat intelligence service using the MD5 hash. If you do not already have the hash, use the -FileToHash parameter to have it obtained automtacilly for you.
 
 .EXAMPLE
+Get-CybereasonThreatIntel -Md5Hash 'D7AB69FAD18D4A643D84A271DFC0DBDF','5D997A651DA137B68B15EAC157A4FC42'
+# This example returns details on two file reputations based on the Cybereason threat intelligence service using the MD5 hash. If you do not already have the hash, use the -FileToHash parameter to have it obtained automtacilly for you.
+
+.EXAMPLE
 Get-CybereasonThreatIntel -Md5Hash (Get-FileHash -Algorithm MD5 -Path C:\Users\Public\Desktop\AlwaysInstallElevatedCheck.htm).Hash
 # This example gets the file hash of a file on the OS and determines if it is malicious or not
 
@@ -162,12 +206,24 @@ Get-CybereasonThreatIntel -FileToHash C:\Windows\System32\cmd.exe
 # This example returns details on the file C:\Windows\System32\cmd.exe's reputation based on the Cybereason threat intelligence service. This determines the MD5 hash automatically of the file you define. If you already have the hash enter it using the -Md5Hash parameter instead of this one.
 
 .EXAMPLE
+Get-CybereasonThreatIntel -FileToHash 'C:\Windows\System32\cmd.exe','C:\Windows\Sysmon.exe'
+# This example returns details on the file C:\Windows\System32\cmd.exe and C:\WIndows\Sysmon.exe's reputation based on the Cybereason threat intelligence service. This determines the MD5 hash automatically of the file you define. If you already have the hash enter it using the -Md5Hash parameter instead of this one.
+
+.EXAMPLE
 Get-CybereasonThreatIntel -Domain www.cybereason.com
 # This example returns details on domain reputations for www.cybereason.com based on the Cybereason threat intelligence service.
 
 .EXAMPLE
+Get-CybereasonThreatIntel -Domain 'www.cybereason.com',cybereason.net'
+# This example returns details on domain reputations for www.cybereason.com and cybereason.net based on the Cybereason threat intelligence service.
+
+.EXAMPLE
 Get-CybereasonThreatIntel -IPAddress 1.1.1.1
 # This example returns details on IP address reputations for 1.1.1.1 based on the Cybereason threat intelligence service. 
+
+.EXAMPLE
+Get-CybereasonThreatIntel -IPAddress '1.1.1.1','208.67.222.222'
+# This example returns details on IP address reputations for 1.1.1.1 and 208.67.222.222 based on the Cybereason threat intelligence service. 
 
 .EXAMPLE
 Get-CybereasonThreatIntel -ProductClassification
@@ -263,27 +319,34 @@ Function Get-CybereasonThreatIntel {
                 ParameterSetName='Md5Hash',
                 Mandatory=$True,
                 ValueFromPipeline=$False)]  # End Parameter
-            [String]$Md5Hash,
+            [Alias('Hash','MD5')]
+            [ValidateScript({$_.Length -eq 32})]
+            [String[]]$Md5Hash,
 
             [Parameter(
                 ParameterSetName='FileToHash',
                 Mandatory=$True,
                 ValueFromPipeline=$False)]  # End Parameter
-            [String]$FileToHash,
+            [Alias('Path','FilePath','f')]
+            [ValidateScript({Test-Path -Path $_})]
+            [String[]]$FileToHash,
 
             [Parameter(
                 ParameterSetName='Domain',
                 Mandatory=$True,
                 ValueFromPipeline=$False,
                 HelpMessage="`n[H] Define a domain to look up threat information on`n[E] EXAMPLE: www.cybereason.com")]  # End Parameter
-            [String]$Domain,
+            [Alias('d')]
+            [ValidateScript({$_ -Like "*.*"})]
+            [String[]]$Domain,
 
             [Parameter(
                 ParameterSetName='IPAddress',
                 Mandatory=$True,
                 ValueFromPipeline=$False,
                 HelpMessage="`n[H] Define an IP Address to look up threat information on`n[E] EXAMPLE: 1.1.1.1")]  # End Parameter
-            [String]$IPAddress,
+            [Alias('ip')]
+            [String[]]$IPAddress,
 
             [Parameter(
                 ParameterSetName='ProductClassification')]  # End Parameter
@@ -340,19 +403,26 @@ Function Get-CybereasonThreatIntel {
         'Md5Hash' {
 
             $Uri = $Site + 'classification_v1/file_batch'
-            $JsonData = '{"requestData": [{"requestKey": {"md5": "' + $Md5Hash + '"} }] }'
 
-            Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+            ForEach ($MD in $Md5Hash)
+            {
 
-            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
-            $MD5 = ($Results.requestKey.md5 | Out-String).Trim()
-            $SHA1 = ($Results.requestKey.sha1 | Out-String).Trim()
-            $MaliciousScore = $Results.aggregatedResult.maliciousClassification
-            $ProductType = ($Results.aggregatedResult.productClassification.productType | Out-String).Trim()
-            $Type = ($Results.aggregatedResult.productClassification.Type | Out-String).Trim()
-            $Obj += New-Object -TypeName PSObject -Property @{md5="$MD5"; sha1="$SHA1"; MaliciousScore="$MaliciousScore"; ProductType="$ProductType"; Type="$Type"}
+                $JsonData = '{"requestData": [{"requestKey": {"md5": "' + $MD + '"} }] }'
 
+                Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
+                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+
+                $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
+                $MD5 = ($Results.requestKey.md5 | Out-String).Trim()
+                $SHA1 = ($Results.requestKey.sha1 | Out-String).Trim()
+                $MaliciousScore = $Results.aggregatedResult.maliciousClassification
+                $ProductType = ($Results.aggregatedResult.productClassification.productType | Out-String).Trim()
+                $Type = ($Results.aggregatedResult.productClassification.Type | Out-String).Trim()
+                
+                $Obj += New-Object -TypeName PSObject -Property @{md5="$MD5"; sha1="$SHA1"; MaliciousScore="$MaliciousScore"; ProductType="$ProductType"; Type="$Type"}
+
+            }  # End ForEach
+                
             $Obj
 
         }  # End Switch FileRep
@@ -360,28 +430,29 @@ Function Get-CybereasonThreatIntel {
         'FileToHash' {
 
             $Uri = $Site + 'classification_v1/file_batch'
-            If (!(Test-Path -Path $FileToHash))
+
+            ForEach ($FilesMD5 in $FileToHash)
             {
+                
+                $FileHash = (Get-FileHash -Algorithm MD5 -Path $FilesMD5).Hash
+                $JsonData = '{"requestData": [{"requestKey": {"md5": "' + $FileHash + '"} }] }'
 
-                Throw "[!] The file path you defined could not be found"
+                Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
+                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
-            }  # End If
+                $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
+                $MD5 = ($Results.requestKey.md5 | Out-String).Trim()
+                $SHA1 = ($Results.requestKey.sha1 | Out-String).Trim()
+                If ($SHA1.Length -ne 40) { $SHA1 = (Get-FileHash -Algorithm SHA1 -Path $FilesMD5).Hash}
+                $MaliciousScore = $Results.aggregatedResult.maliciousClassification
+                $ProductType = ($Results.aggregatedResult.productClassification.productType | Out-String).Trim()
+                $Type = ($Results.aggregatedResult.productClassification.Type | Out-String).Trim()
 
-            $FileHash = (Get-FileHash -Algorithm MD5 -Path $FileToHash).Hash
-            $JsonData = '{"requestData": [{"requestKey": {"md5": "' + $FileHash + '"} }] }'
+                $Obj += New-Object -TypeName PSObject -Property @{md5="$MD5"; sha1="$SHA1"; MaliciousScore="$MaliciousScore"; ProductType="$ProductType"; Type="$Type"}
 
-            Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+                Clear-Variable -Name FileHash,JsonData,Results,MD5,SHA1,MaliciousScore,ProductType,Type
 
-            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
-            $MD5 = ($Results.requestKey.md5 | Out-String).Trim()
-            $SHA1 = ($Results.requestKey.sha1 | Out-String).Trim()
-            $MaliciousScore = $Results.aggregatedResult.maliciousClassification
-            $ProductType = ($Results.aggregatedResult.productClassification.productType | Out-String).Trim()
-            If ($SHA1.Length -ne 40) { $SHA1 = ((Get-FileHash -Algorithm SHA1 -Path $FileToHash).Hash).Trim() }
-            $Type = ($Results.aggregatedResult.productClassification.Type | Out-String).Trim()
-
-            $Obj += New-Object -TypeName PSObject -Property @{md5="$MD5"; sha1="$SHA1"; MaliciousScore="$MaliciousScore"; ProductType="$ProductType"; Type="$Type"}
+            }  # End ForEach
 
             $Obj
 
@@ -392,37 +463,41 @@ Function Get-CybereasonThreatIntel {
             $Uri = $Site + 'classification_v1/ip_batch'
             $IPv4Regex = '(((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))'
 
-            Write-Verbose "Testing $IPAddress"
-
-            $Obj = @()
-            If ($IPAddress -Match $IPv4Regex)
+            ForEach ($IPAddr in $IPAddress)
             {
 
-                $IPType = 'Ipv4'
+                Write-Verbose "Chekcing $IPAddr"
+                If ($IPAddr -Match $IPv4Regex)
+                {
 
-            }  # End If
-            Else 
-            {
+                    $IPType = 'Ipv4'
 
-                $IPType = 'Ipv6'
+                }  # End If
+                Else 
+                {
 
-            }  # End Else
-            $JsonData = '{"requestData": [{"requestKey": {"ipAddress": "' + $IPAddress + '","addressType": "' + $IPType + '"} }] }' 
+                    $IPType = 'Ipv6'
 
-            Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+                }  # End Else
 
-            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
-            $IPAddres = ($Results.requestKey.ipAddress | Out-String).Trim()
-            $AddressType = ($Results.requestKey.addressType | Out-String).Trim()
-            $MaliciousScore = $Results.aggregatedResult.maliciousClassification
-            $FirstSeen = Get-Date ($Results.aggregatedResult.firstSeen)
-            $AllowFurther = ($Results.allowFurtherClassification | Out-String).Trim()
-            $CPID = ($Results.cpId | Out-String).Trim()
+                $JsonData = '{"requestData": [{"requestKey": {"ipAddress": "' + $IPAddr + '","addressType": "' + $IPType + '"} }] }' 
 
-            $Obj += New-Object -TypeName PSObject -Property @{IP=$IPAddres; Type=$AddressType; MaliciousScore=$MaliciousScore; FirstSeen=$FirstSeen; AllowFurtherClassification=$AllowFurther; CPID=$CPID}
+                Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
+                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
-            $Obj   
+                $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
+                $IPA = ($Results.requestKey.ipAddress | Out-String).Trim()
+                $AddressType = ($Results.requestKey.addressType | Out-String).Trim()
+                $MaliciousScore = $Results.aggregatedResult.maliciousClassification
+                $FirstSeen = Get-Date ($Results.aggregatedResult.firstSeen)
+                $AllowFurther = ($Results.allowFurtherClassification | Out-String).Trim()
+                $CPID = ($Results.cpId | Out-String).Trim()
+
+                $Obj += New-Object -TypeName PSObject -Property @{IP=$IPA; Type=$AddressType; MaliciousScore=$MaliciousScore; FirstSeen=$FirstSeen; AllowFurtherClassification=$AllowFurther; CPID=$CPID} 
+
+            }  # End ForEach
+
+            $Obj
 
         }  # End Switch IPBat
 
@@ -430,27 +505,32 @@ Function Get-CybereasonThreatIntel {
 
             $Uri = $Site + 'classification_v1/domain_batch'
 
-            Write-Verbose "Testing $Domain"
+            ForEach ($Dom in $Domain)
+            {
+                
+                Write-Verbose "Testing $Dom"
 
-            $JsonData = '{"requestData": [{"requestKey": {"domain": "' + $Domain + '"} }] }'
+                $JsonData = '{"requestData": [{"requestKey": {"domain": "' + $Dom + '"} }] }'
 
-            Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+                Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
+                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
 
-            $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
+                $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
 
-            $Dom = ($Results.requestKey.domain | Out-String).Trim()
-            $Source = ($Results.aggregatedResult.maliciousClassification.source | Out-String).Trim()
-            $MaliciousScore = $Results.aggregatedResult.maliciousClassification
-            $FirstSeen = Get-Date -Date ($Results.aggregatedResult.firstSeen)
-            $AllowFurther = ($Results.allowFurtherClassification | Out-String).Trim()
-            $CPID = ($Results.cpId | Out-String).Trim()
-            $CPType = ($Results.cpType | Out-String).Trim()
+                $Doma = ($Results.requestKey.domain | Out-String).Trim()
+                $Source = ($Results.aggregatedResult.maliciousClassification.source | Out-String).Trim()
+                $MaliciousScore = $Results.aggregatedResult.maliciousClassification
+                $FirstSeen = Get-Date -Date ($Results.aggregatedResult.firstSeen)
+                $AllowFurther = ($Results.allowFurtherClassification | Out-String).Trim()
+                $CPID = ($Results.cpId | Out-String).Trim()
+                $CPType = ($Results.cpType | Out-String).Trim()
 
-            $Obj += New-Object -TypeName PSObject -Property @{Domain=$Dom; Source=$Source; MaliciousScore=$MaliciousScore; FirstSeen=$FirstSeen; AllowFurtherClassification=$AllowFurther; CPID=$CPID; CPType=$CPType}
+                $Obj += New-Object -TypeName PSObject -Property @{Domain=$Doma; Source=$Source; MaliciousScore=$MaliciousScore; FirstSeen=$FirstSeen; AllowFurtherClassification=$AllowFurther; CPID=$CPID; CPType=$CPType}
+ 
+            }  # End ForEach
 
             $Obj
- 
+
         }  # End Switch DomainBatch
         
         'ProductClassification' {
@@ -699,30 +779,40 @@ Function Get-CybereasonReputations {
     [CmdletBinding()]
         param(
             [Parameter(
+                Position=0,
                 Mandatory=$True,
+                ValueFromPipeline=$False,
                 HelpMessage="`n[H] Enterh the root URL of your Cybereason server `n[E] EXAMPLE: https://12.34.56.78:443")]  # End Parameter
+            [ValidateNotNullOrEmpty()]
             [String]$Server,
 
             [Parameter(
+                Position=1,
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [ValidateRange(1,65535)]
+            [String]$Port = 443,
+
+            [Parameter(
+                Position=1,
                 Mandatory=$False)]  # End Parameter
             [String]$Path
         )  # End param
 
-    $Uri = 'https://' + $Server + '/rest/classification/download'
-    $JsonData = "{}"
+    $Uri = 'https://' + $Server + ":$Port" + '/rest/classification/download'
 
     Write-Verbose "Sending request to $Uri"
-    $Response = Invoke-WebRequest -Uri $Uri -Method GET -ContentType "application/json" -Body $JsonData -Headers (Get-Content $CookieFile | ConvertFrom-Json)
-
     If (($Path) -and ($Response.StatusCode -eq '200'))
     {
 
-        Invoke-RestMethod -URI $Uri -WebSession $Session -ContentType "application/json" -Method GET -OutFile $Path
+        Write-Verbose "Downloading file to $Path"
+        Invoke-RestMethod -URI $Uri -WebSession $Session -ContentType "application/json" -Method GET -OutFile "$Path"
 
     }  # End If
     Else
     {
         
+        Write-Verbose "Returning CSV formatted results to window"
         Invoke-RestMethod -URI $Uri -WebSession $Session -ContentType "application/json" -Method GET
 
     }  # End Else

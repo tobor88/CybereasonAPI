@@ -125,6 +125,7 @@ Function Connect-CybereasonAPI {
     }  # End If
 
     $Global:Session = $Session
+    $Global:JSession = $Session.Cookies.GetCookies($uri).Value
     $Global:Server = $Server
     $Global:Port = $Port
 
@@ -1449,6 +1450,7 @@ Function Get-CybereasonRemediationStatus {
 .SYNOPSIS
 This cmdlet retrieves a list of all rules for isolating specific machines.
 
+
 .DESCRIPTION
 Retrieves a list of all rules for isolating specific machines.
 
@@ -1611,39 +1613,48 @@ Function New-CybereasonIsolationRule {
         $Block = 'true'
 
     }  # End If
-    Else
+    Else 
     {
-        
+
         $Block = 'false'
 
-    }  # End Else
+    }  # End If
 
-    ForEach ($I in $IpAddressString)
+    If ($IpAddressString.Length -gt 0)
     {
 
-        $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
+        $StringOne = '"ipAddressString":' + $IpAddressString
 
-        $JsonData = '{"ipAddressString":' + $I + ',"port":' + $PortNumber + ',"blocking":"' + $Block + '","direction":' + $Direction + '}'
+    }  # End If
 
-        $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+    If ($PortNumber.Length -gt 0)
+    {
 
-            $Response.Content | ConvertFrom-Json | `
-            ForEach-Object {
-                $RuleId = ($_.ruleId | Out-String).Trim()
-                $IpAddress = ($_.ipAddress | Out-String).Trim()
-                $IpAddressString = ($_.ipAddressString | Out-String).Trim()
-                $Domain = ($_.domain | Out-String).Trim()
-                $PortNumber = ($_.port | Out-String).Trim()
-                $Direction = ($_.direction | Out-String).Trim()
-                $LastUpdated = Get-Date -Date ($_.lastUpdated)
-                $Blocking = ($_.blocking | Out-String).Trim()
+        $StringTwo = ',"port":' + $PortNumber
+
+    }  # End If
+
+    $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
+
+    $JsonData = '{' + $StringOne + $StringTwo + ',"blocking":"' + $Block + '","direction":' + $Direction + '}'
+
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Headers @{Cookie="JSESSIONID=$JSESSIONID"} -Body $JsonData
+
+        $Response.Content | ConvertFrom-Json | `
+        ForEach-Object {
+            $RuleId = ($_.ruleId | Out-String).Trim()
+            $IpAddress = ($_.ipAddress | Out-String).Trim()
+            $IpAddressString = ($_.ipAddressString | Out-String).Trim()
+            $Domain = ($_.domain | Out-String).Trim()
+            $PortNumber = ($_.port | Out-String).Trim()
+            $Direction = ($_.direction | Out-String).Trim()
+            $LastUpdated = Get-Date -Date ($_.lastUpdated)
+            $Blocking = ($_.blocking | Out-String).Trim()
                     
-                $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking} 
+            $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking} 
                 
-            }  # End ForEach-Object
-
-    }  # End ForEach
-                
+        }  # End ForEach-Object
+         
     $Obj
 
 }  # End Function New-CybereasonIsolationRule

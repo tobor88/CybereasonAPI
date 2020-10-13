@@ -795,7 +795,7 @@ Function Get-CybereasonReputations {
     $Uri = 'https://' + $Server + ":$Port" + '/rest/classification/download'
 
     Write-Verbose "Sending request to $Uri"
-    If (($Path) -and ($Response.StatusCode -eq '200'))
+    If ($Path.Length -gt 0)
     {
 
         Write-Verbose "Downloading file to $Path"

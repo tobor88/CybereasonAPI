@@ -5,13 +5,15 @@
  __RESOURCE:__ [Cybereason API Documentation](https://nest.cybereason.com/documentation/api-documentation)
 
 ## Current Cmdlets
-__Connect-CybereasonAPI__: This cmdlet is used to authenticate to the Cybereason API. This will create a global variable called $Session that will get used with the rest of the cmdlets in this module that need it.
+__Connect-CybereasonAPI__: <br>
+This cmdlet is used to authenticate to the Cybereason API. This will create a global variable called $Session that will get used with the rest of the cmdlets in this module that need it.
 ```powershell
 Connect-CybereasonAPI -Username 'admin@cybereason.com' -Passwd 'Password123!' -Server 'aaaaaaaa.cybereason.net' -Port '8443' -ClearHistory -Verbose
 # This authenticates to the Cybereason API creating a session that gets used with all cmdlets in this module
 ```
 
-__Get-CybereasonReputations__: This cmdlet is used to view or download a CSV list of reputation information that have been manually configured on your environments Cybereason server.
+__Get-CybereasonReputations__: <br>
+This cmdlet is used to view or download a CSV list of reputation information that have been manually configured on your environments Cybereason server.
 [Documentation for Manage Reputations](https://nest.cybereason.com/documentation/api-documentation/all-versions/manage-reputations)
 - Return a list of reputations that have been configured on Cybereason for your environment and view it in CSV format in your terminal window
 - Return a list of reputations that have been configured on Cybereason for your environment and view it in CSV format and save it to a file
@@ -21,7 +23,8 @@ Get-CybereasonReputations -Verbose
 Get-CybereasonReputations -Path C:\Windows\Temp\CybereasonReputations.csv
 ```
 
-__Set-CybereasonReputations__: This cmdlet is used to add or update a custom reputation on the Cybereason server instance. Using the Cybereason Reputation Management API, you can integrate and update threat intelligence from various sources to improve detections, view and update file reputations, and add items to the whitelist based on behavioral characteristics.
+__Set-CybereasonReputations__: <br>
+This cmdlet is used to add or update a custom reputation on the Cybereason server instance. Using the Cybereason Reputation Management API, you can integrate and update threat intelligence from various sources to improve detections, view and update file reputations, and add items to the whitelist based on behavioral characteristics.
 - Add or remove reputations for a file using its hash or filename by adding it to a whitelist or blacklist. You can also prevent execution of the file throughout your environment
 - Add or remove reputations for an IP address by adding it to a whitelist or blacklist
 - Add or remove reputations for a domain by adding it to a whitelist or blacklist
@@ -33,7 +36,8 @@ Set-CybereasonReputations -File 'C:\Users\Enemy\badFile.exe','C:\Users\Enemy\per
 
 ### Get Threat Intel
 This cmdlet is used to communicate with every link under the "Get Threat Intel" section of the API documentation. 
-__Get-CybereasonThreatIntel__ can perform the following actions.
+__Get-CybereasonThreatIntel__: <br>
+can perform the following actions.
  - Get a file reputation	
  - Get reputation for a domain	
  - Get reputation for an IP address	
@@ -59,12 +63,14 @@ By using the API you can retrieve details on malware. This enables you to addres
 - Get a count of all Malware per type
 - Query a specific type of Malware <br>
 [Documentation for Respond to Malware](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malware) <br>
-__Get-CybereasonMalwareCount__: This cmdlet is used to return all of the Malware counts on Cybereason
+__Get-CybereasonMalwareCount__: <br>
+This cmdlet is used to return all of the Malware counts on Cybereason
 ```powershell
 # This example returns the count for all Malware types in Cybereason
 Get-CybereasonMalwareCount
 ```
-__Get-CybereasonMalwareTypes__: This cmdlet is used to query Malware from a start date, all malware, all malware that needs attention, or all malware with a status of done.
+__Get-CybereasonMalwareTypes__: <br>
+This cmdlet is used to query Malware from a start date, all malware, all malware that needs attention, or all malware with a status of done.
 ```powershell
 Get-CybereasonMalwareTypes -MalwareType KnownMalware -NeedsAttention -Limit 1 -Sort ASC
 # This example returns 1 result on all malware that needs attention in ascending order of their occurences
@@ -90,7 +96,8 @@ Get-CybereasonMalwareTypes -MalwareType KnownMalware -Status Done -Limit 25 -Sor
 - Get remediation statuses for a particular Malop <br>
 [Documentation for Remediate Items](https://nest.cybereason.com/documentation/api-documentation/all-versions/remediate-items-0)
 
-__Invoke-CybereasonRemediateItem__: This uses the Cybereason API to perform a remediation action on a specific file, process, or registry key.
+__Invoke-CybereasonRemediateItem__: <br>
+This uses the Cybereason API to perform a remediation action on a specific file, process, or registry key.
 ```powershell
 Invoke-CybereasonRemediateItem -MalopID "11.2718161727221199870" -InitiatorUserName "admin@yourserver.com" -MachineID "-1632138521.1198775089551518743" -ActionType KILL_PROCESS
 # This example remediates a process by killing it after it was discovered by a Malop
@@ -99,19 +106,22 @@ Invoke-CybereasonRemediateItem -InitiatorUserName "admin@yourserver.com" -Machin
 # This example remediates a process that was not involved in a Malop
 ```
 
-__Get-CybereasonRemediationProgress__: This cmdlet is used too return details on the progress of a specific remediation operation.
+__Get-CybereasonRemediationProgress__: <br>
+This cmdlet is used too return details on the progress of a specific remediation operation.
 ```powershell
 Get-CybereasonRemediationProgress -Username 'admin@cyberason.com' -MalopID '11.2718161727221199870' -RemediationID '86f3faa1-bac0-4a17-9192-9d106b734664'
 # This example gets the current status on a Malop that was remediated by the user admin@cyberason.com
 ```
 
-__Stop-CybereasonMalopRemediation__: This cmdlet aborts a remediation operation on a specific Malop.
+__Stop-CybereasonMalopRemediation__: <br>
+This cmdlet aborts a remediation operation on a specific Malop.
 ```powershell
 Stop-CybereasonMalopRemediation -MalopID '11.2718161727221199870' -RemediationID '86f3faa1-bac0-4a17-9192-9d106b734664'
 # This example aborts the remediation action take on the defined Malop
 ```
 
-__Get-CybereasonRemediationStatus__: This cmdlet retrieves details about remediation actions performed on a particular Malop.
+__Get-CybereasonRemediationStatus__: <br>
+This cmdlet retrieves details about remediation actions performed on a particular Malop.
 ```powershell
 Get-CybereasonRemediationStatus -MalopID '11.2718161727221199870'
 # This example gets the current status for the defined Malop
@@ -120,25 +130,29 @@ Get-CybereasonRemediationStatus -MalopID '11.2718161727221199870'
 ### Isolation Rules
 Normally, when a machine is isolated, there is absolutely no communication allowed with the machine. This can sometimes limit the ability of an analyst or administrator to perform investigation or triage on that machine. However, you can add isolation exception rules to help you allow limited communication to an isolated machine
 
-- __Get-CybereasonIsolationRules__ Retrieve a list of isolation rules 
+- __Get-CybereasonIsolationRules__: <br>
+Retrieve a list of isolation rules 
 ```powershell
 Get-CybereasonIsolationRules
 # This example retrieves a list of all rules for isolating specific machines
 ```
 
-- __New-CybereasonIsolationRule__ Create an isolation rule
+- __New-CybereasonIsolationRule__: <br>
+Create an isolation rule
 ```powershell
 New-CybereasonIsolationRule -IPAddressString '123.45.67.89' -PortNumber 8443 -Blocking -Direction ALL
 # This example creates a new isolation rule that blocks All communication to 123.45.67.89
 ```
 
-- __Set-CybereasonIsolationRule__ Update an isolation rule
+- __Set-CybereasonIsolationRule__: <br>
+Update an isolation rule
 ```powershell
 Set-CybereasonIsolationRule -RuleID "5a7b2e95e4b082f2e909a4f3" -IPAddressString '123.45.67.89' -PortNumber 8443 -Blocking -Direction ALL
 # This example creates a new isolation rule that blocks All communication to 123.45.67.89
 ```
 
-- __Remove-CybereasonIsolationRule__ Delete an isolation rule
+- __Remove-CybereasonIsolationRule__: <br>
+Delete an isolation rule
 ```powershell
 Remove-CybereasonIsolationRule -RuleID '5859b3d0ae8eeb920e9d2f4e' -IPAddressString '1.1.1.1' -PortNumber 8443 -Direction ALL -LastUpdated 1525594605852
 # This example deletes the isolation rule that is blocking all traffic to 1.1.1.1
@@ -179,15 +193,14 @@ Get-CybereasonCustomDetectionRule -RuleID 1582038865368 -ModificationHistory
 # This eample returns details on modifications made to a custom rule.
 
 New-CybereasonCustomDetectionRule
-
+# Still finishing help and testing to make sure it works as expected
 
 Set-CybereasonCustomDetectionRule
-
-
+# Still finishing help and testing to make sure it works as expected
 ```
 
 ## Still To Come Cmdlets
-### Hunt And Investigate 
+### Hunt And Investigate
 Using hunting queries and file search capabilities in the API, further your investigation of malicious behavior in your organization, including:
 - Run investigative queries
 - Search for files

@@ -54,6 +54,28 @@ Get-CybereasonThreatIntel -MD5Hash FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI product_classification
 ```
 
+### Respond To Malware
+By using the API you can retrieve details on malware. This enables you to address and investigate malware to prevent additional damage.
+- Get a count of all Malware per type
+- Query a specific type of Malware <br>
+[Documentation for Respond to Malware](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malware)
+__Get-CybereasonMalwareCount__: This cmdlet is used to return all of the Malware counts on Cybereason
+```powershell
+# This example returns the count for all Malware types in Cybereason
+Get-CybereasonMalwareCount
+```
+__Get-CybereasonMalwareTypes__: This cmdlet is used to query Malware from a start date, all malware, all malware that needs attention, or all malware with a status of done.
+```powershell
+Get-CybereasonMalwareTypes -NeedsAttention -Sort DESC -Limit 100
+Get-CybereasonMalwareTypes -AllKnownMalware -Sort ASC -Limit 25
+Get-CybereasonMalwareTypes -UnknownMalware -Limit 40
+Get-CybereasonMalwareTypes -FilelessMalware -Sort ASC
+Get-CybereasonMalwareTypes -ApplicationControlMalware
+Get-CybereasonMalwareTypes -RansomwareMalware -Limit 10
+Get-CybereasonMalwareTypes -MalwareAfter (Get-Date).AddDays(-2).Ticks
+Get-CybereasonMalwareTypes -CompletedKnownMalware
+```
+
 ### Remediate Items
  By using the API you can take remediation actions on Malops to limit or prevent additional damage.
 - Remediate an item
@@ -149,12 +171,6 @@ By using the API you can retrieve Malops or isolate machines involved in a speci
 - Delete a Malop label
 - Update Malop labels <br>
 [Documentation for Respond to Malops](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malops)
-
-### Respond To Malware
-By using the API you can retrieve details on malware. This enables you to address and investigate malware to prevent additional damage.
-- Get a count of all Malware per type
-- Query a specific type of Malware <br>
-[Documentation for Respond to Malware](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malware)
 
 ### Add Custom Detection Rule
 Custom detection rules created via API should be created only after adequate research regarding precision and coverage has been completed. Creating a custom detection rule that is not specific enough can have detrimental impact on retention and overall performance of the environment.

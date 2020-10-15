@@ -1494,7 +1494,7 @@ Function Get-CybereasonIsolationRules {
     $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
     $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
     
-    Try 
+    If ($Response.StatusCode -eq 200) 
     {
 
         $Response.Content | ConvertFrom-Json | `
@@ -1514,11 +1514,12 @@ Function Get-CybereasonIsolationRules {
         
         $Obj
 
-    }  # End Try
-    Catch 
+    }  
+    Else 
     {
         
-        Write-Output "No isolation rules were found"
+        Write-Output "[*] No isolation rules were found or access was denied. Try authenticating with a non-api user if you believe you should have this access."
+        $Response
 
     }  # End Catch
 
@@ -1623,7 +1624,7 @@ Function New-CybereasonIsolationRule {
     If ($IpAddressString.Length -gt 0)
     {
 
-        $StringOne = '"ipAddressString":' + $IpAddressString
+        $StringOne = '"ipAddressString":"' + $IpAddressString + '"'
 
     }  # End If
 
@@ -1636,9 +1637,9 @@ Function New-CybereasonIsolationRule {
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
 
-    $JsonData = '{' + $StringOne + $StringTwo + ',"blocking":"' + $Block + '","direction":' + $Direction + '}'
+    $JsonData = '{' + $StringOne + $StringTwo + ',"blocking":"' + $Block + '","direction":"' + $Direction + '"}'
 
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Headers @{Cookie="JSESSIONID=$JSESSIONID"} -Body $JsonData
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
 
         $Response.Content | ConvertFrom-Json | `
         ForEach-Object {
@@ -1776,7 +1777,7 @@ Function Set-CybereasonIsolationRule {
     If ($IpAddressString.Length -gt 0)
     {
 
-        $StringOne = ',"ipAddressString":' + $IpAddressString
+        $StringOne = ',"ipAddressString":"' + $IpAddressString + '"'
 
     }  # End If
 
@@ -1790,7 +1791,7 @@ Function Set-CybereasonIsolationRule {
     If ($Direction.Length -gt 0)
     {
 
-        $StringFour = ',"direction":' + $Direction
+        $StringFour = ',"direction":"' + $Direction + '"'
 
     }  # End If
 
@@ -1801,7 +1802,7 @@ Function Set-CybereasonIsolationRule {
 
     }  # End If
     
-    $JsonData = '{"ruleId":' + $RuleID + $StringOne + $StringTwo + $StringThree + $StringFour + $StringFive + '}'
+    $JsonData = '{"ruleId":"' + $RuleID + '"' + $StringOne + $StringTwo + $StringThree + $StringFour + $StringFive + '}'
     
     $Response = Invoke-WebRequest -Method PUT -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
 
@@ -1947,7 +1948,7 @@ Function Remove-CybereasonIsolationRule {
     If ($IpAddressString.Length -gt 0)
     {
     
-        $StringOne = ',"ipAddressString":' + $IpAddressString
+        $StringOne = ',"ipAddressString":"' + $IpAddressString + '"'
     
     }  # End If
     
@@ -1961,7 +1962,7 @@ Function Remove-CybereasonIsolationRule {
     If ($Direction.Length -gt 0)
     {
     
-        $StringFour = ',"direction":' + $Direction
+        $StringFour = ',"direction":"' + $Direction + '"'
     
     }  # End If
     
@@ -1978,3 +1979,304 @@ Function Remove-CybereasonIsolationRule {
     $Response.Content | ConvertFrom-Json
 
 }  # End Function Remove-CybereasonIsolationRule
+
+
+<#
+.SYNOPSIS
+This cmdlet returns a count of each type of malware.
+
+
+.DESCRIPTION
+Returns a count of each type of malware. When sending this request, there may be a delay in returning a response, depending on how much data and activity is in your system. Ensure you do not send this request multiple times while waiting for response as this may cause unexpected results and performance issues in your environment. If you want to return fewer types of malware, you can remove the necessary filters object from the template above. In addition, if you are trying to retrieve types of malware other than the Needs Attention type, you must add multiple objects in the filters object as seen above.
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/get-malware-counts#getmalwarecounts
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Get-CybereasonMalwareCounts {
+    [CmdletBinding()]
+        param()  # End param
+
+
+    $Uri = 'https://' + $Server + ':' + $Port + '/rest/malware/counts'
+    $JsonData = '{"compoundQueryFilters":[{"filters":[{"fieldName":"needsAttention","operator":"Is","values":[true]}],"filterName":"needsAttention"},{"filters":[{"fieldName":"type","operator":"Equals","values":["KnownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":[false]}],"filterName":"KnownMalware"},{"filters":[{"fieldName":"type","operator":"Equals","values":["UnknownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":[false]}],"filterName":"UnknownMalware"},{"filters":[{"fieldName":"type","operator":"Equals","values":["FilelessMalware"]},{"fieldName":"needsAttention","operator":"Is","values":[false]}],"filterName":"FilelessMalware"},{"filters":[{"fieldName":"type","operator":"Equals","values":["ApplicationControlMalware"]}],"filterName":"ApplicationControlMalware"}]}'
+
+    Write-Verbose "Sending query to $Uri"
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+    $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data | Select-Object -ExpandProperty malwareCountFilters
+
+    $TotalCount = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data).TotalCount
+    $Results += New-Object -TypeName PSObject -Property @{Filter='Total'; Count=$TotalCount} 
+
+    $Results
+
+}  # End Function Get-CybereasonMalwareCounts
+
+
+<#
+.SYNOPSIS
+This cmdlet is supported from Cybereason version 17.5 and later. Returns details on malware currently in your environment.
+
+
+.DESCRIPTION
+Returns details on malware currently in your environment.
+
+
+.PARAMETER NeedsAttention
+This switch parameter indicates you wish to return results on all malware that needs attention
+
+.PARAMETER AllKnownMalware
+This switch parameter indicates you wish to return information on all known malware
+
+.PARAMETER UnknownMalware
+This switch parameter returns the results for all unknown malware
+
+.PARAMETER FilelessMalware
+This switch parameter returns the results for all Fileless Malware
+
+.PARAMETER ApplicationControlMalware
+This switch parameter returns the results for all Application Control Malware
+
+.PARAMETER RansomwareMalware
+This switch parameter returns the results for all Ransomware Malware
+
+.PARAMETER MalwareBefore
+This indicates a timestamp in the form of ticks from which to start a search on malware. This will return info on any malware that occured after the date you define
+
+.PARAMETER Limit
+This parameter defines the amount of results to return. The default value is 25
+
+.PARAMETER Sort
+This parameter defines whether to sort the results in Ascending or Descending order. The default value is descending
+
+.PARAMETER CompletedKnownMalware
+This switch parameter returns all known malware with a status of done
+
+
+.EXAMPLE
+Get-CybereasonMalwareTypes -NeedsAttention
+# This example returns info on all malware that needs attention
+
+.EXAMPLE
+Get-CybereasonMalwareTypes -AllKnownMalware
+# This example returns info on all known malware
+
+.EXAMPLE 
+Get-CybereasonMalwareTypes -UnknownMalware
+# This example returns info on all discovered unknown malware
+
+.EXAMPLE 
+Get-CybereasonMalwareTypes -FilelessMalware
+# This example returns info on all discovered fileless malware
+
+.EXAMPLE
+Get-CybereasonMalwareTypes -ApplicationControlMalware
+# This example returns info on all discovered application control malware
+
+.EXAMPLE
+Get-CybereasonMalwareTypes -RansomwareMalware
+# This example returns info on all discovered application control malware
+
+.EXAMPLE
+Get-CybereasonMalwareTypes -MalwareAfter (Get-Date).AddDays(-2).Ticks
+# This example returns info on all known malware that occured after a defined date
+
+.EXAMPLE
+Get-CybereasonMalwareTypes -MalwareBefore (Get-Date).AddDays(-2).Ticks
+# This example returns info on all known malware that occured before a defined date
+
+.EXAMPLE
+Get-CybereasonMalwareTypes -ResolvedMalware
+# This example returns info on all malware with a status of done
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/query-malware-types
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Get-CybereasonMalwareTypes {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                ParameterSetName='NeedsAttention')]  # End Parameter
+            [Switch][Bool]$NeedsAttention,
+
+            [Parameter(
+                ParameterSetName='AllKnownMalware')]  # End Parameter
+            [Switch][Bool]$AllKnownMalware,
+
+            [Parameter(
+                ParameterSetName='UnknownMalware')]  # End Parameter
+            [Switch][Bool]$UnknownMalware,
+
+            [Parameter(
+                ParameterSetName='FilelessMalware')]  # End Parameter
+            [Switch][Bool]$FilelessMalware,
+
+            [Parameter(
+                ParameterSetName='ApplicationControlMalware')]  # End Parameter
+            [Switch][Bool]$ApplicationControlMalware,
+
+            [Parameter(
+                ParameterSetName='RansomwareMalware')]  # End Parameter
+            [Switch][Bool]$RansomwareMalware,
+
+            [Parameter(
+                ParameterSetName='MalwareAfter',
+                Position=0,
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Use a timestamp in the form of ticks to discover malware that occured after a certain date and time`n[E] EXAMPLE: 637381353373709085")]  # End Parameter
+            [Int64]$MalwareAfter,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [Int32]$Limit = 25,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [ValidateSet('ASC','DESC')]
+            [String]$Sort = 'DESC',
+
+            [Parameter(
+                ParameterSetName='ResolvedMalware')]  # End Parameter
+            [Switch][Bool]$ResolvedMalware
+
+        )  # End param
+
+
+    $Uri = 'https://' + $Server + ':' + $Port + '/rest/malware/query'
+
+    Switch ($PSBoundParameters.Keys)
+    {
+
+        'NeedsAttention' {
+
+            $JsonData = '{"filters": [{"fieldName":"type","operator":"Equals","values":["KnownMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+        
+        }  # End Switch Needs Attention
+
+        'AllKnownMalware' {
+
+            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["KnownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["KnownMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+        
+        }  # End Switch AllKnownMalware
+
+        'UnknownMalware' {
+
+            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["UnknownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["UnknownMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+        
+        }  # End Switch UnknownMalware
+
+        'FilelessMalware' {
+
+            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["FilelessMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["FilelessMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+        
+        }  # End Switch FilelessMalware
+
+        'ApplicationControlMalware' {
+
+            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["ApplicationControlMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["ApplicationControlMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+        
+        }  # End Switch ApplicationControlMalware
+
+        'RansomwareMalware' {
+
+            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["RansomwareMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["RansomwareMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+        
+        }  # End Switch RansomwareMalware
+
+        'MalwareAfter' {
+
+            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["KnownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"timestamp","operator":"GreaterThan","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+        
+        }  # End Switch KnownMalwareFromTime
+
+        'MalwareBefore' {
+
+            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["KnownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"timestamp","operator":"LessThan","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+        
+        }  # End Switch KnownMalwareFromTime
+
+        'ResolvedMalware' {
+
+            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["KnownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"status","operator":"GreaterThan","values":["Done"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+        
+        }  # End Switch CompletedKnownMalware
+
+    }  # End Switch
+    Write-Verbose "Sending query to $Uri"
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+
+    $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data 
+
+    If ($Results.totalResults -eq 0)
+    {
+
+        Write-Output "[*] There were not any results returned"
+        $Results
+
+    }  # End If
+    Else 
+    {
+
+        $Results.malwares
+
+    }  # End Else
+
+    If ($Results.hasMoreResults -like 'True')
+    {
+
+        Write-Output "[*] More results were found but not all were returned. Raise the -Limit parameters value if you wish to view more"
+
+    }  # End If
+
+
+}  # End Function Get-CybereasonMalwareTypes

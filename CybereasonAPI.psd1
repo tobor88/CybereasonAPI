@@ -69,10 +69,10 @@ ProcessorArchitecture = 'None'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = @('Connect-CybereasonAPI','Get-CybereasonThreatIntel','Get-CybereasonReputations','Set-CybereasonReputations','Invoke-CybereasonRemediateItem','Get-CybereasonRemediationProgress','Stop-CybereasonMalopRemediation','Get-CybereasonRemediationStatus','Get-CybereasonIsolationRules','New-CybereasonIsolationRule','Set-CybereasonIsolationRule','Remove-CybereasonIsolationRule')
+FunctionsToExport = @('Connect-CybereasonAPI','Get-CybereasonThreatIntel','Get-CybereasonReputations','Set-CybereasonReputations','Invoke-CybereasonRemediateItem','Get-CybereasonRemediationProgress','Stop-CybereasonMalopRemediation','Get-CybereasonRemediationStatus','Get-CybereasonIsolationRules','New-CybereasonIsolationRule','Set-CybereasonIsolationRule','Remove-CybereasonIsolationRule','Get-CybereasonMalwareCount','Get-CybereasonMalwareTypes')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = @('Connect-CybereasonAPI','Get-CybereasonThreatIntel','Get-CybereasonReputations','Set-CybereasonReputations','Invoke-CybereasonRemediateItem','Get-CybereasonRemediationProgress','Stop-CybereasonMalopRemediation','Get-CybereasonRemediationStatus','Get-CybereasonIsolationRules','New-CybereasonIsolationRule','Set-CybereasonIsolationRule','Remove-CybereasonIsolationRule')
+CmdletsToExport = @('Connect-CybereasonAPI','Get-CybereasonThreatIntel','Get-CybereasonReputations','Set-CybereasonReputations','Invoke-CybereasonRemediateItem','Get-CybereasonRemediationProgress','Stop-CybereasonMalopRemediation','Get-CybereasonRemediationStatus','Get-CybereasonIsolationRules','New-CybereasonIsolationRule','Set-CybereasonIsolationRule','Remove-CybereasonIsolationRule','Get-CybereasonMalwareCount','Get-CybereasonMalwareTypes')
 
 # Variables to export from this module
 VariablesToExport = '*'

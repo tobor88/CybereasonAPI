@@ -3,6 +3,9 @@
 # CybereasonAPI
  PowerShell module containing commands to easily interact with the Cybereason API. To use the API there are some cmdlets that require you to authenticate with an API user and others you are able to use a full privileged account. Once I get all the functions added I plan to add I will add this to PowerShell Gallery for easy installs.<br>
  __RESOURCE:__ [Cybereason API Documentation](https://nest.cybereason.com/documentation/api-documentation)
+ 
+## ISSUE REQUESTS: 
+If you find an issue with any of the cmdlets in this module I wont be offended if you let me know even though this is not completed yet. There are a few cmdlets I have not tested out yet, the isolation rules inparticular and Remdeiate Items I have not fully tested. If you want to send me an email with the PowerShell error message you received it will be very helpful. Thank you. rosborne@osbornepro.com 
 
 ## Current Cmdlets
 __Connect-CybereasonAPI__: <br>

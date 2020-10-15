@@ -2045,23 +2045,17 @@ This cmdlet is supported from Cybereason version 17.5 and later. Returns details
 Returns details on malware currently in your environment.
 
 
+.PARAMETER MalwareType
+This parameter defines the type of malware you wish to return results on
+
 .PARAMETER NeedsAttention
 This switch parameter indicates you wish to return results on all malware that needs attention
 
-.PARAMETER AllKnownMalware
-This switch parameter indicates you wish to return information on all known malware
+.PARAMETER All
+This switch parameter indicates you wish to return information on all results of the malware type you define
 
-.PARAMETER UnknownMalware
-This switch parameter returns the results for all unknown malware
-
-.PARAMETER FilelessMalware
-This switch parameter returns the results for all Fileless Malware
-
-.PARAMETER ApplicationControlMalware
-This switch parameter returns the results for all Application Control Malware
-
-.PARAMETER RansomwareMalware
-This switch parameter returns the results for all Ransomware Malware
+.PARAMETER MalwareAfter
+This indicates a timestamp in the form of ticks from which to start a search on malware. This will return info on any malware that occured before the date you define
 
 .PARAMETER MalwareBefore
 This indicates a timestamp in the form of ticks from which to start a search on malware. This will return info on any malware that occured after the date you define
@@ -2072,33 +2066,20 @@ This parameter defines the amount of results to return. The default value is 25
 .PARAMETER Sort
 This parameter defines whether to sort the results in Ascending or Descending order. The default value is descending
 
+.PARAMETER Offset
+This parameter defines the malware page to start your search from. 0 is the default value which starts your search from the beginning
+
 .PARAMETER CompletedKnownMalware
 This switch parameter returns all known malware with a status of done
 
 
 .EXAMPLE
-Get-CybereasonMalwareTypes -NeedsAttention
-# This example returns info on all malware that needs attention
+Get-CybereasonMalwareTypes -MalwareType KnownMalware -NeedsAttention -Limit 1 -Sort ASC
+# This example returns 1 result on all malware that needs attention in ascending order of their occurences
 
 .EXAMPLE
-Get-CybereasonMalwareTypes -AllKnownMalware
-# This example returns info on all known malware
-
-.EXAMPLE 
-Get-CybereasonMalwareTypes -UnknownMalware
-# This example returns info on all discovered unknown malware
-
-.EXAMPLE 
-Get-CybereasonMalwareTypes -FilelessMalware
-# This example returns info on all discovered fileless malware
-
-.EXAMPLE
-Get-CybereasonMalwareTypes -ApplicationControlMalware
-# This example returns info on all discovered application control malware
-
-.EXAMPLE
-Get-CybereasonMalwareTypes -RansomwareMalware
-# This example returns info on all discovered application control malware
+Get-CybereasonMalwareTypes -MalwareType KnownMalware -All -Limit 25 -Sort DESC -Offset 0 
+# This example returns up to 25 results on all known malware in descending order
 
 .EXAMPLE
 Get-CybereasonMalwareTypes -MalwareAfter (Get-Date).AddDays(-2).Ticks
@@ -2109,8 +2090,8 @@ Get-CybereasonMalwareTypes -MalwareBefore (Get-Date).AddDays(-2).Ticks
 # This example returns info on all known malware that occured before a defined date
 
 .EXAMPLE
-Get-CybereasonMalwareTypes -ResolvedMalware
-# This example returns info on all malware with a status of done
+Get-CybereasonMalwareTypes -MalwareType KnownMalware -Status Done -Limit 25 -Sort DESC -Offset 0 
+# This example returns info on all known malware with a status of done
 
 
 .NOTES
@@ -2140,31 +2121,30 @@ https://www.youracclaim.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Get-CybereasonMalwareTypes {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName='All')]
         param(
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Define one of the types of Malware you want to query the results of.`n[E] EXAMPLE: RansomwareMalware")]  # End Parameter
+            [ValidateSet('KnownMalware','UnknownMalware','FilelessMalware','ApplicationControlMalware','RansomwareMalware')]
+            [String]$MalwareType,
+
+            [Parameter(
+                ParameterSetName='Status',
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] `n[E] EXAMPLE: Done")]  # End Parameter
+            [ValidateSet('Done','Excluded','Detected','Prevented','Remediated','DeleteOnRestart','Quarantined')]
+            [String]$Status,
+
             [Parameter(
                 ParameterSetName='NeedsAttention')]  # End Parameter
             [Switch][Bool]$NeedsAttention,
 
             [Parameter(
-                ParameterSetName='AllKnownMalware')]  # End Parameter
-            [Switch][Bool]$AllKnownMalware,
-
-            [Parameter(
-                ParameterSetName='UnknownMalware')]  # End Parameter
-            [Switch][Bool]$UnknownMalware,
-
-            [Parameter(
-                ParameterSetName='FilelessMalware')]  # End Parameter
-            [Switch][Bool]$FilelessMalware,
-
-            [Parameter(
-                ParameterSetName='ApplicationControlMalware')]  # End Parameter
-            [Switch][Bool]$ApplicationControlMalware,
-
-            [Parameter(
-                ParameterSetName='RansomwareMalware')]  # End Parameter
-            [Switch][Bool]$RansomwareMalware,
+                ParameterSetName='All')]  # End Parameter
+            [Switch][Bool]$All,
 
             [Parameter(
                 ParameterSetName='MalwareAfter',
@@ -2173,6 +2153,14 @@ Function Get-CybereasonMalwareTypes {
                 ValueFromPipeline=$False,
                 HelpMessage="`n[H] Use a timestamp in the form of ticks to discover malware that occured after a certain date and time`n[E] EXAMPLE: 637381353373709085")]  # End Parameter
             [Int64]$MalwareAfter,
+
+            [Parameter(
+                ParameterSetName='MalwareBefore',
+                Position=0,
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Use a timestamp in the form of ticks to discover malware that occured before a certain date and time`n[E] EXAMPLE: 637381353373709085")]  # End Parameter
+            [Int64]$MalwareBefore,
 
             [Parameter(
                 Mandatory=$False,
@@ -2186,8 +2174,9 @@ Function Get-CybereasonMalwareTypes {
             [String]$Sort = 'DESC',
 
             [Parameter(
-                ParameterSetName='ResolvedMalware')]  # End Parameter
-            [Switch][Bool]$ResolvedMalware
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [Int32]$Offset = 0
 
         )  # End param
 
@@ -2199,55 +2188,31 @@ Function Get-CybereasonMalwareTypes {
 
         'NeedsAttention' {
 
-            $JsonData = '{"filters": [{"fieldName":"type","operator":"Equals","values":["KnownMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+            $JsonData = '{"filters": [{"fieldName":"type","operator":"Equals","values":["' + $MalwareType + '"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
         
         }  # End Switch Needs Attention
 
-        'AllKnownMalware' {
+        'All' {
 
-            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["KnownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["KnownMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["' + $MalwareType + '"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
         
         }  # End Switch AllKnownMalware
 
-        'UnknownMalware' {
-
-            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["UnknownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["UnknownMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
-        
-        }  # End Switch UnknownMalware
-
-        'FilelessMalware' {
-
-            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["FilelessMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["FilelessMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
-        
-        }  # End Switch FilelessMalware
-
-        'ApplicationControlMalware' {
-
-            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["ApplicationControlMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["ApplicationControlMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
-        
-        }  # End Switch ApplicationControlMalware
-
-        'RansomwareMalware' {
-
-            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["RansomwareMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["RansomwareMalware"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
-        
-        }  # End Switch RansomwareMalware
-
         'MalwareAfter' {
 
-            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["KnownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"timestamp","operator":"GreaterThan","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"timestamp","operator":"GreaterOrEqualsTo","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
         
         }  # End Switch KnownMalwareFromTime
 
         'MalwareBefore' {
 
-            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["KnownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"timestamp","operator":"LessThan","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"timestamp","operator":"LessOrEqualsTo","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
         
         }  # End Switch KnownMalwareFromTime
 
-        'ResolvedMalware' {
+        'Status' {
 
-            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["KnownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"status","operator":"GreaterThan","values":["Done"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":0})'
+            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"status","operator":"GreaterThan","values":["' + $Status + '"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
         
         }  # End Switch CompletedKnownMalware
 
@@ -2278,5 +2243,831 @@ Function Get-CybereasonMalwareTypes {
 
     }  # End If
 
-
 }  # End Function Get-CybereasonMalwareTypes
+
+
+<#
+.SYNOPSIS 
+This cmdlet is used to retrieve a list of custom detection rules
+
+
+.DESCRIPTION
+Retrieve a list of custom detection rules
+
+
+.PARAMETER ActiveRules
+This switch parameter returns a list of all custom rules currently active in your environment.
+
+.PARAMETER DisabledRules
+This switch parameter returns a list of all custom rules currently disabled in your environment.
+
+.PARAMETER RootCauses
+Returns a list of all Elements you can use for a root cause for a Malop generated from this custom rule.
+
+.PARAMETER DetectionTypes
+Returns a list of all available detection types you can use for the custom detection rule.
+
+.PARAMETER ActivityTypes
+Returns a list of all available Malop activity types you can use for the custom detection rule.
+
+.PARAMETER RuleID
+Define the rule ID value you wish to view the modificaiton history on
+
+.PARAMETER ModificationHistory
+Returns details on modifications made to a custom rule.
+
+
+.EXAMPLE
+Get-CybereasonCustomDetectionRule -ActiveRules
+# This eample returns a list of all custom rules currently active in your environment.
+
+.EXAMPLE
+Get-CybereasonCustomDetectionRule -DisabledRules
+# This eample returns a list of all custom rules currently disabled in your environment.
+
+.EXAMPLE
+Get-CybereasonCustomDetectionRule -RootCauses
+# This eample returns a list of all Elements you can use for a root cause for a Malop generated from this custom rule.
+
+.EXAMPLE
+Get-CybereasonCustomDetectionRule -DetectionTypes
+# This eample returns a list of all available detection types you can use for the custom detection rule.
+
+.EXAMPLE
+Get-CybereasonCustomDetectionRule -ActivityTypes
+# This eample returns a list of all available Malop activity types you can use for the custom detection rule.
+
+.EXAMPLE
+Get-CybereasonCustomDetectionRule -RuleID 1582038865368 -ModificationHistory
+# This eample returns details on modifications made to a custom rule.
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/add-custom-detection-rules
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Get-CybereasonCustomDetectionRule {
+    [CmdletBinding(DefaultParameterSetName='Active')]
+        param(
+            [Parameter(
+                ParameterSetName='Active')]  # End Parameter
+            [Switch][Bool]$Active,
+
+            [Parameter(
+                ParameterSetName='Disabled')]  # End Parameter
+            [Switch][Bool]$Disabled,
+
+            [Parameter(
+                ParameterSetName='RootCauses')]  # End Parameter
+            [Switch][Bool]$RootCauses,
+
+            [Parameter(
+                ParameterSetName='DetectionTypes')]  # End Parameter
+            [Switch][Bool]$DetectionTypes,
+
+            [Parameter(
+                ParameterSetName='ActivityTypes')]  # End Parameter
+            [Switch][Bool]$ActivityTypes,
+
+            [Parameter(
+                ParameterSetName='ModificationHistory',
+                Position=0,
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Define the Rule ID you want to view modification history on `n[E] EXAMPLE: 1582038865368")]  # End Parameter
+            [Int64]$RuleID,
+
+            [Parameter(
+                ParameterSetName='ModificationHistory'
+            )]  # End Parameter
+            [Switch][Bool]$ModificationHistory
+
+        )  # End param
+
+    $Obj = @()
+
+    Switch ($PSBoundParameters.Keys)
+    {
+    
+        'Active' {
+
+            $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/live'
+
+            Write-Verbose "Sending query to $Uri"
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+
+            $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
+            ForEach-Object {
+                $id = ($_.id | Out-String).Trim()
+                $Name = ($_.name | Out-String).Trim()
+                $RootCause = ($_.rootCause | Out-String).Trim()
+                $malopDetectionType = ($_.malopDetectionType | Out-String).Trim()
+                $parentId = ($_.rule.parentId | Out-String).Trim()
+                $elementType = ($_.rule.root.elementType | Out-String).Trim()
+                $facetName = ($_.rule.root.filters.facetName | Out-String).Trim()
+                $values = ($_.rule.root.filters.values | Out-String).Trim()
+                $filterType = ($_.rule.root.filters.filterType | Out-String).Trim()
+                $featureTranslation = ($_.rule.root.filters.featureTranslation | Out-String).Trim()
+                $children = $_.rule.root.children
+                $malopActivityType = ($_.root.malopActivityType | Out-String).Trim()
+                $description = ($_.description | Out-String).Trim()
+                $enabled = ($_.enabled | Out-String).Trim()
+                $userName = ($_.userName | Out-String).Trim()
+                $creationTime = Get-Date -Date ($_.creationTime)
+                $updateTime = Get-Date -Date ($_.updateTime)
+                $lastTriggerTime = Get-Date -Date ($_.lastTriggerTime)
+                $autoRemediationActions = $_.autoRemediationActions
+                $autoRemediationStatus = $_.autoRemediationStatus
+                $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
+
+                $Obj += New-Object -TypeName PSObject -Property @{
+                    id=$id; 
+                    Name=$name; 
+                    RootCause=$RootCause; 
+                    malopDetectionType=$malopDetectionType; 
+                    parentId=$parentId; 
+                    elementType=$elementType; 
+                    facetName=$facetName
+                    values=$values;
+                    filterType=$filterType;
+                    featureTranslation=$featureTranslation;
+                    children=$children;
+                    malopActivityType=$malopActivityType;
+                    description=$description;
+                    enabled=$enabled;
+                    userName=$userName;
+                    creationTime=$creationTime;
+                    updateTime=$updateTime;
+                    lastTriggerTime=$lastTriggerTime;
+                    autoRemediationActions=$autoRemediationActions;
+                    autoRemediationStatus=$autoRemediationStatus;
+                    limitExceed=$limitExceed
+                }  # End Properties 
+
+            }  # End ForEach-Object 
+
+            If ($Obj.Count -eq 0)
+            {
+
+                Write-Output "[*] No results were found"
+
+            }  # End If
+            Else 
+            {
+
+                $Obj
+
+            }  # End Else
+
+
+        }  # End Switch Active
+    
+        'Disabled' {
+
+            $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/deleted'
+
+            Write-Verbose "Sending query to $Uri"
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+
+            $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
+            ForEach-Object {
+                $id = ($_.id | Out-String).Trim()
+                $Name = ($_.name | Out-String).Trim()
+                $RootCause = ($_.rootCause | Out-String).Trim()
+                $malopDetectionType = ($_.malopDetectionType | Out-String).Trim()
+                $parentId = ($_.rule.parentId | Out-String).Trim()
+                $elementType = ($_.rule.root.elementType | Out-String).Trim()
+                $facetName = ($_.rule.root.filters.facetName | Out-String).Trim()
+                $values = ($_.rule.root.filters.values | Out-String).Trim()
+                $filterType = ($_.rule.root.filters.filterType | Out-String).Trim()
+                $featureTranslation = ($_.rule.root.filters.featureTranslation | Out-String).Trim()
+                $children = $_.rule.root.children
+                $malopActivityType = ($_.root.malopActivityType | Out-String).Trim()
+                $description = ($_.description | Out-String).Trim()
+                $enabled = ($_.enabled | Out-String).Trim()
+                $userName = ($_.userName | Out-String).Trim()
+                $creationTime = Get-Date -Date ($_.creationTime)
+                $updateTime = Get-Date -Date ($_.updateTime)
+                $lastTriggerTime = Get-Date -Date ($_.lastTriggerTime)
+                $autoRemediationActions = $_.autoRemediationActions
+                $autoRemediationStatus = $_.autoRemediationStatus
+                $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
+
+                $Obj += New-Object -TypeName PSObject -Property @{
+                    id=$id; 
+                    Name=$name; 
+                    RootCause=$RootCause; 
+                    malopDetectionType=$malopDetectionType; 
+                    parentId=$parentId; 
+                    elementType=$elementType; 
+                    facetName=$facetName
+                    values=$values;
+                    filterType=$filterType;
+                    featureTranslation=$featureTranslation;
+                    children=$children;
+                    malopActivityType=$malopActivityType;
+                    description=$description;
+                    enabled=$enabled;
+                    userName=$userName;
+                    creationTime=$creationTime;
+                    updateTime=$updateTime;
+                    lastTriggerTime=$lastTriggerTime;
+                    autoRemediationActions=$autoRemediationActions;
+                    autoRemediationStatus=$autoRemediationStatus;
+                    limitExceed=$limitExceed
+                }  # End Properties 
+
+            }  # End ForEach-Object 
+
+            If ($Obj.Count -eq 0)
+            {
+
+                Write-Output "[*] No results were found"
+
+            }  # End If
+            Else 
+            {
+
+                $Obj
+
+            }  # End Else
+
+        }  # End Switch Disabled
+
+        'RootCauses' {
+
+            $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/rootCauses'
+
+            Write-Verbose "Sending query to $Uri"
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+
+            $Response.Content | ConvertFrom-Json
+
+        }  # End Switch RootCauses
+
+        'DetectionTypes' {
+
+            $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/getMalopDetectionTypes'
+
+            Write-Verbose "Sending query to $Uri"
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+
+            $Response.Content | ConvertFrom-Json
+
+        }  # End Switch DetectionTypes
+
+        'ActivityTypes' {
+
+            $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/getMalopActivityTypes'
+
+            Write-Verbose "Sending query to $Uri"
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+
+            $Response.Content | ConvertFrom-Json
+
+        }  # End Switch ActivityTypes
+
+        'ModificationHistory' {
+
+            $Obj = @()
+            $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/history/' + $RuleID.ToString()
+
+            Write-Verbose "Sending query to $Uri"
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+
+            $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty history | `
+            ForEach-Object {
+                $Username = ($_.username | Out-String).Trim()
+                $Date = Get-Date -Date $_.date
+                $JsonRef = ($_.changes.jsonRef | Out-String).Trim()
+                $OriginalValue = ($_.changes.originalValue | Out-String).Trim()
+                $NewValue = ($_.changes.newValue | Out-String).Trim()
+
+                $Obj += New-Object -TypeName PSObject -Property @{Username=$Username; $Date=$Date; JsonRef=$JsonRef; OriginalValue=$OriginalValue; NewValue=$NewValue}
+
+            }  # End ForEach-Object
+
+            If ($Obj.Length -eq 0)
+            {
+
+                Write-Output "[*] No results were found"
+
+            }  # End If
+            Else 
+            {
+
+                $Obj
+
+            }  # End Else
+
+        }  # End Switch ModificationHistory
+
+    }  # End Switch
+  
+}  # End Function Get-CybereasonCustomDetectionRule
+
+
+<#
+.SYNOPSIS
+This cmdlet is used to creates a custom detection rule
+
+
+.DESCRIPTION
+Creates a custom detection rule.
+
+
+.PARAMETER Name
+This parameter gives the rule you are creating a name
+
+.PARAMETER FacetName
+The name of the Feature on which to filter the base Element
+
+.PARAMETER ChildFacetName
+The name of the child feature on which to filter the base Child Element
+
+.PARAMETER RootCause
+The Element which is identified as the root cause in the Malop generated from the custom detection rule. Possible values include: self (the base Element is malicious) OR imageFile (the image file for the base Element is malicious) OR parentProcess (the parent process for the base Element is malicious)
+
+.PARAMETER MalopDetectionType
+The detection type to assign to Malops generated from this custom detection rule.
+
+.PARAMETER MalopActivityType
+The activity type to assign to Malops generated from this custom detection rule. 
+
+.PARAMETER ElementType
+The Element used as the base of the custom detection rule.
+
+.PARAMETER ChildElementType
+The Child Element used as the base of the custom detection rule.
+
+.PARAMETER ConnectionFeature
+Parameter to define the link between parent and child facets. https://nest.cybereason.com/api-documentation/all-versions/APIReference/CustomRulesAPI/customRulesConnectionFeatures.html#supported-features-for-linking-elements-in-a-custom-detection-rule
+
+.PARAMETER Description
+The description for this custom detection rule.
+
+.PARAMETER EnableOnCreation
+Indicates whether or not to enable this detection rule upon creation. Defining this switch parameter sets this value to true to automatically enable the rule.
+
+.PARAMETER KillProcess
+This parameter indicates you want to kill any malicious discovered processes
+
+.PARAMETER QuarantineFile
+This paraemeter defines that you want to quarantine files that are infectious
+
+.PARAMETER IsolateMachine
+This parameter indicates you want to isolate machines that become infected
+
+
+.EXAMPLE
+New-CybereasonCustomDetectionRule
+# This example
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/query-malware-types
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function New-CybereasonCustomDetectionRule {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] This parameter is a name to assign to the custom rule. `n[E] EXAMPLE: Test Rule 1"
+            )]  # End Parameter
+            [String]$Name,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The name of the Feature on which to filter the base Element.`n[E] EXAMPLE: maliciousUseOfRegsvr32ModuleEvidence")]  # End Parameter
+            [String]$FacetName,
+
+            [Parameter(
+                ParameterSetName='Children',
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The name of the child Feature on which to filter the base Element.`n[E] EXAMPLE: maliciousUseOfRegsvr32ModuleEvidence")]  # End Parameter
+            [String]$ChildFacetName,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The Element which is identified as the root cause in the Malop generated from the custom detection rule. `n[E] EXAMPLE: parentProcess")]  # End Parameter
+            [ValidateSet('self','imageFile','parentProcess')]
+            [String]$RootCause,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The detection type to assign to Malops generated from this custom detection rule.`n[E] EXAMPLE: BLACKLIST")]  # End Parameter
+            [ValidateSet('BLACKLIST','CNC','CUSTOM_RULE','UNAUTHORIZED_USER','CREDENTIAL_THEFT','DATA_TRANSMISSION_VOLUME','ELEVATED_ACCESS','EXTENSION_MANIPULATION','KNOWN_MALWARE','LATERAL_MOVEMENT','MALWARE_PROCESS','MALICIOUS_PROCESS','PUP','PERSISTENCE','PHISHING','PROCESS_INJECTION','RANSOMWARE','RECONNAISSANCE')]
+            [String]$MalopDetectionType,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The activity type to assign to Malops generated from this custom detection rule.`n[E] EXAMPLE: STOLEN_CREDENTIALS")]  # End Parameter
+            [ValidateSet('CNC_COMMUNICATION','DATA_THEFT','MALICIOUS_INFECTION','LATERAL_MOVEMENT','PRIVILEGE_ESCALATION','RANSOMWARE','SCANNING','STOLEN_CREDENTIALS')]
+            [String]$MalopActivityType,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The Element used as the base of the custom detection rule. Possible values include: Process or LogonSession `n[E] EXAMPLE: Process")]  # End Parameter
+            [ValidateSet('Process','LogonSession')]
+            [String]$ElementType,
+
+            [Parameter(
+                ParameterSetName='Children',
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The Element used as the base of the custom detection rule. Possible values include: Process or LogonSession `n[E] EXAMPLE: Process")]  # End Parameter
+            [ValidateSet('Process','LogonSession')]
+            [String]$ChildElementType,
+
+            [Parameter(
+                ParameterSetName='Children',
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The name of the Feature that connects the linked Elements. `n[E] EXAMPLE: msword.exe")]  # End Parameter
+            [String]$ChildElementName,
+
+            [Parameter(
+                ParameterSetName='Children',
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="The name of the Feature that connects the linked Elements. This Feature name corresponds with the name of the linked Element. For details on the Features available to use as connection features, see Supported Features for Linking Elements in a Custom Detection Rule. https://nest.cybereason.com/api-documentation/all-versions/APIReference/CustomRulesAPI/customRulesConnectionFeatures.html#supported-features-for-linking-elements-in-a-custom-detection-rule")]  # End Parameter
+            [ValidateSet('DomainName','Machine','urlDomains','fileHash','ownerMachine','remoteMachine','user','file','autorun','children','connections','hostedChildren','hostProcess','imageFile','injectedChildren','loadedModules','originInjector','parentProcess','scheduledTask','service','executableActions','binaryFile')]
+            [String]$ConnectionFeature,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [String]$Description = $Name,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch][Bool]$EnableOnCreation,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch][Bool]$KillProcess,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch][Bool]$QuarantineFile,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch][Bool]$IsolateMachine
+        )  # End param
+
+    If ($EnableOnCreation.IsPresent) { $EnableOnCreate = 'true' }  # End If
+    Else { $EnableOnCreate = 'false' }  # End Else
+
+    If ($QuarantineFile.IsPresent) { $EnableQuarantine = 'true' }  # End If
+    Else { $EnableQuarantine = 'false' }  # End Else
+
+    If ($IsolateMachine.IsPresent) { $EnableIsolate = 'true' }  # End If
+    Else { $EnableIsolate = 'false' }  # End Else
+
+    If ($KillProcess.IsPresent) { $EnableKill = 'true' }  # End If
+    Else { $EnableKill = 'false' }  # End Else
+
+
+    $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/create'
+
+    Switch ($PSBoundParameters.Keys)
+    {
+
+        'Children' {
+
+            $JsonData = '{"name":"' + $Name + '","rootCause":"' + $RootCause + '","malopDetectionType":"' + $MalopDetectionType + '","autoRemediationActions":{"killProcess":' + $EnableKill + ',"quarantineFile":' + $EnableQuarantine + ',"isolateMachine":' + $EnableIsolate + '},"autoRemediationStatus":"Active","rule":{"root":{"elementType":"' + $ElementType + '","elementTypeTranslation":"' + $ElementType + '","filters":[{"facetName":"' + $FacetName + '","filterType":"Equals","values":[True]}],"children": [{"elementType":"' + $ChildElementType + '","elementTypeTranslation":"' + $ChildElementType + '","connectionFeature":"' + $ConnectionFeature + '","connectionFeatureTranslation":"' + $ConnectionFeature + '","reversed":False,"filters": [{"facetName":"' + $ChildFacetName + '","filterType":"ContainsIgnoreCase","values":["' + $ChildElementName + '"]}]}]},"malopActivityType":"' + $MalopActivityType +  '"},"description":"' + $Description + '","enabled":' + $EnableOnCreate + '}'
+
+        }  # End Switch Children
+
+        Default {
+
+            $JsonData = '{"name":"' + $Name + '","rootCause":"' + $RootCause + '","malopDetectionType":"' + $MalopDetectionType + '","autoRemediationActions":{"killProcess":' + $EnableKill + ',"quarantineFile":' + $EnableQuarantine + ',"isolateMachine":' + $EnableIsolate + '},"autoRemediationStatus":"Active","rule":{"root":{"elementType":"' + $ElementType + '","elementTypeTranslation":"' + $ElementType + '","filters":[{"facetName":"' + $FacetName + '","filterType":"Equals","values":[True]}]}},"malopActivityType":"' + $MalopActivityType +  '"},"description":"' + $Description + '","enabled":' + $EnableOnCreate + '}'
+
+        }  # End Switch Default
+
+    }  # End Switch
+    
+    Write-Verbose "Sending query to $Uri"
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+
+    $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
+            ForEach-Object {
+                $id = ($_.id | Out-String).Trim()
+                $Name = ($_.name | Out-String).Trim()
+                $RootCause = ($_.rootCause | Out-String).Trim()
+                $malopDetectionType = ($_.malopDetectionType | Out-String).Trim()
+                $parentId = ($_.rule.parentId | Out-String).Trim()
+                $elementType = ($_.rule.root.elementType | Out-String).Trim()
+                $facetName = ($_.rule.root.filters.facetName | Out-String).Trim()
+                $values = ($_.rule.root.filters.values | Out-String).Trim()
+                $filterType = ($_.rule.root.filters.filterType | Out-String).Trim()
+                $featureTranslation = ($_.rule.root.filters.featureTranslation | Out-String).Trim()
+                $children = $_.rule.root.children
+                $malopActivityType = ($_.root.malopActivityType | Out-String).Trim()
+                $description = ($_.description | Out-String).Trim()
+                $enabled = ($_.enabled | Out-String).Trim()
+                $userName = ($_.userName | Out-String).Trim()
+                $creationTime = Get-Date -Date ($_.creationTime)
+                $updateTime = Get-Date -Date ($_.updateTime)
+                $lastTriggerTime = Get-Date -Date ($_.lastTriggerTime)
+                $autoRemediationActions = $_.autoRemediationActions
+                $autoRemediationStatus = $_.autoRemediationStatus
+                $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
+
+                $Obj += New-Object -TypeName PSObject -Property @{id=$id; Name=$name; RootCause=$RootCause; malopDetectionType=$malopDetectionType; parentId=$parentId; elementType=$elementType; facetName=$facetName; Values=$values;filterType=$filterType;featureTranslation=$featureTranslation;children=$children;malopActivityType=$malopActivityType;description=$description;enabled=$enabled;userName=$userName;creationTime=$creationTime;updateTime=$updateTime;lastTriggerTime=$lastTriggerTime;autoRemediationActions=$autoRemediationActions;autoRemediationStatus=$autoRemediationStatus;limitExceed=$limitExceed}  # End Properties 
+
+            }  # End ForEach-Object 
+
+            $Obj
+
+}  # End Function New-CybereasonCustomDetectionRule
+
+
+<#
+.SYNOPSIS
+This cmdlet is used to updates an existing custom detection rule
+
+
+.DESCRIPTION
+Updates an existing custom detection rule.
+
+
+.PARAMETER RuleID
+The unique identifier for the custom detection rule.
+
+.PARAMETER Name
+This parameter gives the rule you are creating a name
+
+.PARAMETER FacetName
+The name of the Feature on which to filter the base Element
+
+.PARAMETER ChildFacetName
+The name of the child feature on which to filter the base Child Element
+
+.PARAMETER RootCause
+The Element which is identified as the root cause in the Malop generated from the custom detection rule. Possible values include: self (the base Element is malicious) OR imageFile (the image file for the base Element is malicious) OR parentProcess (the parent process for the base Element is malicious)
+
+.PARAMETER MalopDetectionType
+The detection type to assign to Malops generated from this custom detection rule.
+
+.PARAMETER MalopActivityType
+The activity type to assign to Malops generated from this custom detection rule. 
+
+.PARAMETER ElementType
+The Element used as the base of the custom detection rule.
+
+.PARAMETER ChildElementType
+The Child Element used as the base of the custom detection rule.
+
+.PARAMETER ConnectionFeature
+Parameter to define the link between parent and child facets. https://nest.cybereason.com/api-documentation/all-versions/APIReference/CustomRulesAPI/customRulesConnectionFeatures.html#supported-features-for-linking-elements-in-a-custom-detection-rule
+
+.PARAMETER Description
+The description for this custom detection rule.
+
+.PARAMETER EnableOnCreation
+Indicates whether or not to enable this detection rule upon creation. Defining this switch parameter sets this value to true to automatically enable the rule.
+
+.PARAMETER KillProcess
+This parameter indicates you want to kill any malicious discovered processes
+
+.PARAMETER QuarantineFile
+This paraemeter defines that you want to quarantine files that are infectious
+
+.PARAMETER IsolateMachine
+This parameter indicates you want to isolate machines that become infected
+
+.PARAMETER Username
+The Cybereason user name for the user updating the rule
+
+
+.EXAMPLE 
+Set-CybereasonCustomDetectionRule -RuleID 1580246401162 -Name 'Test Rule 1' -FacetName 'maliciousUseOfRegsvr32ModuleEvidence' -ChildFacetName name  -RootCause self
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/update-custom-detection-rule
+https://roberthsoborne.com
+https://osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.youracclaim.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Set-CybereasonCustomDetectionRule {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The unique identifier for the custom detection rule.`n[E] EXAMPLE: 1580246401162")]  # End Parameter
+            [Int64]$RuleID,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] This parameter is a name to assign to the custom rule. `n[E] EXAMPLE: Test Rule 1"
+            )]  # End Parameter
+            [String]$Name,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The name of the Feature on which to filter the base Element.`n[E] EXAMPLE: maliciousUseOfRegsvr32ModuleEvidence")]  # End Parameter
+            [String]$FacetName,
+
+            [Parameter(
+                ParameterSetName='Children',
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The name of the child Feature on which to filter the base Element.`n[E] EXAMPLE: name")]  # End Parameter
+            [String]$ChildFacetName,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The Element which is identified as the root cause in the Malop generated from the custom detection rule. `n[E] EXAMPLE: parentProcess")]  # End Parameter
+            [ValidateSet('self','imageFile','parentProcess')]
+            [String]$RootCause,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The detection type to assign to Malops generated from this custom detection rule.`n[E] EXAMPLE: BLACKLIST")]  # End Parameter
+            [ValidateSet('BLACKLIST','CNC','CUSTOM_RULE','UNAUTHORIZED_USER','CREDENTIAL_THEFT','DATA_TRANSMISSION_VOLUME','ELEVATED_ACCESS','EXTENSION_MANIPULATION','KNOWN_MALWARE','LATERAL_MOVEMENT','MALWARE_PROCESS','MALICIOUS_PROCESS','PUP','PERSISTENCE','PHISHING','PROCESS_INJECTION','RANSOMWARE','RECONNAISSANCE')]
+            [String]$MalopDetectionType,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The activity type to assign to Malops generated from this custom detection rule.`n[E] EXAMPLE: STOLEN_CREDENTIALS")]  # End Parameter
+            [ValidateSet('CNC_COMMUNICATION','DATA_THEFT','MALICIOUS_INFECTION','LATERAL_MOVEMENT','PRIVILEGE_ESCALATION','RANSOMWARE','SCANNING','STOLEN_CREDENTIALS')]
+            [String]$MalopActivityType,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The Element used as the base of the custom detection rule. Possible values include: Process or LogonSession `n[E] EXAMPLE: Process")]  # End Parameter
+            [ValidateSet('Process','LogonSession')]
+            [String]$ElementType,
+
+            [Parameter(
+                ParameterSetName='Children',
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The Element used as the base of the custom detection rule. Possible values include: Process or LogonSession `n[E] EXAMPLE: Process")]  # End Parameter
+            [ValidateSet('Process','LogonSession')]
+            [String]$ChildElementType,
+
+            [Parameter(
+                ParameterSetName='Children',
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The name of the Feature that connects the linked Elements. `n[E] EXAMPLE: msword.exe")]  # End Parameter
+            [String]$ChildElementName,
+
+            [Parameter(
+                ParameterSetName='Children',
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="The name of the Feature that connects the linked Elements. This Feature name corresponds with the name of the linked Element. For details on the Features available to use as connection features, see Supported Features for Linking Elements in a Custom Detection Rule. https://nest.cybereason.com/api-documentation/all-versions/APIReference/CustomRulesAPI/customRulesConnectionFeatures.html#supported-features-for-linking-elements-in-a-custom-detection-rule")]  # End Parameter
+            [ValidateSet('DomainName','Machine','urlDomains','fileHash','ownerMachine','remoteMachine','user','file','autorun','children','connections','hostedChildren','hostProcess','imageFile','injectedChildren','loadedModules','originInjector','parentProcess','scheduledTask','service','executableActions','binaryFile')]
+            [String]$ConnectionFeature,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [String]$Description = $Name,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch][Bool]$EnableOnCreation,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch][Bool]$KillProcess,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch][Bool]$QuarantineFile,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch][Bool]$IsolateMachine,
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] The Cybereason user name for the user updating the rule.`n[E] EXAMPLE: admin@cybereason.com")]  # End Parameter
+            [String]$Username
+
+        )  # End param
+
+    $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/update'
+
+    $JsonData = '{"id":' + $RuleID + ',"name":"' + $Name + '","rootCause":"' + $RootCause + '","malopDetectionType":"' + $MalopDetectionType + '","autoRemediationActions":{"killProcess":' + $EnableKill + ',"quarantineFile":' + $EnableQuarantine + ',"isolateMachine":' + $EnableIsolate + '},"autoRemediationStatus":"Active","rule":{"root":{"elementType":"' + $ElementType + '","elementTypeTranslation":"' + $ElementType + '","filters":[{"facetName":"' + $FacetName + '","filterType":"Equals","values":[True]}],"children": [{"elementType":"' + $ChildElementType + '","elementTypeTranslation":"' + $ChildElementName + '","connectionFeature":"' + $ConnectionFeature + '","connectionFeatureTranslation":"' + $ConnectionFeature + '","reversed":False,"filters": [{"facetName":"' + $ChildElementType + '","filterType":"ContainsIgnoreCase","values":["' + $ChildElementName + '"]}]}]},"malopActivityType":"' + $MalopActivityType + '"},"description":"' + $Description + '","enabled":' + $EnableOnCreation + '})'
+
+    Write-Verbose "Sending query to $Uri"
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+
+    $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
+            ForEach-Object {
+                $id = ($_.id | Out-String).Trim()
+                $Name = ($_.name | Out-String).Trim()
+                $RootCause = ($_.rootCause | Out-String).Trim()
+                $malopDetectionTypes = ($_.malopDetectionType | Out-String).Trim()
+                $parentId = ($_.rule.parentId | Out-String).Trim()
+                $elementType = ($_.rule.root.elementType | Out-String).Trim()
+                $facetName = ($_.rule.root.filters.facetName | Out-String).Trim()
+                $values = ($_.rule.root.filters.values | Out-String).Trim()
+                $filterType = ($_.rule.root.filters.filterType | Out-String).Trim()
+                $featureTranslation = ($_.rule.root.filters.featureTranslation | Out-String).Trim()
+                $children = $_.rule.root.children
+                $malopActivityType = ($_.root.malopActivityType | Out-String).Trim()
+                $description = ($_.description | Out-String).Trim()
+                $enabled = ($_.enabled | Out-String).Trim()
+                $userName = ($_.userName | Out-String).Trim()
+                $creationTime = Get-Date -Date ($_.creationTime)
+                $updateTime = Get-Date -Date ($_.updateTime)
+                $lastTriggerTime = Get-Date -Date ($_.lastTriggerTime)
+                $autoRemediationActions = $_.autoRemediationActions
+                $autoRemediationStatus = $_.autoRemediationStatus
+                $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
+
+                $Obj += New-Object -TypeName PSObject -Property @{id=$id; Name=$name; RootCause=$RootCause; malopDetectionType=$MalopDetectionTypes; parentId=$parentId; elementType=$elementType; facetName=$facetName; Values=$values;filterType=$filterType;featureTranslation=$featureTranslation;children=$children;malopActivityType=$malopActivityType;description=$description;enabled=$enabled;userName=$userName;creationTime=$creationTime;updateTime=$updateTime;lastTriggerTime=$lastTriggerTime;autoRemediationActions=$autoRemediationActions;autoRemediationStatus=$autoRemediationStatus;limitExceed=$limitExceed}  # End Properties 
+
+            }  # End ForEach-Object 
+
+            $Obj
+
+}  # End Function Set-CybereasonCustomDetectionRule

@@ -66,14 +66,20 @@ Get-CybereasonMalwareCount
 ```
 __Get-CybereasonMalwareTypes__: This cmdlet is used to query Malware from a start date, all malware, all malware that needs attention, or all malware with a status of done.
 ```powershell
-Get-CybereasonMalwareTypes -NeedsAttention -Sort DESC -Limit 100
-Get-CybereasonMalwareTypes -AllKnownMalware -Sort ASC -Limit 25
-Get-CybereasonMalwareTypes -UnknownMalware -Limit 40
-Get-CybereasonMalwareTypes -FilelessMalware -Sort ASC
-Get-CybereasonMalwareTypes -ApplicationControlMalware
-Get-CybereasonMalwareTypes -RansomwareMalware -Limit 10
+Get-CybereasonMalwareTypes -MalwareType KnownMalware -NeedsAttention -Limit 1 -Sort ASC
+# This example returns 1 result on all malware that needs attention in ascending order of their occurences
+
+Get-CybereasonMalwareTypes -MalwareType KnownMalware -All -Limit 25 -Sort DESC -Offset 0 
+# This example returns up to 25 results on all known malware in descending order
+
 Get-CybereasonMalwareTypes -MalwareAfter (Get-Date).AddDays(-2).Ticks
-Get-CybereasonMalwareTypes -CompletedKnownMalware
+# This example returns info on all known malware that occured after a defined date
+
+Get-CybereasonMalwareTypes -MalwareBefore (Get-Date).AddDays(-2).Ticks
+# This example returns info on all known malware that occured before a defined date
+
+Get-CybereasonMalwareTypes -MalwareType KnownMalware -Status Done -Limit 25 -Sort DESC -Offset 0 
+# This example returns info on all known malware with a status of done
 ```
 
 ### Remediate Items
@@ -142,6 +148,44 @@ Remove-CybereasonIsolationRule -RuleID '5859b3d0ae8eeb920e9d2f4e' -IPAddressStri
 ```
 [Documentation for Machine Isolation Rules](https://nest.cybereason.com/documentation/api-documentation/all-versions/set-machine-isolation-rules)
 
+### Add Custom Detection Rule
+Custom detection rules created via API should be created only after adequate research regarding precision and coverage has been completed. Creating a custom detection rule that is not specific enough can have detrimental impact on retention and overall performance of the environment.
+- Retrieve a list of all active custom detection rules
+- Retrieve a list of all disabled custom detection rules
+- Retrieve a list of all available root causes
+- Retrieve a list of all available Malop detection types
+- Retrieve a list of all available Malop activity types
+- Create a custom rule
+- Update a custom rule
+- Get the modification history <br>
+[Documentation for Add Custom Detection Rules](https://nest.cybereason.com/documentation/api-documentation/all-versions/add-custom-detection-rules)
+```powershell
+Get-CybereasonCustomDetectionRule -ActiveRules
+# This eample returns a list of all custom rules currently active in your environment.
+
+Get-CybereasonCustomDetectionRule -DisabledRules
+# This eample returns a list of all custom rules currently disabled in your environment.
+
+Get-CybereasonCustomDetectionRule -RootCauses
+# This eample returns a list of all Elements you can use for a root cause for a Malop generated from this custom rule.
+
+Get-CybereasonCustomDetectionRule -DetectionTypes
+# This eample returns a list of all available detection types you can use for the custom detection rule.
+
+Get-CybereasonCustomDetectionRule -ActivityTypes
+# This eample returns a list of all available Malop activity types you can use for the custom detection rule.
+
+Get-CybereasonCustomDetectionRule -RuleID 1582038865368 -ModificationHistory
+# This eample returns details on modifications made to a custom rule.
+
+New-CybereasonCustomDetectionRule
+
+
+Set-CybereasonCustomDetectionRule
+
+
+```
+
 ## Still To Come Cmdlets
 ### Hunt And Investigate 
 Using hunting queries and file search capabilities in the API, further your investigation of malicious behavior in your organization, including:
@@ -172,18 +216,6 @@ By using the API you can retrieve Malops or isolate machines involved in a speci
 - Delete a Malop label
 - Update Malop labels <br>
 [Documentation for Respond to Malops](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malops)
-
-### Add Custom Detection Rule
-Custom detection rules created via API should be created only after adequate research regarding precision and coverage has been completed. Creating a custom detection rule that is not specific enough can have detrimental impact on retention and overall performance of the environment.
-- Retrieve a list of all active custom detection rules
-- Retrieve a list of all disabled custom detection rules
-- Retrieve a list of all available root causes
-- Retrieve a list of all available Malop detection types
-- Retrieve a list of all available Malop activity types
-- Create a custom rule
-- Update a custom rule
-- Get the modification history <br>
-[Documentation for Add Custom Detection Rules](https://nest.cybereason.com/documentation/api-documentation/all-versions/add-custom-detection-rules)
 
 ### Manage Sensors (Multiple Cmdlets)
 Cybereason enables you to manage your Sensors from the API, including configuring NGAV settings for the sensors, starting and stopping collection on the Sensors, restarting Sensors, deleting or removing Sensors, archiving Sensors, and upgrading Sensors. _(Get-Sensor, Set-Sensor, Remove-Sensor, Restart-Sensor, Create-Sensor, Add-Sensor, Update-Sensor, Save-Sensor)_

@@ -58,7 +58,7 @@ Get-CybereasonThreatIntel -DbUpdateCheck -ReputationAPI product_classification
 By using the API you can retrieve details on malware. This enables you to address and investigate malware to prevent additional damage.
 - Get a count of all Malware per type
 - Query a specific type of Malware <br>
-[Documentation for Respond to Malware](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malware)
+[Documentation for Respond to Malware](https://nest.cybereason.com/documentation/api-documentation/all-versions/respond-malware) <br>
 __Get-CybereasonMalwareCount__: This cmdlet is used to return all of the Malware counts on Cybereason
 ```powershell
 # This example returns the count for all Malware types in Cybereason
@@ -143,7 +143,8 @@ Remove-CybereasonIsolationRule -RuleID '5859b3d0ae8eeb920e9d2f4e' -IPAddressStri
 [Documentation for Machine Isolation Rules](https://nest.cybereason.com/documentation/api-documentation/all-versions/set-machine-isolation-rules)
 
 ## Still To Come Cmdlets
-### Hunt And Investigate Using hunting queries and file search capabilities in the API, further your investigation of malicious behavior in your organization, including:
+### Hunt And Investigate 
+Using hunting queries and file search capabilities in the API, further your investigation of malicious behavior in your organization, including:
 - Run investigative queries
 - Search for files
 - Get results of a previous file search

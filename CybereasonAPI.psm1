@@ -90,17 +90,17 @@ Function Connect-CybereasonAPI {
         )  # End param
 
     Write-Verbose "Validating username parameter is in email address format"
-    Try 
+    Try
     {
-    
+
         $Null = [MailAddress]$Username
-    
+
     }  # End Try
-    Catch 
+    Catch
     {
 
         Throw "[x] The username you defined is not a valid email address."
-        
+
     }  # End Catch
 
 
@@ -116,7 +116,7 @@ Function Connect-CybereasonAPI {
 
     Write-Verbose "Sending request to $Uri"
     $Results = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $Body -SessionVariable 'Session'
-    
+
     If ($Results.StatusCode -eq '200')
     {
 
@@ -125,7 +125,6 @@ Function Connect-CybereasonAPI {
     }  # End If
 
     $Global:Session = $Session
-    $Global:JSession = $Session.Cookies.GetCookies($uri).Value
     $Global:Server = $Server
     $Global:Port = $Port
 
@@ -134,9 +133,9 @@ Function Connect-CybereasonAPI {
 
         Clear-History -Verbose
         Write-Warning "This PowerShells session history has just been cleared to prevent the clear text password from appearing in log files. This does not clear the PowerShell Event log. Only allow administrators to view that log."
-    
+
     }  # End If
-    Else 
+    Else
     {
 
         Write-Warning "The -ClearHistory parameter was not specified. If you wish to remove the clear text password from this session command history you will need to manually issue the command Clear-History"
@@ -177,22 +176,22 @@ This switch parameter indicates you wish to retrieve process classification info
 This switch parameter indicates you wish to retrieve process hierarchy information
 
 .PARAMETER FileExtension
-This switch parameter indicates you wish to retrieve file extension information  
+This switch parameter indicates you wish to retrieve file extension information
 
 .PARAMETER PortInfo
 This switch parameter indicates you wish to retrieve port information
 
 .PARAMETER CollectionInfo
-This switch parameter indicates you wish to retrieve collection information 
+This switch parameter indicates you wish to retrieve collection information
 
 .PARAMETER IPReputation
-This switch parameter indicates you wish to retrieve a list of IP address reputations 
+This switch parameter indicates you wish to retrieve a list of IP address reputations
 
 .PARAMETER DomainRep
 This switch parameter indicates you wish to retrieve a list of domain reputations
 
 .PARAMETER DbUpdateCheck
-This switch parameter indicates you wish to check for database updates 
+This switch parameter indicates you wish to check for database updates
 
 
 .EXAMPLE
@@ -225,11 +224,11 @@ Get-CybereasonThreatIntel -Domain 'www.cybereason.com',cybereason.net'
 
 .EXAMPLE
 Get-CybereasonThreatIntel -IPAddress 1.1.1.1
-# This example returns details on IP address reputations for 1.1.1.1 based on the Cybereason threat intelligence service. 
+# This example returns details on IP address reputations for 1.1.1.1 based on the Cybereason threat intelligence service.
 
 .EXAMPLE
 Get-CybereasonThreatIntel -IPAddress '1.1.1.1','208.67.222.222'
-# This example returns details on IP address reputations for 1.1.1.1 and 208.67.222.222 based on the Cybereason threat intelligence service. 
+# This example returns details on IP address reputations for 1.1.1.1 and 208.67.222.222 based on the Cybereason threat intelligence service.
 
 .EXAMPLE
 Get-CybereasonThreatIntel -ProductClassification
@@ -377,7 +376,7 @@ Function Get-CybereasonThreatIntel {
             [Parameter(
                 ParameterSetName='CollectionInfo')]  # End Parameter
             [Switch][Bool]$CollectionInfo,
-           
+
             [Parameter(
                 ParameterSetName='IPReputation')]  # End Parameter
             [Switch][Bool]$IPReputation,
@@ -397,7 +396,7 @@ Function Get-CybereasonThreatIntel {
                 HelpMessage="`n[H] Enter the reputaion API value to be added to the query of the API's URI. This goes here in the URI, /download_v1/<HERE>/service `n[E] EXMAPLE: process_classification")]  # End Parameter
             [ValidateSet("ip_reputation","domain_reputation","process_classification","file_extension","process_hierarchy","process_hierarchy","product_classification","const")]
             [String]$ReputationAPI
-            
+
         )  # End param
 
     $Obj = @()
@@ -416,7 +415,7 @@ Function Get-CybereasonThreatIntel {
                 $JsonData = '{"requestData": [{"requestKey": {"md5": "' + $MD + '"} }] }'
 
                 Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
                 $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
                 $MD5 = ($Results.requestKey.md5 | Out-String).Trim()
@@ -424,11 +423,11 @@ Function Get-CybereasonThreatIntel {
                 $MaliciousScore = $Results.aggregatedResult.maliciousClassification
                 $ProductType = ($Results.aggregatedResult.productClassification.productType | Out-String).Trim()
                 $Type = ($Results.aggregatedResult.productClassification.Type | Out-String).Trim()
-                
+
                 $Obj += New-Object -TypeName PSObject -Property @{md5="$MD5"; sha1="$SHA1"; MaliciousScore="$MaliciousScore"; ProductType="$ProductType"; Type="$Type"}
 
             }  # End ForEach
-                
+
             $Obj
 
         }  # End Switch FileRep
@@ -439,12 +438,12 @@ Function Get-CybereasonThreatIntel {
 
             ForEach ($FilesMD5 in $FileToHash)
             {
-                
+
                 $FileHash = (Get-FileHash -Algorithm MD5 -Path $FilesMD5).Hash
                 $JsonData = '{"requestData": [{"requestKey": {"md5": "' + $FileHash + '"} }] }'
 
                 Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
                 $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
                 $MD5 = ($Results.requestKey.md5 | Out-String).Trim()
@@ -479,17 +478,17 @@ Function Get-CybereasonThreatIntel {
                     $IPType = 'Ipv4'
 
                 }  # End If
-                Else 
+                Else
                 {
 
                     $IPType = 'Ipv6'
 
                 }  # End Else
 
-                $JsonData = '{"requestData": [{"requestKey": {"ipAddress": "' + $IPAddr + '","addressType": "' + $IPType + '"} }] }' 
+                $JsonData = '{"requestData": [{"requestKey": {"ipAddress": "' + $IPAddr + '","addressType": "' + $IPType + '"} }] }'
 
                 Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
                 $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
                 $IPA = ($Results.requestKey.ipAddress | Out-String).Trim()
@@ -499,7 +498,7 @@ Function Get-CybereasonThreatIntel {
                 $AllowFurther = ($Results.allowFurtherClassification | Out-String).Trim()
                 $CPID = ($Results.cpId | Out-String).Trim()
 
-                $Obj += New-Object -TypeName PSObject -Property @{IP=$IPA; Type=$AddressType; MaliciousScore=$MaliciousScore; FirstSeen=$FirstSeen; AllowFurtherClassification=$AllowFurther; CPID=$CPID} 
+                $Obj += New-Object -TypeName PSObject -Property @{IP=$IPA; Type=$AddressType; MaliciousScore=$MaliciousScore; FirstSeen=$FirstSeen; AllowFurtherClassification=$AllowFurther; CPID=$CPID}
 
             }  # End ForEach
 
@@ -513,13 +512,13 @@ Function Get-CybereasonThreatIntel {
 
             ForEach ($Dom in $Domain)
             {
-                
+
                 Write-Verbose "Testing $Dom"
 
                 $JsonData = '{"requestData": [{"requestKey": {"domain": "' + $Dom + '"} }] }'
 
                 Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
                 $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "classificationResponses"
 
@@ -532,20 +531,20 @@ Function Get-CybereasonThreatIntel {
                 $CPType = ($Results.cpType | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{Domain=$Doma; Source=$Source; MaliciousScore=$MaliciousScore; FirstSeen=$FirstSeen; AllowFurtherClassification=$AllowFurther; CPID=$CPID; CPType=$CPType}
- 
+
             }  # End ForEach
 
             $Obj
 
         }  # End Switch DomainBatch
-        
+
         'ProductClassification' {
 
             $Uri = $Site + 'download_v1/productClassifications'
             $JsonData = "{}"
 
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" | `
             ForEach-Object {
@@ -568,7 +567,7 @@ Function Get-CybereasonThreatIntel {
             $JsonData = "{}"
 
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" | `
             ForEach-Object {
@@ -594,7 +593,7 @@ Function Get-CybereasonThreatIntel {
             $JsonData = "{}"
 
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" | `
             ForEach-Object {
@@ -605,7 +604,7 @@ Function Get-CybereasonThreatIntel {
                 $Obj += New-Object -TypeName PSObject -Property @{Parent="$Parent"; ProcessName="$ProcessName"}
 
             }  # End For
-            
+
             $Obj
 
         }  # End Switch ProcessHierarchy
@@ -616,10 +615,10 @@ Function Get-CybereasonThreatIntel {
             $JsonData = "{}"
 
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Obj = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" | Select-Object -ExpandProperty "Value" | Select-Object -Property Description,Type
-            
+
             $Obj
 
         }  # End Switch FileExtension
@@ -630,7 +629,7 @@ Function Get-CybereasonThreatIntel {
             $JsonData = "{}"
 
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" | `
             ForEach-Object {
@@ -656,7 +655,7 @@ Function Get-CybereasonThreatIntel {
             $JsonData = "{}"
 
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty "recordList" | `
             ForEach-Object {
@@ -665,8 +664,8 @@ Function Get-CybereasonThreatIntel {
 
                 $Obj += New-Object -TypeName PSObject -Property @{Name="$Name"; Data="$Data"}
 
-            }  # End For 
-            
+            }  # End For
+
             $Obj
 
         }  # End Switch CollectionInfo
@@ -677,7 +676,7 @@ Function Get-CybereasonThreatIntel {
             $JsonData = "{}"
 
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Results = $Response.Content | ConvertFrom-Json
             For ($i = 0; $i -le $Results.ipReputationResponseList.Count; $i++)
@@ -690,8 +689,8 @@ Function Get-CybereasonThreatIntel {
 
                 $Obj += New-Object -TypeName PSObject -Property @{IPAddress="$IPAddress"; AddressType="$AddressType"; ReputationSource="$ReputationSource"; ReputationScore="$ReputationScore"}
 
-            }  # End For 
-            
+            }  # End For
+
             $Obj
 
         }  # End IPReputation Switch
@@ -702,7 +701,7 @@ Function Get-CybereasonThreatIntel {
             $JsonData = "{}"
 
             Write-Verbose "Sending Threat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Results = $Response.Content | ConvertFrom-Json
             For ($i = 0; $i -le ($Results.domainReputationResponseList).Count; $i++)
@@ -715,9 +714,9 @@ Function Get-CybereasonThreatIntel {
                 $Obj += New-Object -TypeName PSObject -Property @{Domain="$Domain"; ReputationSource="$ReputationSource"; ReputationScore="$ReputationScore"}
 
             }  # End For
-            
-            $Obj 
-        
+
+            $Obj
+
         }  #End Switch DomainReputation
 
         'DbUpdateCheck' {
@@ -726,10 +725,10 @@ Function Get-CybereasonThreatIntel {
             $JsonData = "{}"
 
             Write-Verbose "Sending THreat Intel JSON data to Cybereason's API"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData 
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Obj = $Response.Content | ConvertFrom-Json
-            
+
             $Obj
 
         }  # End Switch DbUpdateCheck
@@ -753,7 +752,7 @@ This parameter defines the path and filename to save the CSV results.
 
 
 .EXAMPLE
-Get-CybereasonReputations -Path C:\Windows\Temp\CybereasonRepuations.csv
+Get-CybereasonReputation -Path C:\Windows\Temp\CybereasonRepuations.csv
 # This example gets the current repuations of files, IP addresses, and domains configured in your environment and returns CSV related results.
 
 
@@ -768,7 +767,7 @@ None
 
 
 .OUTPUTS
-System.String 
+System.String
 The CSV list is sent to the file designated in the Path parameter.
 
 
@@ -784,7 +783,7 @@ https://www.linkedin.com/in/roberthosborne/
 https://www.youracclaim.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
-Function Get-CybereasonReputations {
+Function Get-CybereasonReputation {
     [CmdletBinding()]
         param(
             [Parameter(
@@ -800,18 +799,18 @@ Function Get-CybereasonReputations {
     {
 
         Write-Verbose "Downloading file to $Path"
-        Invoke-RestMethod -URI $Uri -WebSession $Session -ContentType "application/json" -Method GET -OutFile "$Path"
+        Invoke-RestMethod -URI $Uri -WebSession $Session -Headers @{charset='utf-8'} -ContentType "application/json" -Method GET -OutFile "$Path"
 
     }  # End If
     Else
     {
-        
+
         Write-Verbose "Returning CSV formatted results to window"
         Invoke-RestMethod -URI $Uri -WebSession $Session -ContentType "application/json" -Method GET
 
     }  # End Else
-    
-}  # End Function Get-CybereasonReputations
+
+}  # End Function Get-CybereasonReputation
 
 
 <#
@@ -840,19 +839,19 @@ This parameter indicates whether to prevent the file’s execution with Applicat
 
 
 .EXAMPLE
-Set-CybereasonReputations -Keys '1.1.1.1' -Modify Whitelist -Action Add -PreventExecution False
+Set-CybereasonReputation -Keys '1.1.1.1' -Modify Whitelist -Action Add -PreventExecution False
 # This example sets the Cybereason repuations of IP address 1.1.1.1 by adding it to the whitelist. Because this is an IP address the -PreventExecution parameter needs to be false. This will be modified automatically in the script if set incorrectly.
 
 .EXAMPLE
-Set-CybereasonReputations -Keys 'maliciousdomain.com' -Modify Blacklist -Action Add -PreventExecution False
+Set-CybereasonReputation -Keys 'maliciousdomain.com' -Modify Blacklist -Action Add -PreventExecution False
 # This example sets the Cybereason repuations of domain maliciousdomain.com by adding it to the blacklist. Because this is not a file hash the -PreventExecution parameter needs to be false. This will be modified automatically in the script if set incorrectly.
 
 .EXAMPLE
-Set-CybereasonReputations -Keys 'badguy.com','badperson.com' -Modify Blacklist -Action Add -PreventExecution False
+Set-CybereasonReputation -Keys 'badguy.com','badperson.com' -Modify Blacklist -Action Add -PreventExecution False
 # This example sets the Cybereason repuations of domain badguy.com and badperson.com by adding them to the blacklist. Because this is not a file hash the -PreventExecution parameter needs to be false. This will be modified automatically in the script if set incorrectly.
 
 .EXAMPLE
-Set-CybereasonReputations -Keys 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' -Modify 'Blacklist' -Action 'Add' -PreventExecution 'True'
+Set-CybereasonReputation -Keys 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF' -Modify 'Blacklist' -Action 'Add' -PreventExecution 'True'
 # This example sets the Cybereason repuations of a file with the defined SHA1 hash value and adds it to the blacklist. Prevent Execution is set to true which will prevent all devices in an environment from executing this file when App Control is enabled in Cybereason.
 
 
@@ -882,7 +881,7 @@ https://www.linkedin.com/in/roberthosborne/
 https://www.youracclaim.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
-Function Set-CybereasonReputations {
+Function Set-CybereasonReputation {
     [CmdletBinding()]
         param(
             [Parameter(
@@ -949,7 +948,7 @@ Function Set-CybereasonReputations {
                     $PreventExecution = 'false'
 
                 }  # End If
-                Else 
+                Else
                 {
 
                     Write-Output "[*] Preventing the execution of the file with hash : $F"
@@ -959,7 +958,7 @@ Function Set-CybereasonReputations {
             }  # End If
 
             $JsonData = '[{"keys": ["' + $Hash + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
-            
+
             Write-Verbose "Sending request to $Uri"
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $Session
             $Response.Content | ConvertFrom-Json
@@ -967,13 +966,13 @@ Function Set-CybereasonReputations {
         }  # End ForEach
 
     }  # End Switch File
-    Else 
+    Else
     {
 
         $IPv4Regex = '(((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))'
         ForEach ($Key in $Keys)
         {
-                
+
             Write-Verbose "Ensuring the Prevent Execution value is set to false when the Key value defined is an IP address or domain name"
             If ((!($Key.Length -eq 32)) -or (!($Key.Length -eq 40)) -or ($Key -Match $IPv4Regex) -or ($Key -like "*.*"))
             {
@@ -983,7 +982,7 @@ Function Set-CybereasonReputations {
             }  # End If
 
             $JsonData = '[{"keys": ["' + $Key + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
-        
+
             Write-Verbose "Sending request to $Uri"
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $Session
             $Response.Content | ConvertFrom-Json
@@ -991,8 +990,8 @@ Function Set-CybereasonReputations {
         }  # End ForEach
 
     }  # End Else
-    
-}  # End Function Set-CybereasonReputations
+
+}  # End Function Set-CybereasonReputation
 
 
 <#
@@ -1048,7 +1047,7 @@ None
 
 
 .OUTPUTS
-None
+System.Object[]
 
 
 .LINK
@@ -1065,6 +1064,7 @@ https://www.hackthebox.eu/profile/52286
 #>
 Function Invoke-RemediateItem {
     [CmdletBinding()]
+    [OutputType([System.Object[]])]
         param(
             [Parameter(
                 ParameterSetName='MalopID',
@@ -1103,17 +1103,17 @@ Function Invoke-RemediateItem {
 
     $Obj = @()
     Write-Verbose "Validating -InitiatorUserName parameter is in email address format"
-    Try 
+    Try
     {
-    
+
         $Null = [MailAddress]$InitiatorUserName
-    
+
     }  # End Try
-    Catch 
+    Catch
     {
 
         Throw "[x] The username you defined, $InitiatorUserName, is not a valid email address."
-        
+
     }  # End Catch
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate"
@@ -1124,7 +1124,7 @@ Function Invoke-RemediateItem {
         'MalopID' {
 
             $JsonData = '{"malopId":' + $MalopID + ',"initiatorUserName":' + $InitiatorUserName + ',"actionsByMachine":{' + $MachineId + ':[{"actionType":' + $ActionType + '}]}}'
-        
+
         }  # End Switch MalopID
 
         'TargetID' {
@@ -1134,7 +1134,7 @@ Function Invoke-RemediateItem {
         }  # End Switch TargetID
 
     }  # End Switch
-    
+
     Write-Verbose "Sending request to $Uri"
     $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $Session
     $Response.Content | ConvertFrom-Json | `
@@ -1151,7 +1151,7 @@ Function Invoke-RemediateItem {
                 $ErrorMessage = $_.statusLog.error
                 $TimeStamp = Get-Date -Date ($_.statusLog.timestamp)
 
-                $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage} 
+                $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage}
 
         }  # End ForEach-Object
 
@@ -1236,20 +1236,20 @@ Function Get-CybereasonRemediationProgress {
 
     $Obj = @()
     Write-Verbose "Validating -InitiatorUserName parameter is in email address format"
-    Try 
+    Try
     {
-        
+
         $Null = [MailAddress]$InitiatorUserName
-       
+
     }  # End Try
-    Catch 
+    Catch
     {
-    
+
         Throw "[x] The username you defined, $InitiatorUserName, is not a valid email address."
-            
+
     }  # End Catch
-    
-    $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/progress/" + $Username + "/" + $MalopID + "/" + $RemediationID 
+
+    $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/progress/" + $Username + "/" + $MalopID + "/" + $RemediationID
 
     $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
 
@@ -1267,16 +1267,16 @@ Function Get-CybereasonRemediationProgress {
         $ErrorMessage = $_.statusLog.error
         $TimeStamp = Get-Date -Date ($_.statusLog.timestamp)
 
-        $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage} 
+        $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage}
 
     }  # End ForEach-Object
 
     $Obj
-    
+
 }  # End Function Get-CybereasonRemediationProgress
 
 <#
-.SYNOPSIS 
+.SYNOPSIS
 This cmdlet aborts a remediation operation on a specific Malop.
 
 
@@ -1338,7 +1338,7 @@ Function Stop-CybereasonMalopRemediation {
             [String]$RemediationID
         )  # End parm
 
-    $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/abort/" + $MalopID + "/" + $RemediationID 
+    $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/abort/" + $MalopID + "/" + $RemediationID
 
     $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session
 
@@ -1356,7 +1356,7 @@ Function Stop-CybereasonMalopRemediation {
         $ErrorMessage = $_.statusLog.error
         $TimeStamp = Get-Date -Date ($_.statusLog.timestamp)
 
-        $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage} 
+        $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage}
 
     }  # End ForEach-Object
 
@@ -1365,7 +1365,7 @@ Function Stop-CybereasonMalopRemediation {
 }  # End Function Stop-CybereasonMalopRemediation
 
 <#
-.SYNOPSIS 
+.SYNOPSIS
 This cmdlet retrieves details about remediation actions performed on a particular Malop.
 
 
@@ -1422,7 +1422,7 @@ Function Get-CybereasonRemediationStatus {
     $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/status/" + $MalopID
 
     $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
-    
+
     $Response.Content | ConvertFrom-Json | `
     ForEach-Object {
         $MalopId = ($_.malopId | Out-String).Trim()
@@ -1436,11 +1436,11 @@ Function Get-CybereasonRemediationStatus {
         $ActionType = ($_.statusLog.actionType | Out-String).Trim()
         $ErrorMessage = $_.statusLog.error
         $TimeStamp = Get-Date -Date ($_.statusLog.timestamp)
-    
-        $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage} 
-    
+
+        $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage}
+
     }  # End ForEach-Object
-    
+
     $Obj
 
 }  # End Function Get-CybereasonRemediationStatus
@@ -1456,7 +1456,7 @@ Retrieves a list of all rules for isolating specific machines.
 
 
 .EXAMPLE
-Get-CybereasonIsolationRules
+Get-CybereasonIsolationRule
 # This example retrieves a list of all rules for isolating specific machines
 
 
@@ -1486,15 +1486,15 @@ https://www.linkedin.com/in/roberthosborne/
 https://www.youracclaim.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
-Function Get-CybereasonIsolationRules {
+Function Get-CybereasonIsolationRule {
     [CmdletBinding()]
         param()
 
     $Obj = @()
     $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
     $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
-    
-    If ($Response.StatusCode -eq 200) 
+
+    If ($Response.StatusCode -eq 200)
     {
 
         $Response.Content | ConvertFrom-Json | `
@@ -1507,23 +1507,23 @@ Function Get-CybereasonIsolationRules {
             $Direction = ($_.direction | Out-String).Trim()
             $LastUpdated = Get-Date -Date ($_.lastUpdated)
             $Blocking = ($_.blocking | Out-String).Trim()
-        
-            $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking} 
-        
+
+            $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking}
+
         }  # End ForEach-Object
-        
+
         $Obj
 
-    }  
-    Else 
+    }
+    Else
     {
-        
+
         Write-Output "[*] No isolation rules were found or access was denied. Try authenticating with a non-api user if you believe you should have this access."
         $Response
 
     }  # End Catch
 
-}  # End Function Get-CybereasonIsolationRules
+}  # End Function Get-CybereasonIsolationRule
 
 
 <#
@@ -1614,7 +1614,7 @@ Function New-CybereasonIsolationRule {
         $Block = 'true'
 
     }  # End If
-    Else 
+    Else
     {
 
         $Block = 'false'
@@ -1651,11 +1651,11 @@ Function New-CybereasonIsolationRule {
             $Direction = ($_.direction | Out-String).Trim()
             $LastUpdated = Get-Date -Date ($_.lastUpdated)
             $Blocking = ($_.blocking | Out-String).Trim()
-                    
-            $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking} 
-                
+
+            $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking}
+
         }  # End ForEach-Object
-         
+
     $Obj
 
 }  # End Function New-CybereasonIsolationRule
@@ -1686,7 +1686,7 @@ States whether communication with the given IP or port is allowed. Set to true i
 The direction of the allowed communication. Values include ALL, INCOMING, or OUTGOING.
 
 
-.EXAMPLE 
+.EXAMPLE
 Set-CybereasonIsolationRule -RuleID "5a7b2e95e4b082f2e909a4f3" -IPAddressString '123.45.67.89' -PortNumber 8443 -Blocking -Direction ALL
 # This example creates a new isolation rule that blocks All communication to 123.45.67.89
 
@@ -1764,7 +1764,7 @@ Function Set-CybereasonIsolationRule {
         $StringThree = ',"blocking":"' + $Block + '"'
 
     }  # End If
-    Else 
+    Else
     {
 
         $Block = 'false'
@@ -1801,9 +1801,9 @@ Function Set-CybereasonIsolationRule {
         $StringFive = ',"lastUpdated":' + $LasUpdated
 
     }  # End If
-    
+
     $JsonData = '{"ruleId":"' + $RuleID + '"' + $StringOne + $StringTwo + $StringThree + $StringFour + $StringFive + '}'
-    
+
     $Response = Invoke-WebRequest -Method PUT -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
 
     $Response.Content | ConvertFrom-Json | `
@@ -1817,9 +1817,9 @@ Function Set-CybereasonIsolationRule {
         $LastUpdated = Get-Date -Date ($_.lastUpdated)
         $Blocking = ($_.blocking | Out-String).Trim()
 
-        $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking} 
+        $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking}
 
-    }  # End ForEach-Object 
+    }  # End ForEach-Object
 
     $Obj
 
@@ -1932,47 +1932,47 @@ Function Remove-CybereasonIsolationRule {
 
     If ($Blocking.IsPresent)
     {
-    
+
         $Block = 'true'
         $StringThree = ',"blocking":"' + $Block + '"'
-    
+
     }  # End If
-    Else 
+    Else
     {
-    
+
         $Block = 'false'
         $StringThree = ',"blocking":"' + $Block + '"'
-    
+
     }  # End If
 
     If ($IpAddressString.Length -gt 0)
     {
-    
+
         $StringOne = ',"ipAddressString":"' + $IpAddressString + '"'
-    
+
     }  # End If
-    
+
     If ($PortNumber.Length -gt 0)
     {
-    
+
         $StringTwo = ',"port":' + $PortNumber
-    
+
     }  # End If
-    
+
     If ($Direction.Length -gt 0)
     {
-    
+
         $StringFour = ',"direction":"' + $Direction + '"'
-    
+
     }  # End If
-    
+
     If ($LastUpdated.Length -gt 0)
     {
-    
+
         $StringFive = ',"lastUpdated":' + $LasUpdated
-    
+
     }  # End If
-        
+
     $JsonData = '{"ruleId":' + $RuleID + $StringOne + $StringTwo + $StringThree + $StringFour + $StringFive + '}'
 
     $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
@@ -2016,7 +2016,7 @@ https://www.linkedin.com/in/roberthosborne/
 https://www.youracclaim.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
-Function Get-CybereasonMalwareCounts {
+Function Get-CybereasonMalwareCount {
     [CmdletBinding()]
         param()  # End param
 
@@ -2029,11 +2029,11 @@ Function Get-CybereasonMalwareCounts {
     $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data | Select-Object -ExpandProperty malwareCountFilters
 
     $TotalCount = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data).TotalCount
-    $Results += New-Object -TypeName PSObject -Property @{Filter='Total'; Count=$TotalCount} 
+    $Results += New-Object -TypeName PSObject -Property @{Filter='Total'; Count=$TotalCount}
 
     $Results
 
-}  # End Function Get-CybereasonMalwareCounts
+}  # End Function Get-CybereasonMalwareCount
 
 
 <#
@@ -2074,23 +2074,23 @@ This switch parameter returns all known malware with a status of done
 
 
 .EXAMPLE
-Get-CybereasonMalwareTypes -MalwareType KnownMalware -NeedsAttention -Limit 1 -Sort ASC
+Get-CybereasonMalwareType -MalwareType KnownMalware -NeedsAttention -Limit 1 -Sort ASC
 # This example returns 1 result on all malware that needs attention in ascending order of their occurences
 
 .EXAMPLE
-Get-CybereasonMalwareTypes -MalwareType KnownMalware -All -Limit 25 -Sort DESC -Offset 0 
+Get-CybereasonMalwareType -MalwareType KnownMalware -All -Limit 25 -Sort DESC -Offset 0
 # This example returns up to 25 results on all known malware in descending order
 
 .EXAMPLE
-Get-CybereasonMalwareTypes -MalwareAfter (Get-Date).AddDays(-2).Ticks
+Get-CybereasonMalwareType -MalwareAfter (Get-Date).AddDays(-2).Ticks
 # This example returns info on all known malware that occured after a defined date
 
 .EXAMPLE
-Get-CybereasonMalwareTypes -MalwareBefore (Get-Date).AddDays(-2).Ticks
+Get-CybereasonMalwareType -MalwareBefore (Get-Date).AddDays(-2).Ticks
 # This example returns info on all known malware that occured before a defined date
 
 .EXAMPLE
-Get-CybereasonMalwareTypes -MalwareType KnownMalware -Status Done -Limit 25 -Sort DESC -Offset 0 
+Get-CybereasonMalwareType -MalwareType KnownMalware -Status Done -Limit 25 -Sort DESC -Offset 0
 # This example returns info on all known malware with a status of done
 
 
@@ -2120,7 +2120,7 @@ https://www.linkedin.com/in/roberthosborne/
 https://www.youracclaim.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
-Function Get-CybereasonMalwareTypes {
+Function Get-CybereasonMalwareType {
     [CmdletBinding(DefaultParameterSetName='All')]
         param(
             [Parameter(
@@ -2189,38 +2189,38 @@ Function Get-CybereasonMalwareTypes {
         'NeedsAttention' {
 
             $JsonData = '{"filters": [{"fieldName":"type","operator":"Equals","values":["' + $MalwareType + '"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
-        
+
         }  # End Switch Needs Attention
 
         'All' {
 
             $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["' + $MalwareType + '"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
-        
+
         }  # End Switch AllKnownMalware
 
         'MalwareAfter' {
 
             $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"timestamp","operator":"GreaterOrEqualsTo","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
-        
+
         }  # End Switch KnownMalwareFromTime
 
         'MalwareBefore' {
 
             $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"timestamp","operator":"LessOrEqualsTo","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
-        
+
         }  # End Switch KnownMalwareFromTime
 
         'Status' {
 
             $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"status","operator":"GreaterThan","values":["' + $Status + '"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
-        
+
         }  # End Switch CompletedKnownMalware
 
     }  # End Switch
     Write-Verbose "Sending query to $Uri"
     $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
 
-    $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data 
+    $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data
 
     If ($Results.totalResults -eq 0)
     {
@@ -2229,7 +2229,7 @@ Function Get-CybereasonMalwareTypes {
         $Results
 
     }  # End If
-    Else 
+    Else
     {
 
         $Results.malwares
@@ -2243,11 +2243,11 @@ Function Get-CybereasonMalwareTypes {
 
     }  # End If
 
-}  # End Function Get-CybereasonMalwareTypes
+}  # End Function Get-CybereasonMalwareType
 
 
 <#
-.SYNOPSIS 
+.SYNOPSIS
 This cmdlet is used to retrieve a list of custom detection rules
 
 
@@ -2370,7 +2370,7 @@ Function Get-CybereasonCustomDetectionRule {
 
     Switch ($PSBoundParameters.Keys)
     {
-    
+
         'Active' {
 
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/live'
@@ -2403,13 +2403,13 @@ Function Get-CybereasonCustomDetectionRule {
                 $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{
-                    id=$id; 
-                    Name=$name; 
-                    RootCause=$RootCause; 
-                    malopDetectionType=$malopDetectionType; 
-                    parentId=$parentId; 
-                    elementType=$elementType; 
-                    facetName=$facetName
+                    id=$id;
+                    Name=$name;
+                    RootCause=$RootCause;
+                    malopDetectionType=$malopDetectionType;
+                    parentId=$parentId;
+                    elementType=$elementType;
+                    facetName=$facetName;
                     values=$values;
                     filterType=$filterType;
                     featureTranslation=$featureTranslation;
@@ -2424,9 +2424,9 @@ Function Get-CybereasonCustomDetectionRule {
                     autoRemediationActions=$autoRemediationActions;
                     autoRemediationStatus=$autoRemediationStatus;
                     limitExceed=$limitExceed
-                }  # End Properties 
+                }  # End Properties
 
-            }  # End ForEach-Object 
+            }  # End ForEach-Object
 
             If ($Obj.Count -eq 0)
             {
@@ -2434,7 +2434,7 @@ Function Get-CybereasonCustomDetectionRule {
                 Write-Output "[*] No results were found"
 
             }  # End If
-            Else 
+            Else
             {
 
                 $Obj
@@ -2443,7 +2443,7 @@ Function Get-CybereasonCustomDetectionRule {
 
 
         }  # End Switch Active
-    
+
         'Disabled' {
 
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/deleted'
@@ -2476,13 +2476,13 @@ Function Get-CybereasonCustomDetectionRule {
                 $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
 
                 $Obj += New-Object -TypeName PSObject -Property @{
-                    id=$id; 
-                    Name=$name; 
-                    RootCause=$RootCause; 
-                    malopDetectionType=$malopDetectionType; 
-                    parentId=$parentId; 
-                    elementType=$elementType; 
-                    facetName=$facetName
+                    id=$id;
+                    Name=$name;
+                    RootCause=$RootCause;
+                    malopDetectionType=$malopDetectionType;
+                    parentId=$parentId;
+                    elementType=$elementType;
+                    facetName=$facetName;
                     values=$values;
                     filterType=$filterType;
                     featureTranslation=$featureTranslation;
@@ -2497,9 +2497,9 @@ Function Get-CybereasonCustomDetectionRule {
                     autoRemediationActions=$autoRemediationActions;
                     autoRemediationStatus=$autoRemediationStatus;
                     limitExceed=$limitExceed
-                }  # End Properties 
+                }  # End Properties
 
-            }  # End ForEach-Object 
+            }  # End ForEach-Object
 
             If ($Obj.Count -eq 0)
             {
@@ -2507,7 +2507,7 @@ Function Get-CybereasonCustomDetectionRule {
                 Write-Output "[*] No results were found"
 
             }  # End If
-            Else 
+            Else
             {
 
                 $Obj
@@ -2575,7 +2575,7 @@ Function Get-CybereasonCustomDetectionRule {
                 Write-Output "[*] No results were found"
 
             }  # End If
-            Else 
+            Else
             {
 
                 $Obj
@@ -2585,7 +2585,7 @@ Function Get-CybereasonCustomDetectionRule {
         }  # End Switch ModificationHistory
 
     }  # End Switch
-  
+
 }  # End Function Get-CybereasonCustomDetectionRule
 
 
@@ -2614,7 +2614,7 @@ The Element which is identified as the root cause in the Malop generated from th
 The detection type to assign to Malops generated from this custom detection rule.
 
 .PARAMETER MalopActivityType
-The activity type to assign to Malops generated from this custom detection rule. 
+The activity type to assign to Malops generated from this custom detection rule.
 
 .PARAMETER ElementType
 The Element used as the base of the custom detection rule.
@@ -2799,7 +2799,7 @@ Function New-CybereasonCustomDetectionRule {
         }  # End Switch Default
 
     }  # End Switch
-    
+
     Write-Verbose "Sending query to $Uri"
     $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
 
@@ -2827,9 +2827,9 @@ Function New-CybereasonCustomDetectionRule {
                 $autoRemediationStatus = $_.autoRemediationStatus
                 $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
 
-                $Obj += New-Object -TypeName PSObject -Property @{id=$id; Name=$name; RootCause=$RootCause; malopDetectionType=$malopDetectionType; parentId=$parentId; elementType=$elementType; facetName=$facetName; Values=$values;filterType=$filterType;featureTranslation=$featureTranslation;children=$children;malopActivityType=$malopActivityType;description=$description;enabled=$enabled;userName=$userName;creationTime=$creationTime;updateTime=$updateTime;lastTriggerTime=$lastTriggerTime;autoRemediationActions=$autoRemediationActions;autoRemediationStatus=$autoRemediationStatus;limitExceed=$limitExceed}  # End Properties 
+                $Obj += New-Object -TypeName PSObject -Property @{id=$id; Name=$name; RootCause=$RootCause; malopDetectionType=$malopDetectionType; parentId=$parentId; elementType=$elementType; facetName=$facetName; Values=$values;filterType=$filterType;featureTranslation=$featureTranslation;children=$children;malopActivityType=$malopActivityType;description=$description;enabled=$enabled;userName=$userName;creationTime=$creationTime;updateTime=$updateTime;lastTriggerTime=$lastTriggerTime;autoRemediationActions=$autoRemediationActions;autoRemediationStatus=$autoRemediationStatus;limitExceed=$limitExceed}  # End Properties
 
-            }  # End ForEach-Object 
+            }  # End ForEach-Object
 
             $Obj
 
@@ -2864,7 +2864,7 @@ The Element which is identified as the root cause in the Malop generated from th
 The detection type to assign to Malops generated from this custom detection rule.
 
 .PARAMETER MalopActivityType
-The activity type to assign to Malops generated from this custom detection rule. 
+The activity type to assign to Malops generated from this custom detection rule.
 
 .PARAMETER ElementType
 The Element used as the base of the custom detection rule.
@@ -2894,7 +2894,7 @@ This parameter indicates you want to isolate machines that become infected
 The Cybereason user name for the user updating the rule
 
 
-.EXAMPLE 
+.EXAMPLE
 Set-CybereasonCustomDetectionRule -RuleID 1580246401162 -Name 'Test Rule 1' -FacetName 'maliciousUseOfRegsvr32ModuleEvidence' -ChildFacetName name  -RootCause self
 
 
@@ -3032,19 +3032,19 @@ Function Set-CybereasonCustomDetectionRule {
             [String]$Username
 
         )  # End param
-    
+
     If ($EnableOnCreation.IsPresent) { $EnableOnCreate = 'true' }  # End If
     Else { $EnableOnCreate = 'false' }  # End Else
 
     If ($QuarantineFile.IsPresent) { $EnableQuarantine = 'true' }  # End If
     Else { $EnableQuarantine = 'false' }  # End Else
-    
+
     If ($IsolateMachine.IsPresent) { $EnableIsolate = 'true' }  # End If
     Else { $EnableIsolate = 'false' }  # End Else
-    
+
     If ($KillProcess.IsPresent) { $EnableKill = 'true' }  # End If
     Else { $EnableKill = 'false' }  # End Else
-    
+
     $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/update'
 
     $JsonData = '{"id":' + $RuleID + ',"name":"' + $Name + '","rootCause":"' + $RootCause + '","malopDetectionType":"' + $MalopDetectionType + '","autoRemediationActions":{"killProcess":' + $EnableKill + ',"quarantineFile":' + $EnableQuarantine + ',"isolateMachine":' + $EnableIsolate + '},"autoRemediationStatus":"Active","rule":{"root":{"elementType":"' + $ElementType + '","elementTypeTranslation":"' + $ElementType + '","filters":[{"facetName":"' + $FacetName + '","filterType":"Equals","values":[True]}],"children": [{"elementType":"' + $ChildElementType + '","elementTypeTranslation":"' + $ChildElementName + '","connectionFeature":"' + $ConnectionFeature + '","connectionFeatureTranslation":"' + $ConnectionFeature + '","reversed":False,"filters": [{"facetName":"' + $ChildElementType + '","filterType":"ContainsIgnoreCase","values":["' + $ChildElementName + '"]}]}]},"malopActivityType":"' + $MalopActivityType + '"},"description":"' + $Description + '","enabled":' + $EnableOnCreate + '})'
@@ -3076,9 +3076,9 @@ Function Set-CybereasonCustomDetectionRule {
                 $autoRemediationStatus = $_.autoRemediationStatus
                 $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
 
-                $Obj += New-Object -TypeName PSObject -Property @{id=$id; Name=$name; RootCause=$RootCause; malopDetectionType=$MalopDetectionTypes; parentId=$parentId; elementType=$elementType; facetName=$facetName; Values=$values;filterType=$filterType;featureTranslation=$featureTranslation;children=$children;malopActivityType=$malopActivityType;description=$description;enabled=$enabled;userName=$userName;creationTime=$creationTime;updateTime=$updateTime;lastTriggerTime=$lastTriggerTime;autoRemediationActions=$autoRemediationActions;autoRemediationStatus=$autoRemediationStatus;limitExceed=$limitExceed}  # End Properties 
+                $Obj += New-Object -TypeName PSObject -Property @{id=$id; Name=$name; RootCause=$RootCause; malopDetectionType=$MalopDetectionTypes; parentId=$parentId; elementType=$elementType; facetName=$facetName; Values=$values;filterType=$filterType;featureTranslation=$featureTranslation;children=$children;malopActivityType=$malopActivityType;description=$description;enabled=$enabled;userName=$userName;creationTime=$creationTime;updateTime=$updateTime;lastTriggerTime=$lastTriggerTime;autoRemediationActions=$autoRemediationActions;autoRemediationStatus=$autoRemediationStatus;limitExceed=$limitExceed}  # End Properties
 
-            }  # End ForEach-Object 
+            }  # End ForEach-Object
 
             $Obj
 

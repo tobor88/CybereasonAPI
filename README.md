@@ -29,26 +29,26 @@ Connect-CybereasonAPI -Username 'admin@cybereason.com' -Passwd 'Password123!' -S
 # This authenticates to the Cybereason API creating a session that gets used with all cmdlets in this module
 ```
 
-__Get-CybereasonReputations__: <br>
+__Get-CybereasonReputation__: <br>
 This cmdlet is used to view or download a CSV list of reputation information that have been manually configured on your environments Cybereason server.
 [Documentation for Manage Reputations](https://nest.cybereason.com/documentation/api-documentation/all-versions/manage-reputations)
 - Return a list of reputations that have been configured on Cybereason for your environment and view it in CSV format in your terminal window
 - Return a list of reputations that have been configured on Cybereason for your environment and view it in CSV format and save it to a file
 ```powershell
-Get-CybereasonReputations -Verbose
+Get-CybereasonReputation -Verbose
 # OR TO SAVE TO CSV FILE
-Get-CybereasonReputations -Path C:\Windows\Temp\CybereasonReputations.csv
+Get-CybereasonReputation -Path C:\Windows\Temp\CybereasonReputations.csv
 ```
 
-__Set-CybereasonReputations__: <br>
+__Set-CybereasonReputation__: <br>
 This cmdlet is used to add or update a custom reputation on the Cybereason server instance. Using the Cybereason Reputation Management API, you can integrate and update threat intelligence from various sources to improve detections, view and update file reputations, and add items to the whitelist based on behavioral characteristics.
 - Add or remove reputations for a file using its hash or filename by adding it to a whitelist or blacklist. You can also prevent execution of the file throughout your environment
 - Add or remove reputations for an IP address by adding it to a whitelist or blacklist
 - Add or remove reputations for a domain by adding it to a whitelist or blacklist
 ```powershell
-Set-CybereasonReputations -Keys '1.1.1.1' -Modify whitelist -Action Add -PreventExecution false -Verbose
-Set-CybereasonReputations -Keys '8.8.8.8','www.cybereason.com' -Modify whitelist -Action Remove -PreventExecution false -Verbose
-Set-CybereasonReputations -File 'C:\Users\Enemy\badFile.exe','C:\Users\Enemy\persistence.exe' -Modify blacklist -Action Add -PreventExecution true -Verbose
+Set-CybereasonReputation -Keys '1.1.1.1' -Modify whitelist -Action Add -PreventExecution false -Verbose
+Set-CybereasonReputation -Keys '8.8.8.8','www.cybereason.com' -Modify whitelist -Action Remove -PreventExecution false -Verbose
+Set-CybereasonReputation -File 'C:\Users\Enemy\badFile.exe','C:\Users\Enemy\persistence.exe' -Modify blacklist -Action Add -PreventExecution true -Verbose
 ```
 
 ### Get Threat Intel
@@ -86,22 +86,22 @@ This cmdlet is used to return all of the Malware counts on Cybereason
 # This example returns the count for all Malware types in Cybereason
 Get-CybereasonMalwareCount
 ```
-__Get-CybereasonMalwareTypes__: <br>
+__Get-CybereasonMalwareType__: <br>
 This cmdlet is used to query Malware from a start date, all malware, all malware that needs attention, or all malware with a status of done.
 ```powershell
-Get-CybereasonMalwareTypes -MalwareType KnownMalware -NeedsAttention -Limit 1 -Sort ASC
+Get-CybereasonMalwareType -MalwareType KnownMalware -NeedsAttention -Limit 1 -Sort ASC
 # This example returns 1 result on all malware that needs attention in ascending order of their occurences
 
-Get-CybereasonMalwareTypes -MalwareType KnownMalware -All -Limit 25 -Sort DESC -Offset 0 
+Get-CybereasonMalwareType -MalwareType KnownMalware -All -Limit 25 -Sort DESC -Offset 0 
 # This example returns up to 25 results on all known malware in descending order
 
-Get-CybereasonMalwareTypes -MalwareAfter (Get-Date).AddDays(-2).Ticks
+Get-CybereasonMalwareType -MalwareAfter (Get-Date).AddDays(-2).Ticks
 # This example returns info on all known malware that occured after a defined date
 
-Get-CybereasonMalwareTypes -MalwareBefore (Get-Date).AddDays(-2).Ticks
+Get-CybereasonMalwareType -MalwareBefore (Get-Date).AddDays(-2).Ticks
 # This example returns info on all known malware that occured before a defined date
 
-Get-CybereasonMalwareTypes -MalwareType KnownMalware -Status Done -Limit 25 -Sort DESC -Offset 0 
+Get-CybereasonMalwareType -MalwareType KnownMalware -Status Done -Limit 25 -Sort DESC -Offset 0 
 # This example returns info on all known malware with a status of done
 ```
 
@@ -147,10 +147,10 @@ Get-CybereasonRemediationStatus -MalopID '11.2718161727221199870'
 ### Isolation Rules
 Normally, when a machine is isolated, there is absolutely no communication allowed with the machine. This can sometimes limit the ability of an analyst or administrator to perform investigation or triage on that machine. However, you can add isolation exception rules to help you allow limited communication to an isolated machine
 
-- __Get-CybereasonIsolationRules__: <br>
+- __Get-CybereasonIsolationRule__: <br>
 Retrieve a list of isolation rules 
 ```powershell
-Get-CybereasonIsolationRules
+Get-CybereasonIsolationRule
 # This example retrieves a list of all rules for isolating specific machines
 ```
 

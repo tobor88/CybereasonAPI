@@ -2595,7 +2595,7 @@ This cmdlet is used to creates a custom detection rule
 
 
 .DESCRIPTION
-Creates a custom detection rule.
+Creates a custom detection rule. Custom detection rules created via API should be created only after adequate research regarding precision and coverage has been completed. Creating a custom detection rule that is not specific enough can have detrimental impact on retention and overall performance of the environment.
 
 
 .PARAMETER Name
@@ -2842,7 +2842,7 @@ This cmdlet is used to updates an existing custom detection rule
 
 
 .DESCRIPTION
-Updates an existing custom detection rule.
+Updates an existing custom detection rule. Custom Detection Rules can be created via API but should be created only once adequate research regarding precision and coverage has been completed. Creating a custom detection rule that is not specific enough can have detrimental impact on Retention and overall performance of the environment
 
 
 .PARAMETER RuleID

@@ -2661,7 +2661,7 @@ None
 
 
 .LINK
-https://nest.cybereason.com/documentation/api-documentation/all-versions/query-malware-types
+https://nest.cybereason.com/documentation/api-documentation/all-versions/add-custom-detection-rules
 https://roberthsoborne.com
 https://osbornepro.com
 https://btps-secpack.com
@@ -3032,10 +3032,22 @@ Function Set-CybereasonCustomDetectionRule {
             [String]$Username
 
         )  # End param
+    
+    If ($EnableOnCreation.IsPresent) { $EnableOnCreate = 'true' }  # End If
+    Else { $EnableOnCreate = 'false' }  # End Else
 
+    If ($QuarantineFile.IsPresent) { $EnableQuarantine = 'true' }  # End If
+    Else { $EnableQuarantine = 'false' }  # End Else
+    
+    If ($IsolateMachine.IsPresent) { $EnableIsolate = 'true' }  # End If
+    Else { $EnableIsolate = 'false' }  # End Else
+    
+    If ($KillProcess.IsPresent) { $EnableKill = 'true' }  # End If
+    Else { $EnableKill = 'false' }  # End Else
+    
     $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/update'
 
-    $JsonData = '{"id":' + $RuleID + ',"name":"' + $Name + '","rootCause":"' + $RootCause + '","malopDetectionType":"' + $MalopDetectionType + '","autoRemediationActions":{"killProcess":' + $EnableKill + ',"quarantineFile":' + $EnableQuarantine + ',"isolateMachine":' + $EnableIsolate + '},"autoRemediationStatus":"Active","rule":{"root":{"elementType":"' + $ElementType + '","elementTypeTranslation":"' + $ElementType + '","filters":[{"facetName":"' + $FacetName + '","filterType":"Equals","values":[True]}],"children": [{"elementType":"' + $ChildElementType + '","elementTypeTranslation":"' + $ChildElementName + '","connectionFeature":"' + $ConnectionFeature + '","connectionFeatureTranslation":"' + $ConnectionFeature + '","reversed":False,"filters": [{"facetName":"' + $ChildElementType + '","filterType":"ContainsIgnoreCase","values":["' + $ChildElementName + '"]}]}]},"malopActivityType":"' + $MalopActivityType + '"},"description":"' + $Description + '","enabled":' + $EnableOnCreation + '})'
+    $JsonData = '{"id":' + $RuleID + ',"name":"' + $Name + '","rootCause":"' + $RootCause + '","malopDetectionType":"' + $MalopDetectionType + '","autoRemediationActions":{"killProcess":' + $EnableKill + ',"quarantineFile":' + $EnableQuarantine + ',"isolateMachine":' + $EnableIsolate + '},"autoRemediationStatus":"Active","rule":{"root":{"elementType":"' + $ElementType + '","elementTypeTranslation":"' + $ElementType + '","filters":[{"facetName":"' + $FacetName + '","filterType":"Equals","values":[True]}],"children": [{"elementType":"' + $ChildElementType + '","elementTypeTranslation":"' + $ChildElementName + '","connectionFeature":"' + $ConnectionFeature + '","connectionFeatureTranslation":"' + $ConnectionFeature + '","reversed":False,"filters": [{"facetName":"' + $ChildElementType + '","filterType":"ContainsIgnoreCase","values":["' + $ChildElementName + '"]}]}]},"malopActivityType":"' + $MalopActivityType + '"},"description":"' + $Description + '","enabled":' + $EnableOnCreate + '})'
 
     Write-Verbose "Sending query to $Uri"
     $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData

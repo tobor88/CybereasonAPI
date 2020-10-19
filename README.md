@@ -1,11 +1,25 @@
 <center><img src="https://raw.githubusercontent.com/tobor88/CybereasonAPI/main/images/cyberreason.jpg" alt="Cybereason" width="25%" height="25%"></center>
 
 # CybereasonAPI
- PowerShell module containing commands to easily interact with the Cybereason API. To use the API there are some cmdlets that require you to authenticate with an API user and others you are able to use a full privileged account. Once I get all the functions added I plan to add I will add this to PowerShell Gallery for easy installs.<br>
+__NOTE:__ Tested with latest version of Cybereason API v20.2. Most of these should work with as low as version 18.0. <br>
+ CybereasonAPI is a PowerShell module containing commands meant to allow simple interaciton with the Cybereason API. To use the API there are some cmdlets that require you to authenticate with an API user and others you are able to use a full privileged S3 account. Cybereason has defined a total of 9 general categories of reference for their API. 
+
+1. __Hunt and Investigate__ (_Still In Progress_)
+2. __Respond to Malops__ (_Still In Progress_)
+3. __Remediate Items__ (_Copmleted_)
+4. __Respond to Malware__ (_Completed_)
+5. __Manage Reputations__ (_Completed_)
+6. __Add Custom Detection Rules__ (_Completed_)
+7. __Get Threat Intel__ (_Completed_)
+8. __Manage Sensors__ (_Still In Progress_)
+9. __Set Machine Isolation Rules__ (_Completed_)
+
  __RESOURCE:__ [Cybereason API Documentation](https://nest.cybereason.com/documentation/api-documentation)
- 
+ <br>
+ I have come up with some cmdlets for the above categories to allow simplified communication from a Windows PowerShell window. Any contributions to this project are welcome as there is a ton of information to go through.
+
 ## ISSUE REQUESTS: 
-If you find an issue with any of the cmdlets in this module I wont be offended if you let me know even though this is not completed yet. There are a few cmdlets I have not tested out yet, the isolation rules inparticular and Remdeiate Items I have not fully tested. If you want to send me an email with the PowerShell error message you received it will be very helpful. Thank you. rosborne@osbornepro.com 
+If you find an issue with any of the cmdlets in this module please let me know. There are a few cmdlets I have not tested out yet, the Isolation Rules inparticular and Respond To Malware I have not fully tested. If you want to send me an email with the PowerShell error message you received it will be very helpful. Thank you. rosborne@osbornepro.com 
 
 ## Current Cmdlets
 __Connect-CybereasonAPI__: <br>

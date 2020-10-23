@@ -1,6 +1,17 @@
 <center><img src="https://raw.githubusercontent.com/tobor88/CybereasonAPI/main/images/cyberreason.jpg" alt="Cybereason" width="25%" height="25%"></center>
 
 # CybereasonAPI
+### [NOW IN POWERSHELL GALLERY!!!](https://www.powershellgallery.com/packages/CybereasonAPI/1.0.0)
+```powershell
+# Install Module
+Install-Module CybereasonAPI
+
+# Update Module
+Update-Module -Name CybereasonAPI
+# OR
+Install-Module CybereasonAPI -Force
+```
+---
 __NOTE:__ Tested with latest version of Cybereason API v20.2. Most of these should work with as low as version 18.0. <br>
  CybereasonAPI is a PowerShell module containing commands meant to allow simple interaciton with the Cybereason API. To use the API there are some cmdlets that require you to authenticate with an API user and others you are able to use a full privileged S3 account. Cybereason has defined a total of 9 general categories of reference for their API. 
 

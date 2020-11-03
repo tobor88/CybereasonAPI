@@ -17,7 +17,7 @@ __NOTE:__ Tested with latest version of Cybereason API v20.2. Most of these shou
 
 1. __Hunt and Investigate__ (_Still In Progress_)
 2. __Respond to Malops__ (_Still In Progress_)
-3. __Remediate Items__ (_Copmleted_)
+3. __Remediate Items__ (_Completed_)
 4. __Respond to Malware__ (_Completed_)
 5. __Manage Reputations__ (_Completed_)
 6. __Add Custom Detection Rules__ (_Completed_)

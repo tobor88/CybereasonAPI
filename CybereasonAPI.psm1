@@ -2139,6 +2139,12 @@ Function Get-CybereasonMalwareType {
             [String]$Status,
 
             [Parameter(
+                ParameterSetName='MalwareAfter')]  # End Parameter
+                [Parameter(
+                ParameterSetName='MalwareBefore')]  # End Parameter
+            [Parameter(
+                ParameterSetName='Status')]  # End Parameter
+            [Parameter(
                 ParameterSetName='NeedsAttention')]  # End Parameter
             [Switch][Bool]$NeedsAttention,
 
@@ -2194,25 +2200,49 @@ Function Get-CybereasonMalwareType {
 
         'All' {
 
-            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["' + $MalwareType + '"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
+            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":[' + $NeedsAttentionBool + ']}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
 
         }  # End Switch AllKnownMalware
 
         'MalwareAfter' {
 
-            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"timestamp","operator":"GreaterOrEqualsTo","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
+            $NeedsAttentionBool = 'false'
+            If ($NeedsAttention.IsPresent)
+            {
+
+                $NeedsAttentionBool = 'true'
+
+            }  # End If
+
+            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":[' + $NeedsAttentionBool + ']},{"fieldName":"timestamp","operator":"GreaterOrEqualsTo","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
 
         }  # End Switch KnownMalwareFromTime
 
         'MalwareBefore' {
 
-            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"timestamp","operator":"LessOrEqualsTo","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
+            $NeedsAttentionBool = 'false'
+            If ($NeedsAttention.IsPresent)
+            {
+
+                $NeedsAttentionBool = 'true'
+
+            }  # End If
+
+            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":[' + $NeedsAttentionBool + ']},{"fieldName":"timestamp","operator":"LessOrEqualsTo","values":["timestamp"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
 
         }  # End Switch KnownMalwareFromTime
 
         'Status' {
 
-            $JsonData = '{"filters":[{"fieldName":"type","operator": "Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":["False"]},{"fieldName":"status","operator":"GreaterThan","values":["' + $Status + '"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
+            $NeedsAttentionBool = 'false'
+            If ($NeedsAttention.IsPresent)
+            {
+
+                $NeedsAttentionBool = 'true'
+
+            }  # End If
+
+            $JsonData = '{"filters":[{"fieldName":"type","operator":"Equals","values":["' + $MalwareType + '"]},{"fieldName":"needsAttention","operator":"Is","values":[' + $NeedsAttentionBool + ']},{"fieldName":"status","operator":"Equals","values":["' + $Status + '"]}],"sortingFieldName":"timestamp","sortDirection":"' + $Sort + '","limit":' + $Limit + ',"offset":' + $Offset + '})'
 
         }  # End Switch CompletedKnownMalware
 

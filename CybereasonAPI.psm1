@@ -3562,7 +3562,7 @@ Function Get-CybereasonListAllSensors {
     $JsonData = '{"limit":' + $Limit + ',"offset":' + $Offset + ',"sortDirection":"' + $Sort + '","filters":[{'
     $FieldName,$Values = $Filter.Split(":")
     $Value = $Values.Split(",").Trim()
-    $JsonData = $JsonData + "`"fieldName`":$FieldName`",`"operator`":`"Equals`",`"values`":[$Value]}]})"
+    $JsonData = $JsonData + "`"fieldName`":`"$FieldName`",`"operator`":`"Equals`",`"values`":[`"$Value`"]}]})"
 
     Write-Verbose "Sending query to $Uri"
     $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
@@ -3631,8 +3631,8 @@ Function Get-CybereasonListAllSensors {
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU91d5AlujddAkZgyr3M+0Nbqo
-# bMKgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU86iHllSzEFVz0aZHh8PbJflJ
+# zASgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -3692,11 +3692,11 @@ Function Get-CybereasonListAllSensors {
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FGVZfp3JxtcZKsKODBlPAQuH8OAmMA0GCSqGSIb3DQEBAQUABIIBAAFtaX4Jyw3Y
-# MnMbnmXmKi++pdq65QytMUoB6J0AtQV1G74tOkiv0cK1fLAbKQs/xSymRJtYFW8Y
-# 93bsA7YIxLvUdFlYqgj3ypZ1j0OpA1+zwiTGgDFkg38l92rTsXX102OXs2e90nF4
-# MMRWH6hqWIwFAn5CyPzsZXbhekAJAFqwlxWS4REpDXIjcNOWWZCSPtEq1rOkNoDj
-# oTOBmKVooCyYgsU8RVE2KhhNYzRbJks1paNP7PogyPCqQmSBN3peOKjhqw5oE1H/
-# beXsJIHvCg07vSAPCIWcUhrkoZb2LB1atsW/1WK1PqHyKk2Cc+G4Y7QKUENqbSgs
-# WvjM/sKlvfQ=
+# FI0TjOxxmhUMx8fI/Va3rxKXICv0MA0GCSqGSIb3DQEBAQUABIIBABLjD2Lf7m70
+# Pr9URKLbTYSdtOgeu/tCsEKEDdGxtCldN8EPQxVgJ3w/X9Cy5r0yFDb37izgdesY
+# lrfmgt2P7TMKJoKq/4ZtyzPoIpiyJWy8Xgzz+91C3M4lUAsK6zNXE7zgdHnvf7Cr
+# kWNGGvtvJ8aqpLaN+J88Rj7iHc+gRZ/gndKfBOoiJGV+e5IXY6k42ExehBtRUi8g
+# sR/qYthBFUONafjxKOquJlQwAR8TR6HBN2XNFZZ0rcmf3AAGBOG8rruYs9SjepcH
+# iA7pwkx+AsVdBUVKCScOqDyX8Ppx+gNftfAtjeAblixpP+HFQHujzS6hkUJ1YUCS
+# 6kovc1U3+oc=
 # SIG # End signature block

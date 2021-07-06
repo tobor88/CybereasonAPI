@@ -4,16 +4,18 @@
 ### [NOW IN POWERSHELL GALLERY!!!](https://www.powershellgallery.com/packages/CybereasonAPI/1.0.0)
 ```powershell
 # Install Module
-Install-Module CybereasonAPI
-
-# Update Module
-Update-Module -Name CybereasonAPI
+Install-Module -Name CybereasonAPI
 # OR
-Install-Module CybereasonAPI -Force
+Install-Module -Name CybereasonAPI -Force
 ```
 ---
-__NOTE:__ Tested with latest version of Cybereason API v20.2. Most of these should work with as low as version 18.0. <br>
- CybereasonAPI is a PowerShell module containing commands meant to allow simple interaciton with the Cybereason API. To use the API there are some cmdlets that require you to authenticate with an API user and others you are able to use a full privileged S3 account. Cybereason has defined a total of 9 general categories of reference for their API. 
+__VERSION:__ Tested with latest version of Cybereason API v20.2. Most of these should work with as low as version 18.0. <br>
+<br>
+__IMPORTANT NOTE ON TWO FACTOR AUTHENTICATION:__ Cybereason has two permission types that can communicate with the API. There is an __API user__, which needs to be created manually and a __GUI User__. A __GUI user__ has the ability to sign into the Cybereason Web app and can perform queries against the main Cybereason API site. This site specifically is https://sage.cybereason.com/rest/* That same GUI user however is __NOT__ able to perform queries that for affect isolation rules or other Malop related tasks. These queries get performed against your organizations Cybereason server which is something like this: https://abcdefgh.cybereason.com/rest/. (_This URL value would be whatever value you enter into the ```-Server``` switch parameter in the ```Connect-CybereasonAPI``` cmdlet_). Only the created __API user__, who does not have permissions to sign into the Cybereason Web GUI, is able to perform API actions dealing with Malops and Isolation rules. <br>
+<br>
+
+### Description
+CybereasonAPI is a PowerShell module containing commands meant to allow simple interaciton with the Cybereason API. To use the API there are some cmdlets that require you to authenticate with an API user and others you are able to use a full privileged S3 account. Cybereason has defined a total of 9 general categories of reference for their API. 
 
 1. __Hunt and Investigate__ (_Still In Progress_)
 2. __Respond to Malops__ (_Still In Progress_)
@@ -36,8 +38,13 @@ If you find an issue with any of the cmdlets in this module please let me know. 
 __Connect-CybereasonAPI__: <br>
 This cmdlet is used to authenticate to the Cybereason API. This will create a global variable called $Session that will get used with the rest of the cmdlets in this module that need it.
 ```powershell
-Connect-CybereasonAPI -Username 'admin@cybereason.com' -Passwd 'Password123!' -Server 'aaaaaaaa.cybereason.net' -Port '8443' -ClearHistory -Verbose
+# AUTHENTICATE AS THE API USER (Currently not able to enable TFA for API users)
+Connect-CybereasonAPI -Username 'api-user@cybereason.com' -Passwd 'Password123!' -Server 'aaaaaaaa.cybereason.net' -Port '443'
 # This authenticates to the Cybereason API creating a session that gets used with all cmdlets in this module
+
+# AUTHENTICATE AS AN GUI USER WHO HAS TFA ENABLED
+Connect-CybereasonAPI -Username 'admin@cybereason.com' -Passwd 'OnlyPassword1!' -Server 'aaaaaaaa.cybereason.net' -Port '8443' -ClearHistory -Authenticator 123456
+# This authenticates to the Cybereason API using Two Factor Authentication. This also clears the PowerShell command history in the current session and in the file
 ```
 
 __Get-CybereasonReputation__: <br>

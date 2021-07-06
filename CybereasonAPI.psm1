@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-This cmdlet is used to authenticate to the Cybereason API. Once this is done a global $Session variable is created that will be used for all other cmdlets in this module.
+This cmdlet is used to authenticate to the Cybereason API. Once this is done a global $CybereasonSession variable is created that will be used for all other cmdlets in this module.
 
 
 .DESCRIPTION
-This cmdlet creates a $Session variable that will be used with all the other cmdlets in this module to authenticate requests made to the Cybereason API.
+This cmdlet creates a $CybereasonSession variable that will be used with all the other cmdlets in this module to authenticate requests made to the Cybereason API.
 
 
 .PARAMETER Server
@@ -19,10 +19,17 @@ This is the email address you use to sign into Cybereason
 .PARAMETER Passwd
 This is the password you use to sign into your Cybereason account. The session history gets cleared to attempt preventing the password from appearing in the session logs. This does not clear the events logs. I suggest only letting administrators view the PowerShell event logs.
 
+.PARAMETER Authenticator
+This parameter is for NON-API Cybereason users to authenticate to Cyberason using Two Factor Authentication (TFA). When used, the only cmdlet in this module that will work is Get-CybereasonThreatIntel
+
 
 .EXAMPLE
-Connect-CybereasonAPI -Server 123.45.67.78 -Port 8443 -Username admin@cyberason.com -Passwd "Password123!"
-# This example authenticates to the Cybereason API and creates a $Session variable to be used by other cmdlets. This also clears the current PowerShell Session History.
+Connect-CybereasonAPI -Server 123.45.67.78 -Port 8443 -Username api-user@cyberason.com -Passwd "Password123!" -ClearHistory
+# This example authenticates to the Cybereason API and creates a $CybereasonSession variable to be used by other cmdlets. This also clears the PowerShell command history of the current session as well as the HistorySavePath file value.
+
+.EXAMPLE
+Connect-CybereasonAPI -Server 123.45.67.78 -Port 443 -Username admin-user@cyberason.com -Passwd "Password123!" -Authenticator 123123 -ClearHistory
+# IMPORTANT: Only non-api users are able to use Two Factor Authentication (TFA). This prevents organization level cmdlets from working. Only Get-CybereasonThreatIntel works after authenticating with a non-API user
 
 
 .NOTES
@@ -42,13 +49,13 @@ None
 .LINK
 https://nest.cybereason.com/documentation/api-documentation
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Connect-CybereasonAPI {
@@ -73,7 +80,7 @@ Function Connect-CybereasonAPI {
                 Position=2,
                 Mandatory=$True,
                 ValueFromPipeline=$False,
-                HelpMessage="`n[H] Enter the IP address or hostname of your Cybereason server as well as the port. Spearate values with a : `n[E] EXAMPLE: 10.0.0.1:443 `n[E] EXAMPLE: asdf.cybereason.com:8443")]
+                HelpMessage="`n[H] Enter the IP address or hostname of your Cybereason server. DO NOT include the port `n[E] EXAMPLE: 10.0.0.1`n[E] EXAMPLE: asdf.cybereason.com")]
             [ValidateNotNullOrEmpty()]
             [String]$Server,
 
@@ -83,6 +90,13 @@ Function Connect-CybereasonAPI {
                 ValueFromPipeline=$False)]  # End Parameter
             [ValidateRange(1,65535)]
             [String]$Port = "443",
+
+            [Parameter(
+                Position=4,
+                Mandatory=$False,
+                ValueFromPipeline=$False,  # End Parameter
+                HelpMessage="`n[H] Enter the code from your authenticator app `n[E] EXAMPLE: 123456")]
+            [String]$Authenticator,
 
             [Parameter(
                 Mandatory=$False)]  # End Parameter
@@ -113,9 +127,19 @@ Function Connect-CybereasonAPI {
         username="$Username"
         password="$Passwd"
     }  # End Body
+    If ($Authenticator)
+    {
+
+        $Body = @{
+            username="$Username"
+            password="$Passwd"
+            totpCode="$Authenticator"
+        }  # End Body
+
+    }  # End If
 
     Write-Verbose "Sending request to $Uri"
-    $Results = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $Body -SessionVariable 'Session'
+    $Results = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $Body -SessionVariable 'CybereasonSession'
 
     If ($Results.StatusCode -eq '200')
     {
@@ -123,15 +147,28 @@ Function Connect-CybereasonAPI {
         Write-Output "[*] Successfully created an authenticated session to the Cybereason API."
 
     }  # End If
+    Else
+    {
 
-    $Global:Session = $Session
+        Write-Warning "[!] Status code returned was not a value of 200. Value received is below"
+        $Results.StatusCode
+        $Results
+
+    }  # End Else
+
+    $Global:CybereasonSession = $CybereasonSession
     $Global:Server = $Server
     $Global:Port = $Port
 
     If ($ClearHistory.IsPresent)
     {
 
-        Clear-History -Verbose
+        Write-Output "[*] Using the Clear-History command to clear the current PowerShell sessions command history"
+        Clear-History
+
+        Write-Output "[*] Deleing the PowerShell HistorySavePath file which stores a copy of the previous command history"
+        Remove-Item (Get-PSReadlineOption).HistorySavePath
+
         Write-Warning "This PowerShells session history has just been cleared to prevent the clear text password from appearing in log files. This does not clear the PowerShell Event log. Only allow administrators to view that log."
 
     }  # End If
@@ -308,13 +345,13 @@ None
 .LINK
 https://nest.cybereason.com/documentation/api-documentation
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Get-CybereasonThreatIntel {
@@ -774,13 +811,13 @@ The CSV list is sent to the file designated in the Path parameter.
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/get-reputation#getreputations
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Get-CybereasonReputation {
@@ -799,14 +836,14 @@ Function Get-CybereasonReputation {
     {
 
         Write-Verbose "Downloading file to $Path"
-        Invoke-RestMethod -URI $Uri -WebSession $Session -Headers @{charset='utf-8'} -ContentType "application/json" -Method GET -OutFile "$Path"
+        Invoke-RestMethod -URI $Uri -WebSession $CybereasonSession -Headers @{charset='utf-8'} -ContentType "application/json" -Method GET -OutFile "$Path"
 
     }  # End If
     Else
     {
 
         Write-Verbose "Returning CSV formatted results to window"
-        Invoke-RestMethod -URI $Uri -WebSession $Session -ContentType "application/json" -Method GET
+        Invoke-RestMethod -URI $Uri -WebSession $CybereasonSession -ContentType "application/json" -Method GET
 
     }  # End Else
 
@@ -872,13 +909,13 @@ None
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/get-reputation#getreputations
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Set-CybereasonReputation {
@@ -960,7 +997,7 @@ Function Set-CybereasonReputation {
             $JsonData = '[{"keys": ["' + $Hash + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
 
             Write-Verbose "Sending request to $Uri"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $Session
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $CybereasonSession
             $Response.Content | ConvertFrom-Json
 
         }  # End ForEach
@@ -984,7 +1021,7 @@ Function Set-CybereasonReputation {
             $JsonData = '[{"keys": ["' + $Key + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
 
             Write-Verbose "Sending request to $Uri"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $Session
+            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $CybereasonSession
             $Response.Content | ConvertFrom-Json
 
         }  # End ForEach
@@ -1053,13 +1090,13 @@ System.Object[]
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/remediate-items#remediatemalops
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Invoke-RemediateItem {
@@ -1136,7 +1173,7 @@ Function Invoke-RemediateItem {
     }  # End Switch
 
     Write-Verbose "Sending request to $Uri"
-    $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $Session
+    $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $CybereasonSession
     $Response.Content | ConvertFrom-Json | `
         ForEach-Object {
                 $MalopId = ($_.malopId | Out-String).Trim()
@@ -1202,13 +1239,13 @@ None
 https://nest.cybereason.com/documentation/api-documentation/all-versions/check-remediation-progress
 https://nest.cybereason.com/api-documentation/all-versions/APIReference/RemediationAPI/remediateMalop.html#remediate-items
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Get-CybereasonRemediationProgress {
@@ -1251,7 +1288,7 @@ Function Get-CybereasonRemediationProgress {
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/progress/" + $Username + "/" + $MalopID + "/" + $RemediationID
 
-    $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+    $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
     $Response.Content | ConvertFrom-Json | `
     ForEach-Object {
@@ -1313,13 +1350,13 @@ None
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/abort-malop-remediation
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Stop-CybereasonMalopRemediation {
@@ -1340,7 +1377,7 @@ Function Stop-CybereasonMalopRemediation {
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/abort/" + $MalopID + "/" + $RemediationID
 
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
     $Response.Content | ConvertFrom-Json | `
     ForEach-Object {
@@ -1399,13 +1436,13 @@ None
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/get-remediation-statuses
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Get-CybereasonRemediationStatus {
@@ -1421,7 +1458,7 @@ Function Get-CybereasonRemediationStatus {
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/status/" + $MalopID
 
-    $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+    $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
     $Response.Content | ConvertFrom-Json | `
     ForEach-Object {
@@ -1477,13 +1514,13 @@ None
 .LINK
 https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/retrieveRules.html#getisolationrules
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Get-CybereasonIsolationRule {
@@ -1492,7 +1529,7 @@ Function Get-CybereasonIsolationRule {
 
     $Obj = @()
     $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
-    $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+    $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
     If ($Response.StatusCode -eq 200)
     {
@@ -1570,13 +1607,13 @@ None
 .LINK
 https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/createRule.html#createisolationrule
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function New-CybereasonIsolationRule {
@@ -1639,7 +1676,7 @@ Function New-CybereasonIsolationRule {
 
     $JsonData = '{' + $StringOne + $StringTwo + ',"blocking":"' + $Block + '","direction":"' + $Direction + '"}'
 
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
 
         $Response.Content | ConvertFrom-Json | `
         ForEach-Object {
@@ -1708,13 +1745,13 @@ None
 .LINK
 https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/updateRule.html#updateisolationrule
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Set-CybereasonIsolationRule {
@@ -1804,7 +1841,7 @@ Function Set-CybereasonIsolationRule {
 
     $JsonData = '{"ruleId":"' + $RuleID + '"' + $StringOne + $StringTwo + $StringThree + $StringFour + $StringFive + '}'
 
-    $Response = Invoke-WebRequest -Method PUT -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+    $Response = Invoke-WebRequest -Method PUT -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
 
     $Response.Content | ConvertFrom-Json | `
     ForEach-Object {
@@ -1880,13 +1917,13 @@ None
 .LINK
 https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/deleteRule.html#deleteisolationrule
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Remove-CybereasonIsolationRule {
@@ -1975,7 +2012,7 @@ Function Remove-CybereasonIsolationRule {
 
     $JsonData = '{"ruleId":' + $RuleID + $StringOne + $StringTwo + $StringThree + $StringFour + $StringFive + '}'
 
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
     $Response.Content | ConvertFrom-Json
 
 }  # End Function Remove-CybereasonIsolationRule
@@ -2007,13 +2044,13 @@ None
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/get-malware-counts#getmalwarecounts
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Get-CybereasonMalwareCount {
@@ -2025,7 +2062,7 @@ Function Get-CybereasonMalwareCount {
     $JsonData = '{"compoundQueryFilters":[{"filters":[{"fieldName":"needsAttention","operator":"Is","values":[true]}],"filterName":"needsAttention"},{"filters":[{"fieldName":"type","operator":"Equals","values":["KnownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":[false]}],"filterName":"KnownMalware"},{"filters":[{"fieldName":"type","operator":"Equals","values":["UnknownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":[false]}],"filterName":"UnknownMalware"},{"filters":[{"fieldName":"type","operator":"Equals","values":["FilelessMalware"]},{"fieldName":"needsAttention","operator":"Is","values":[false]}],"filterName":"FilelessMalware"},{"filters":[{"fieldName":"type","operator":"Equals","values":["ApplicationControlMalware"]}],"filterName":"ApplicationControlMalware"}]}'
 
     Write-Verbose "Sending query to $Uri"
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
     $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data | Select-Object -ExpandProperty malwareCountFilters
 
     $TotalCount = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data).TotalCount
@@ -2111,13 +2148,13 @@ None
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/query-malware-types
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Get-CybereasonMalwareType {
@@ -2248,7 +2285,7 @@ Function Get-CybereasonMalwareType {
 
     }  # End Switch
     Write-Verbose "Sending query to $Uri"
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
 
     $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data
 
@@ -2349,13 +2386,13 @@ None
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/add-custom-detection-rules
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Get-CybereasonCustomDetectionRule {
@@ -2406,7 +2443,7 @@ Function Get-CybereasonCustomDetectionRule {
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/live'
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
             $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
             ForEach-Object {
@@ -2479,7 +2516,7 @@ Function Get-CybereasonCustomDetectionRule {
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/deleted'
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
             $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
             ForEach-Object {
@@ -2551,7 +2588,7 @@ Function Get-CybereasonCustomDetectionRule {
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/rootCauses'
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
             $Response.Content | ConvertFrom-Json
 
@@ -2562,7 +2599,7 @@ Function Get-CybereasonCustomDetectionRule {
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/getMalopDetectionTypes'
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
             $Response.Content | ConvertFrom-Json
 
@@ -2573,7 +2610,7 @@ Function Get-CybereasonCustomDetectionRule {
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/getMalopActivityTypes'
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
             $Response.Content | ConvertFrom-Json
 
@@ -2585,7 +2622,7 @@ Function Get-CybereasonCustomDetectionRule {
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/history/' + $RuleID.ToString()
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $Session
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
             $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty history | `
             ForEach-Object {
@@ -2693,13 +2730,13 @@ None
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/add-custom-detection-rules
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function New-CybereasonCustomDetectionRule {
@@ -2831,7 +2868,7 @@ Function New-CybereasonCustomDetectionRule {
     }  # End Switch
 
     Write-Verbose "Sending query to $Uri"
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
 
     $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
             ForEach-Object {
@@ -2945,13 +2982,13 @@ None
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/update-custom-detection-rule
 https://roberthsoborne.com
-https://osbornepro.com
+https://writeups.osbornepro.com
 https://btps-secpack.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
 https://www.linkedin.com/in/roberthosborne/
-https://www.youracclaim.com/users/roberthosborne/badges
+https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Set-CybereasonCustomDetectionRule {
@@ -3080,7 +3117,7 @@ Function Set-CybereasonCustomDetectionRule {
     $JsonData = '{"id":' + $RuleID + ',"name":"' + $Name + '","rootCause":"' + $RootCause + '","malopDetectionType":"' + $MalopDetectionType + '","autoRemediationActions":{"killProcess":' + $EnableKill + ',"quarantineFile":' + $EnableQuarantine + ',"isolateMachine":' + $EnableIsolate + '},"autoRemediationStatus":"Active","rule":{"root":{"elementType":"' + $ElementType + '","elementTypeTranslation":"' + $ElementType + '","filters":[{"facetName":"' + $FacetName + '","filterType":"Equals","values":[True]}],"children": [{"elementType":"' + $ChildElementType + '","elementTypeTranslation":"' + $ChildElementName + '","connectionFeature":"' + $ConnectionFeature + '","connectionFeatureTranslation":"' + $ConnectionFeature + '","reversed":False,"filters": [{"facetName":"' + $ChildElementType + '","filterType":"ContainsIgnoreCase","values":["' + $ChildElementName + '"]}]}]},"malopActivityType":"' + $MalopActivityType + '"},"description":"' + $Description + '","enabled":' + $EnableOnCreate + '})'
 
     Write-Verbose "Sending query to $Uri"
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $Session -Body $JsonData
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
 
     $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
             ForEach-Object {

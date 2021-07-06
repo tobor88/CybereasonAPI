@@ -3151,11 +3151,488 @@ Function Set-CybereasonCustomDetectionRule {
 
 }  # End Function Set-CybereasonCustomDetectionRule
 
+
+<#
+.SYNOPSIS
+Sends a request to return details on all or a selected group of sensors. You must be assigned the System Admin role to send requests to this endpoint URL.
+
+
+.PARAMETER Limit
+The number of sensors to which to send the request. Valid values run from 0-1000.
+
+.PARAMETER Offset
+Set to 0 to receive the first limit set of sensors.
+
+.PARAMETER Sort
+The order in which to receive results. Valid values are ASC (ascending) or DESC (descending)
+
+.PARAMETER Filter
+An object containing details on the filter to apply to return a select group of sensors. f you add a parameter in the filters object, ensure you use this syntax: {“fieldName”: “<filter parameter>”, “operator”: “<operator>”, “values”: [“<value>”]}
+Field 	Type 	Description
+actionsInProgress 	Integer 	The number of actions in progress (i.e. Not Resolved) on the machine.
+amStatus 	Enum 	
+
+The Anti-Malware installation status for the sensor. Possible values include:
+
+    AM_INSTALLED
+    AM_UNINSTALLED
+
+antiExploitStatus 	Enum 	
+
+The status of the Exploit Prevention feature. Possible values include:
+
+    ENABLED
+    DISABLED
+
+This field returns a value only if you have enabled Exploit Prevention.
+
+This field is applicable for versions 20.1 and higher.
+antiMalwareStatus 	Enum 	
+
+The Anti-Malware prevention mode for the sensor. Possible values include:
+
+    AM_DETECT_DISINFECT
+    AM_DEFAULT
+
+archiveTimeMs 	Timestamp 	The time (in epoch) when the sensor was archived.
+archiveOrUnarchiveComment 	String 	The comment added when a sensor was archived or unarchived.
+collectionComponents 	Enum 	
+
+Any special collections enabled on the server and/or sensor. Possible values include:
+
+    DPI
+    Metadata
+    File events
+    Registry events
+
+collectionStatus 	Enum 	
+
+States whether the machine has data collection enabled. Possible values include:
+
+    ENABLED
+    DISABLED
+    SUSPENDED
+
+compliance 	Boolean 	Indicates whether the current sensor settings match the policy settings.
+cpuUsage 	Float 	The amount of CPU used by the machine (expressed as a percentage).
+criticalAsset 	Boolean 	The value assigned for the machine for the CRITICAL ASSET sensor tag.
+customTags 	String 	A list of custom sensor tags assigned to the machine.
+deliveryTime 	Timestamp 	The time (in epoch) when the last policy update was delivered to the sensor
+department 	String 	The value assigned to the machine for the DEPARTMENT sensor tag.
+deviceType 	String 	The value assigned to the machine for the DEVICE TYPE sensor tag.
+disconnected 	Boolean 	Indicates whether a sensor is currently disconnected.
+disconnectionTime 	Timestamp 	Time the machine was disconnected. Returns 0 if this is the first connection time. After the first connection, this is the time it was last connected.
+exitReason 	String 	The reason the sensor service (minionhost.exe) stopped.
+externalIpAddress 	String 	The machine’s external IP address for the local network.
+firstSeenTime 	Timestamp 	The first time the machine was recognized. Timestamp values are returned in epoch.
+fullScanStatus 	Enum 	The status set for the sensor for the full scan.
+fqdn 	String 	The fully qualified domain name (fqdn) for the machine.
+fwStatus 	Enum 	
+
+The status of the Personal Firewall Control feature. Possible values include:
+
+    DISABLED
+    ENABLED
+
+This field returns a value only if you have enabled Endpoint Controls.
+
+This field is applicable for versions 19.2 and higher.
+guid 	String 	The globally unique sensor identifier.
+lastStatusAction 	String 	The last action taken that changed the sensor status.
+lastUpgradeResult 	Enum 	
+
+The result of the last upgrade process. Possible values include:
+
+    None
+    Pending
+    InProgress
+    FailedSending
+    Primed
+    UnknownProbe
+    NotSupported
+    Disconnected
+    TimeoutSending
+    Failed
+    Succeeded
+    Timeout
+    InvalidState
+    UnauthorizedUser
+    partialResponse
+    ChunksRequired
+    Aborted
+    GettingChunks
+    ProbeRemoved
+    FailedSendingToServer
+    Started
+    SendingMsi
+    MsiSendFail
+    MsiFileCorrupted
+    AlreadyUpdated
+    NewerInstalled
+
+lastUpgradeSteps 	Enum 	
+
+A list of step taken in the upgrade process. Possible values include:
+
+    None
+    Pending
+    InProgress
+    FailedSending
+    Primed
+    UnknownProbe
+    NotSupported
+    Disconnected
+    TimeoutSending
+    Failed
+    Succeeded
+    Timeout
+    InvalidState
+    UnauthorizedUser
+    partialResponse
+    ChunksRequired
+    Aborted
+    GettingChunks
+    ProbeRemoved
+    FailedSendingToServer
+    Started
+    SendingMsi
+    MsiSendFail
+    MsiFileCorrupted
+    AlreadyUpdated
+    NewerInstalled
+
+If there is a failure to upgrade the sensor, this list shows the failure.
+internalIpAddress 	String 	The machine’s internal IP address as identified by the sensor.
+isolated 	Boolean 	States whether the machine is isolated. Returns true if the machine is isolated.
+lastFullScheduleScanSuccessTime 	Timestamp 	The time (in epoch) that the sensor last did a successful full scan.
+lastQuickScheduleScanSuccessTime 	Timestamp 	The time (in epoch) that the sensor last did a successful quick scan.
+lastPylumInfoMsgUpdateTime 	Timestamp 	The last time (in epoch) the sensor sent a message to the Cybereason server.
+location 	String 	The value assigned for this machine for the LOCATION sensor tag.
+machineName 	String 	The name of the machine.
+memoryUsage 	Long 	The amount of RAM on the hosting computer used by the sensor.
+offlineTimeMS 	Timestamp 	The last time (in epoch) that the sensor was offline.
+onlineTimeMS 	Timestamp 	The last time the sensor was seen online.
+organization 	String 	The organization name for the machine on which the sensor is installed.
+osType 	Enum 	
+
+The operating system running on the machine. Possible values include:
+
+    UNKNOWN_OS
+    WINDOWS
+    OSX
+    LINUX
+
+osVersionType 	Enum 	
+
+Version of operating system for the machine. Possible values include:
+
+    Windows_8_1
+    Windows_8
+    Windows_7
+    Windows_Vista
+    Windows_XP_Professional_x64_Edition
+    Windows_XP
+    Windows_2000
+    Windows_Server_2012_R2
+    Windows_Server_2012
+    Windows_Server_2008_R2
+    Windows_Server_2008
+    Windows_Server_2003_R2
+    Windows_Home_Server
+    Windows_Server_2003
+    Windows_Server_2016
+    Windows_Server_2019
+    Windows_10
+    Catalina_10_15
+    Mojave_10_14
+    High_Sierra_10_13
+    Sierra_10_12
+    El_Capitan_10_11
+    Yosemite_10_10
+    Maverick_10_9
+    Centos_Linux_6
+    Centos_Linux_7
+    Red_Hat_Enterprise_Linux_6
+    Red_Hat_Enterprise_Linux_7
+    Ubuntu_Linux_12
+    Ubuntu_Linux_14
+    Ubuntu_Linux_16
+    Ubuntu_Linux_17
+    Ubuntu_Linux_18
+    Oracle_Linux_6
+    Oracle_Linux_7
+    Suse_Linux_12
+    Amazon_Linux_2011__09
+    Amazon_Linux_2012__03
+    Amazon_Linux_2012__09
+    Amazon_Linux_2013__03
+    Amazon_Linux_2013__09
+    Amazon_Linux_2014__03
+    Amazon_Linux_2014__09
+    Amazon_Linux_2015__03
+    Amazon_Linux_2015__09
+    Amazon_Linux_2016__03
+    Amazon_Linux_2016__09
+    Amazon_Linux_2017__03
+    Debian_Linux_8
+    Debian_Linux_9
+
+outdated 	Boolean 	States whether or not the sensor version is out of sync with the server version.
+pendingActions 	Array 	A list of actions pending to run on the sensor.
+policyId 	String 	The unique identifier the Cybereason platform uses for the policy assigned to the sensor.
+policyName 	String 	The name of the policy assigned to this sensor.
+powerShellStatus 	Enum 	
+
+The PowerShell Prevention mode. Possible values include:
+
+    PS_DISABLED
+    PS_ENABLED
+    PS_DEFAULT
+
+preventionError 	String 	The error received for prevention by the sensor.
+preventionStatus 	Enum 	
+
+The Execution Prevention mode. Possible values include:
+
+    ENABLE
+    DISABLE
+    UNINSTALL
+    UNKNOWN
+
+proxyAddress 	String 	The address for the Proxy server used by this sensor.
+pylumID 	String 	The unique identifier assigned by Cybereason to the sensor.
+quickScanStatus 	Enum 	The status set for the sensor for a quick scan.
+ransomwareStatus 	Enum 	
+
+The Anti-Ransomware mode. Possible values include:
+
+    UNKNOWN
+    DISABLED
+    DETECT_ONLY
+    DETECT_AND_SUSPEND
+    DETECT_SUSPEND_PREVENT
+
+remoteShellStatus 	Enum 	
+
+Whether or not the Remote Shell utility is enabled for the sensor. Possible values include:
+
+    AC_DISABLED
+    AC_ENABLED
+
+This field returns a value only if you have enabled Remote Shell for your Cybereason server.
+sensorId 	String 	The unique identifier for a sensor.
+sensorArchivedByUser 	String 	The Cybereason user name for the user who archived the selected sensor.
+sensorLastUpdate 	Timestamp 	The last time (in epoch) that the sensor was updated.
+serverId 	String 	The unique identifier for the sensor’s server.
+serverName 	String 	The name of the server for the sensor.
+serviceStatus 	Enum 	
+
+Indicates the current value of the Anti-Malware service. Possible values include:
+
+    DISABLED
+    DETECT
+    PREVENT
+    SET_BY_POLICY
+
+siteName 	String 	The name of the site for the sensor.
+siteId 	Long 	The identifier for the sensor’s site.
+staleTimeMS 	Integer 	The time (in epoch) when the Sensor was classified as Stale.
+staticAnalysisDetectMode 	Enum 	
+
+The value for the Artificial Intelligence Detect mode in the Anti-Malware settings. Possible values include:
+
+    DISABLED
+    CAUTIOUS
+    MODERATE
+    AGGRESSIVE
+    SET_BY_POLICY
+
+staticAnalysisDetectModeOrigin 	Enum 	
+
+The source of the value for the Artificial Intelligence Detect mode setting. Possible values include:
+
+    NOT_AVAILBLE
+    SET_BY_POLICY
+    SET_MANUALLY
+    AWAITING_UPDATE
+
+staticAnalysisPreventMode 	Enum 	
+
+The value for the Artificial Intelligence Prevent Mode in the Anti-Malware settings. Possible values include:
+
+    DISABLED
+    CAUTIOUS
+    MODERATE
+    AGGRESSIVE
+
+staticAnalysisPreventModeOrigin 	Enum 	
+
+The source of the value for the Artificial Intelligence Prevent mode setting. Possible values include:
+
+    NOT_AVAILBLE
+    SET_BY_POLICY
+    SET_MANUALLY
+    AWAITING_UPDATE
+
+status 	Enum 	
+
+The status of the sensor. Possible values include:
+
+    Online
+    Offline
+    Stale
+    Archived
+
+statusTimeMS 	Timestamp 	The last time (in epoch) when the sensor sent a status.
+upTime 	Long 	The time the sensors have been in the UP state.
+usbStatus 	Enum 	
+
+The status of the Device Control feature. Possible values include:
+
+    ENABLED: the Cybereason platform blocks access to all USB devices
+    DISABLED: the Cybereason platform allows access to all USB devices
+
+This field returns a value only if you have enabled Endpoint Controls.
+
+This field is applicable for versions 19.2 and higher.
+version 	String 	The sensor version number.
+
+.EXAMPLE
+Set-CybereasonCustomDetectionRule -RuleID 1580246401162 -Name 'Test Rule 1' -FacetName 'maliciousUseOfRegsvr32ModuleEvidence' -ChildFacetName name  -RootCause self
+
+
+.NOTES
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
+
+
+.INPUTS
+None
+
+
+.OUTPUTS
+None
+
+.LINK
+https://nest.cybereason.com/documentation/api-documentation/all-versions/query-sensors#getsensors
+https://roberthsoborne.com
+https://writeups.osbornepro.com
+https://btps-secpack.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.credly.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+#>
+Function Get-CybereasonListAllSensors {
+    [CmdletBinding()]
+        param(
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Define the number of sensors to which to send the request (1-1000).`n[E] EXAMPLE: 100")]  # End Parameter
+            [Int32]$Limit,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [ValidateRange(0,1000)]
+            [Int32]$Offset = 0,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Define the sort order as Ascending or Descending.`n[E] EXAMPLE: ASC")]  # End Parameter
+            [ValidateSet("ASC","DESC")]
+            [String]$Sort = "DESC",
+
+            [Parameter(
+                Mandatory=$True,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Define a field name to filter by. Use a : to separate the value. Use the command 'Get-Help Get-CybereasonListAllSensors -Parameter Filter' to view the possible Value options for each field name`n[E] EXAMPLE: 'machineName:server01', 'usbStatus:Enum'")]  # End Parameter
+            [ValidateSet("actionsInProgress:<int>","amStatus:AM_INSTALLED","amStatus:AM_UNINSTALLED","antiExploitStatus:ENABLED","antiExploitStatus:DISABLED","antiMalwareStatus:AM_DETECT_DISINFECT","antiMalwareStatus:AM_DEFAULT","archiveTimeMs:<timestamp>","archiveOrUnarchiveComment:<string>","collectionComponents:DPI","collectionComponents:Metadata","collectionComponents:File events","collectionComponents:Registry events","collectionStatus:ENABLED","collectionStatus:DISABLED","collectionStatus:SUSPENDED","compliance:true","compliance:false","cpuUsage:<float>","criticalAsset:true","criticalAsset:false","customTags:<string>","deliveryTime:<timestamp>","department:<string DEPARTMENT sensor tag>","deviceType:<string DEVICE TYPE sensor tag>","disconnected:true","disconnected:false","disconnectionTime:<timestamp>","exitReason:<string reason the sensor stopped>","externalIpAddress:<string ipaddress>","firstSeenTime:<timestamp>","fullScanStatus","fqdn:<string FQDN of machine>","fwStatus:DISABLED","fwStatus:ENABLED","guid:<string>","lastStatusAction:<string>","lastUpgradeResult:None","lastUpgradeResult:Pending","lastUpgradeResult:InProgress","lastUpgradeResult:FailedSending","lastUpgradeResult:Primed","lastUpgradeResult:UnknownProbe","lastUpgradeResult:NotSupported","lastUpgradeResult:Disconnected","lastUpgradeResult:TimeoutSending","lastUpgradeResult:Failed","lastUpgradeResult:Succeeded","lastUpgradeResult:Timeout","lastUpgradeResult:InvalidState","lastUpgradeResult:UnauthorizedUser","lastUpgradeResult:partialResponse","lastUpgradeResult:ChunksRequired","lastUpgradeResult:Aborted","lastUpgradeResult:GettingChunks","lastUpgradeResult:ProbeRemoved","lastUpgradeResult:FailedSendingToServer","lastUpgradeResult:Started","lastUpgradeResult:SendingMsi","lastUpgradeResult:MsiSendFail","lastUpgradeResult:MsiFileCorrupted","lastUpgradeResult:AlreadyUpdated","lastUpgradeResult:NewerInstalled","lastUpgradeSteps:None","lastUpgradeSteps:Pending","lastUpgradeSteps:InProgress","lastUpgradeSteps:FailedSending","lastUpgradeSteps:Primed","lastUpgradeSteps:UnknownProbe","lastUpgradeSteps:NotSupported","lastUpgradeSteps:Disconnected","lastUpgradeSteps:TimeoutSending","lastUpgradeSteps:Failed","lastUpgradeSteps:Succeeded","lastUpgradeSteps:Timeout","lastUpgradeSteps:InvalidState","lastUpgradeSteps:UnauthorizedUser","lastUpgradeSteps:partialResponse","lastUpgradeSteps:ChunksRequired","lastUpgradeSteps:Aborted","lastUpgradeSteps:GettingChunks","lastUpgradeSteps:ProbeRemoved","lastUpgradeSteps:FailedSendingToServer","lastUpgradeSteps:Started","lastUpgradeSteps:SendingMsi","lastUpgradeSteps:MsiSendFail","lastUpgradeSteps:MsiFileCorrupted","lastUpgradeSteps:AlreadyUpdated","lastUpgradeSteps:NewerInstalled,","internalIpAddress:<ipaddress>","isolated:true","isolated:false","lastFullScheduleScanSuccessTime:<timestamp>","lastQuickScheduleScanSuccessTime:<timestamp>","lastPylumInfoMsgUpdateTime:<timestamp>","location:<string value of LOCATION sensor tag>","machineName:<string>","memoryUsage:<Long>","offlineTimeMS:<timestamp>","onlineTimeMS:<timestamp>","organization:<string>","osType:UNKNOWN_OS","osType:WINDOWS","osType:OSX","osType:LINUX","osVersionType:Windows_10","osVersionType:Windows_8_1","osVersionType:Windows_8","osVersionType:Windows_7","osVersionType:Windows_Vista","osVersionType:Windows_XP_Professional_x64_Edition","osVersionType:Windows_XP","osVersionType:Windows_2000","osVersionType:Windows_Server_2012_R2","osVersionType:Windows_Server_2012","osVersionType:Windows_Server_2008_R2","osVersionType:Windows_Server_2008","osVersionType:Windows_Server_2003_R2","osVersionType:Windows_Home_Server","osVersionType:Windows_Server_2003","osVersionType:Windows_Server_2016","osVersionType:Windows_Server_2019","osVersionType:Catalina_10_15","osVersionType:Mojave_10_14","osVersionType:High_Sierra_10_13","osVersionType:Sierra_10_12","osVersionType:El_Capitan_10_11","osVersionType:Yosemite_10_10","osVersionType:Maverick_10_9","osVersionType:Centos_Linux_6","osVersionType:Centos_Linux_7","osVersionType:Red_Hat_Enterprise_Linux_6","osVersionType:Red_Hat_Enterprise_Linux_7","osVersionType:Ubuntu_Linux_12","osVersionType:Ubuntu_Linux_14","osVersionType:Ubuntu_Linux_16","osVersionType:Ubuntu_Linux_17","osVersionType:Ubuntu_Linux_18","osVersionType:Oracle_Linux_6","osVersionType:Oracle_Linux_7","osVersionType:Suse_Linux_12","osVersionType:Amazon_Linux_2011__09","osVersionType:Amazon_Linux_2012__03","osVersionType:Amazon_Linux_2012__09","osVersionType:Amazon_Linux_2013__03","osVersionType:Amazon_Linux_2013__09","osVersionType:Amazon_Linux_2014__03","osVersionType:Amazon_Linux_2014__09","osVersionType:Amazon_Linux_2015__03","osVersionType:Amazon_Linux_2015__09","osVersionType:Amazon_Linux_2016__03","osVersionType:Amazon_Linux_2016__09","osVersionType:Amazon_Linux_2017__03","osVersionType:Debian_Linux_8","osVersionType:Debian_Linux_9","outdated:true","outdated:false","pendingActions:<array so it can be defined more than once>","policyId:<string>","policyName:<string>","powerShellStatus:PS_DISABLED","powerShellStatus:PS_ENABLED","powerShellStatus:PS_DEFAULT","preventionError:<string>","preventionStatus:ENABLE","preventionStatus:DISABLE","preventionStatus:UNINSTALL","preventionStatus:UNKNOWN","proxyAddress:<ipaddress>","pylumID:<string>","quickScanStatus","ransomwareStatus:UNKNOWN","ransomwareStatus:DISABLED","ransomwareStatus:DETECT_ONLY","ransomwareStatus:DETECT_AND_SUSPEND","ransomwareStatus:DETECT_SUSPEND_PREVENT","remoteShellStatus:AC_DISABLED","remoteShellStatus:AC_ENABLED","sensorId:<string>","sensorArchivedByUser:<string>","sensorLastUpdate:<timestamp>","serverId:<string>","serverName:<string>","serviceStatus:DISABLED","serviceStatus:DETECT","serviceStatus:PREVENT","serviceStatus:SET_BY_POLICY","siteName:<string>","siteId:<long>","staleTimeMS:<time in epoch>","staticAnalysisDetectMode:DISABLED","staticAnalysisDetectMode:CAUTIOUS","staticAnalysisDetectMode:MODERATE","staticAnalysisDetectMode:AGGRESSIVE","staticAnalysisDetectMode:SET_BY_POLICY","staticAnalysisDetectModeOrigin:NOT_AVAILBLE","staticAnalysisDetectModeOrigin:SET_BY_POLICY","staticAnalysisDetectModeOrigin:SET_MANUALLY","staticAnalysisDetectModeOrigin:AWAITING_UPDATE","staticAnalysisPreventMode:DISABLED","staticAnalysisPreventMode:CAUTIOUS","staticAnalysisPreventMode:MODERATE","staticAnalysisPreventMode:AGGRESSIVE","staticAnalysisPreventModeOrigin:NOT_AVAILBLE","staticAnalysisPreventModeOrigin:SET_BY_POLICY","staticAnalysisPreventModeOrigin:SET_MANUALLY","staticAnalysisPreventModeOrigin:AWAITING_UPDATE","status:Online","status:Offline","status:Stale","status:Archived","statusTimeMS:<timestamp>","upTime:<Long>","usbStatus:ENABLED","usbStatus:DISABLED","version:<string sensor version number>")]
+            [String]$Filter
+
+        )  # End param
+
+    $Uri = 'https://' + $Server + ':' + $Port + '/rest/sensors/query'
+    # '{"limit":' + $Limit + ',"offset":"' + $Offset + '","sortDirection":"' + $Sort + '","filters":[{"fieldName":filter_1_name,"operator":"Equals","values":[filter_1_value]}]})})'
+    $JsonData = '{"limit":' + $Limit + ',"offset":"' + $Offset + '","sortDirection":"' + $Sort + '","filters":[{'
+    $FieldName,$Values = $Filter.Split(":")
+    $Value = $Values.Split(",").Trim()
+    $JsonData = $JsonData + "`"fieldName`":$FieldName`",`"operator`":`"Equals`",`"values`":[$Value]}]})"
+
+    Write-Verbose "Sending query to $Uri"
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
+
+    $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty sensors | `
+            ForEach-Object {
+                $SensorId = ($_.sensorId | Out-String).Trim()
+                $pylumId = ($_.pylumId | Out-String).Trim()
+                $guid = ($_.guid | Out-String).Trim()
+                $fqdn = ($_.fqdn | Out-String).Trim()
+                $machineName = ($_.machineName | Out-String).Trim()
+                $internalIpAddress = ($_.internalIpAddress | Out-String).Trim()
+                $externalIpAddress = ($_.externalIpAddress | Out-String).Trim()
+                $siteName = ($_.siteName | Out-String).Trim()
+                $siteId = ($_.siteId | Out-String).Trim()
+                $ransomwareStatus = ($_.ransomwareStatus | Out-String).Trim()
+                $preventionStatus = $_.preventionStatus
+                $isolated = ($_.isolated | Out-String).Trim()
+                $disconnectionTime = Get-Date -Date ($_.disconnectionTime)
+                $lastPylumInfoMsgUpdateTime = Get-Date -Date ($_.lastPylumInfoMsgUpdateTime)
+                $status = ($_.status | Out-String).Trim()
+                $onlineTimeMS = Get-Date -Date ($_.onlineTimeMS)
+                $offlineTimeMS = Get-Date -Date ($_.offlineTimeMS)
+                $staleTimeMS = Get-Date -Date ($_.staleTimeMS)
+                $archiveTimeMs = Get-Date -Date ($_.archiveTimeMs)
+                $statusTimeMS = Get-Date -Date ($_.statusTimeMS)
+                $lastStatusAction = ($_.lastStatusAction | Out-String).Trim()
+                $archivedOrUnarchiveComment = ($_.archivedOrUnarchiveComment | Out-String).Trim()
+                $sensorArchivedByUser = ($_.sensorArchivedByUser | Out-String).Trim()
+                $serverName = ($_.serverName | Out-String).Trim()
+                $serverId = ($_.serverId | Out-String).Trim()
+                $osType = ($_.osType | Out-String).Trim()
+                $osVersionType = ($_.osVersionType | Out-String).Trim()
+                $collectionStatus = ($_.collectionStatus | Out-String).Trim()
+                $version = ($_.version | Out-String).Trim()
+                $firstSeenTime = Get-Date -Date ($_.firstSeenTime)
+                $upTime = Get-Date -Date ($_.upTime)
+                $cpuUsage = ($_.cpuUsage | Out-String).Trim()
+                $memoryUsage = ($_.memoryUsage | Out-String).Trim()
+                $outdated = ($_.outdated | Out-String).Trim()
+                $amStatus = ($_.amStatus | Out-String).Trim()
+                $powerShellStatus = ($_.powerShellStatus | Out-String).Trim()
+                $antiMalwareStatus = ($_.antiMalwareStatus | Out-String).Trim()
+                $organization = ($_.organization | Out-String).Trim()
+                $proxyAddress = ($_.proxyAddress | Out-String).Trim()
+                $preventionError = ($_.preventionError | Out-String).Trim()
+                $exitReason = ($_.exitReason | Out-String).Trim()
+                $actionsInProgress = ($_.actionsInProgress | Out-String).Trim()
+                $pendingActions = ($_.pendingActions | Out-String).Trim()
+                $lastUpgradeResult = ($_.lastUpgradeResult | Out-String).Trim()
+                $lastUpgradeSteps = ($_.lastUpgradeSteps | Out-String).Trim()
+                $disconnected = ($_.disconnected | Out-String).Trim()
+                $sensorLastUpdate = Get-Date -Date ($_.sensorLastUpdate)
+                $fullScanStatus = ($_.fullScanStatus | Out-String).Trim()
+                $quickScanStatus = ($_.quickScanStatus | Out-String).Trim()
+                $lastFullScheduleScanSuccessTime = Get-Date -Date ($_.lastFullScheduleScanSuccessTime)
+                $lastQuickScheduleScanSuccessTime = Get-Date -Date ($_.lastQuickScheduleScanSuccessTime)
+
+                $Obj += New-Object -TypeName PSObject -Property @{sensorId=$sensorId; pylumId=$pylumId; guid=$guid; fqdn=$fqdn; machineName=$machineName; internalIpAddress=$internalIpAddress; externalIpAddress=$externalIpAddress; siteName=$siteName;siteId=$siteId;ransomwareStatus=$ransomwareStatus;preventionStatus=$preventionStatus;isolated=$isolated;disconnectionTime=$disconnectionTime;lastPylumInfoMsgUpdateTime=$lastPylumInfoMsgUpdateTime;status=$status;onlineTimeMS=$onlineTimeMS;offlineTimeMS=$offlineTimeMS;staleTimeMS=$staleTimeMS;archiveTimeMs=$archiveTimeMs;statusTimeMS=$statusTimeMS;lastStatusAction=$lastStatusAction;archivedOrUnarchiveComment=$archivedOrUnarchiveComment;sensorArchivedByUser=$sensorArchivedByUser;serverName=$serverName;serverId=$serverId;osType=$osType;osVersionType=$osVersionType;collectionStatus=$collectionStatus;version=$version;firstSeenTime=$firstSeenTime;upTime=$upTime;cpuUsage=$cpuUsage;memoryUsage=$memoryUsage;outdated=$outdated;amStatus=$amStatus;powerShellStatus=$powerShellStatus;antiMalwareStatus=$antiMalwareStatus;organization=$organization;proxyAddress=$proxyAddress;preventionError=$preventionError;exitReason=$exitReason;actionsInProgress=$actionsInProgress;pendingActions=$pendingActions;lastUpgradeResult=$lastUpgradeResult;lastUpgradeSteps=$lastUpgradeSteps;disconnected=$disconnected;sensorLastUpdate=$sensorLastUpdate;fullScanStatus=$fullScanStatus;quickScanStatus=$quickScanStatus;lastFullScheduleScanSuccessTime=$lastFullScheduleScanSuccessTime;lastQuickScheduleScanSuccessTime=$lastQuickScheduleScanSuccessTime}  # End Properties
+
+            }  # End ForEach-Object
+
+            $Obj
+
+}  # End Function Get-CybereasonListAllSensors
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUDQDONjJeBM6qyp304tJfPTun
-# Luigggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUbXUwSyvCENJUZatMTJGyI1kb
+# 1j2gggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -3215,11 +3692,11 @@ Function Set-CybereasonCustomDetectionRule {
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FEspStVcWRp37CcKH+G0U47OM6U2MA0GCSqGSIb3DQEBAQUABIIBAKN8+Cb5ICVw
-# f/LMIV+FmAUpILT2XbMYWHpU3k6q/m2Ar938v84J2Iq8qcJk+0ZrW5rldWL4MDOM
-# T2fni4Pg4QzgKqBImkdsV8OklZSlj5P6PjQTeBwfBx1HjrAkzR+6y5dKcja0kV3t
-# un+AUZKBlA71ZHaOviydLTqjGJrKs+CMIKXL2k3gYRCmUgLKmCUMZDDVAmHCaskV
-# qlwAZi4U1q/KOWRptSaK+LtT838K920I8/kvLhxpMLhWL/rURwzFbK1kV63LaTOK
-# 3xq1yDxtGeOMWzYCc/GvTBFyxxiMPkSnNtDUPBRJlSkOOI7sCtGbvSGpx5I0RKNH
-# O6OT73pGNlY=
+# FI9BSBbVz7iM7e4Ed1AhgyYkMI8HMA0GCSqGSIb3DQEBAQUABIIBAD6VCucPkgcz
+# lUVBEEhOms+EnxEm7g8bGL81FMJ4Lam/EW0fHo5kNq7M8zFSxTJKd3SfJrq6rVM9
+# a3SCtdHpX7CJNvIwHXe1TnsVy6a6A/x9jqw/3zBfSLV7I9IBykyUSi+2RRfwJs4G
+# Hnf5oQoJpivLMWQYt4hsmywlHHKvT+03jPR0AW4ne9UxbOalTPnd0/r74w5Yw19m
+# u9u8qUHIj5oBXZUNKQWI1Nc5ySHTS9HJGDPG+lQ1aedYkWL57Ia7RBlvsPM4+B05
+# DVFMGTC8q1lxAnwuK3djch5ZBCo92cWjJOOWeBym7EJHdH0qwzbepmrZpvVdsomr
+# 4fHQWkmqLnY=
 # SIG # End signature block

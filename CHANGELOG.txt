@@ -1,7 +1,10 @@
 *******************************************************************************************************
 #                              CHANGE LOG FOR CYBEREASON API MODULE                                   #
 *******************************************************************************************************
+Module Version 1.0.3 
+    - Corrected TFA area of Connect-CybereasonAPI so TFA works
 Module Version 1.0.2
+    - USE LATEST VERSION 1.0.3!!!
     - Added Two Factor Authentication in Connect-CybereasonAPI cmdlet for GUI users to utilize the Get-CybereasonThreatIntel cmdlet
     - Add ShouldProcess to cmdlets that use the PowerShell verbs Set and New
     - Added cmdlet Get-CybereasonListAllSensor from the Manage Sensors API section on Cybereason

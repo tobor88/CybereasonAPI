@@ -919,7 +919,7 @@ https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Set-CybereasonReputation {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
         param(
             [Parameter(
                 ParameterSetName='Keys',
@@ -952,9 +952,33 @@ Function Set-CybereasonReputation {
                 ValueFromPipeline=$False)]  # End Parameter
             [Alias('Prevent')]
             [ValidateSet('true','false')]
-            [String]$PreventExecution = 'false'
+            [String]$PreventExecution = 'false',
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch]$Force
         )  # End param
 
+BEGIN {
+
+    If (-not $PSBoundParameters.ContainsKey('Verbose'))
+    {
+
+        $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
+
+    }  # End If
+    If (-not $PSBoundParameters.ContainsKey('Confirm'))
+    {
+
+        $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
+
+    }  # End If
+    If (-not $PSBoundParameters.ContainsKey('WhatIf'))
+    {
+
+        $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
+
+    }  # End If
 
     $Uri = "https://" + $Server + ":" + $Port + '/rest/classification/update '
     Switch ($Action)
@@ -965,6 +989,9 @@ Function Set-CybereasonReputation {
 
     }  # End Switch
 
+}  # End BEGIN
+
+PROCESS {
 
     If ($PSBoundParameters.Keys -eq 'File')
     {
@@ -996,9 +1023,14 @@ Function Set-CybereasonReputation {
 
             $JsonData = '[{"keys": ["' + $Hash + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
 
-            Write-Verbose "Sending request to $Uri"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $CybereasonSession
-            $Response.Content | ConvertFrom-Json
+            If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
+            {
+
+                Write-Verbose "Sending request to $Uri"
+                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $CybereasonSession
+                $Response.Content | ConvertFrom-Json
+
+            }  # End If
 
         }  # End ForEach
 
@@ -1020,13 +1052,26 @@ Function Set-CybereasonReputation {
 
             $JsonData = '[{"keys": ["' + $Key + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
 
-            Write-Verbose "Sending request to $Uri"
-            $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $CybereasonSession
-            $Response.Content | ConvertFrom-Json
+            If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
+            {
+
+                Write-Verbose "Sending request to $Uri"
+                $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $CybereasonSession
+                $Response.Content | ConvertFrom-Json
+
+            }  # End If
 
         }  # End ForEach
 
     }  # End Else
+
+}  # End PROCESS
+
+END {
+
+    Write-Verbose ('[{0}] Confirm={1} ConfirmPreference={2} WhatIf={3} WhatIfPreference={4}' -f $MyInvocation.MyCommand, $Confirm, $ConfirmPreference, $WhatIf, $WhatIfPreference)
+
+}  # End END
 
 }  # End Function Set-CybereasonReputation
 
@@ -1360,7 +1405,7 @@ https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Stop-CybereasonMalopRemediation {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$True, ConfirmImpact="High")]
         param(
             [Parameter(
                 Mandatory=$True,
@@ -1372,32 +1417,66 @@ Function Stop-CybereasonMalopRemediation {
                 Mandatory=$True,
                 ValueFromPipeline=$False,
                 HelpMessage="`n[H] Enter the Remediation ID you are querying to view the progress of the request `n[E] EXAMPLE: 86f3faa1-bac0-4a17-9192-9d106b734664")]  # End Parameter
-            [String]$RemediationID
+            [String]$RemediationID,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch]$Force
         )  # End parm
+
+BEGIN {
+
+    If (-not $PSBoundParameters.ContainsKey('Verbose'))
+    {
+
+        $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
+
+    }  # End If
+    If (-not $PSBoundParameters.ContainsKey('Confirm'))
+    {
+
+        $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
+
+    }  # End If
+    If (-not $PSBoundParameters.ContainsKey('WhatIf'))
+    {
+
+        $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
+
+    }  # End If
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate/abort/" + $MalopID + "/" + $RemediationID
 
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
+}  # End BEGIN
+PROCESS {
 
-    $Response.Content | ConvertFrom-Json | `
-    ForEach-Object {
-        $MalopId = ($_.malopId | Out-String).Trim()
-        $RemediationId = ($_.remediationId | Out-String).Trim()
-        $Start = Get-Date -Date ($_.start)
-        $End = Get-Date ($_.end)
-        $InitiatingUser = ($_.initiatingUser | Out-String).Trim()
-        $MachineId = ($_.statusLog.machineID | Out-String).Trim()
-        $TargetId = ($_.statusLog.targetId | Out-String).Trim()
-        $Status = ($_.statusLog.status | Out-String).Trim()
-        $ActionType = ($_.statusLog.actionType | Out-String).Trim()
-        $ErrorMessage = $_.statusLog.error
-        $TimeStamp = Get-Date -Date ($_.statusLog.timestamp)
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
+    {
+        $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
-        $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage}
+        $Response.Content | ConvertFrom-Json | `
+        ForEach-Object {
+            $MalopId = ($_.malopId | Out-String).Trim()
+            $RemediationId = ($_.remediationId | Out-String).Trim()
+            $Start = Get-Date -Date ($_.start)
+            $End = Get-Date ($_.end)
+            $InitiatingUser = ($_.initiatingUser | Out-String).Trim()
+            $MachineId = ($_.statusLog.machineID | Out-String).Trim()
+            $TargetId = ($_.statusLog.targetId | Out-String).Trim()
+            $Status = ($_.statusLog.status | Out-String).Trim()
+            $ActionType = ($_.statusLog.actionType | Out-String).Trim()
+            $ErrorMessage = $_.statusLog.error
+            $TimeStamp = Get-Date -Date ($_.statusLog.timestamp)
 
-    }  # End ForEach-Object
+            $Obj += New-Object -TypeName PSObject -Property @{malopId=$MalopId; remediationId=$RemediationId; Start=$Start; End=$End; initiatingUser=$InitiatingUser; MachineId=$MachineId; TargetId=$TargetId; Status=$Status; ActionType=$ActionType; TimeStamp=$TimeStamp; Error=$ErrorMessage}
 
-    $Obj
+        }  # End ForEach-Object
+
+        $Obj
+
+    }  # End If ShouldProcess
+
+}  # End PROCESS
 
 }  # End Function Stop-CybereasonMalopRemediation
 
@@ -1617,7 +1696,7 @@ https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function New-CybereasonIsolationRule {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$True, ConfirmImpact="High")]
         param(
             [Parameter(
                 Mandatory=$True,
@@ -1641,8 +1720,33 @@ Function New-CybereasonIsolationRule {
                 ValueFromPipeline=$False,
                 HelpMessage="`n[H] Define the direction the rule should be applied too.`n[E] EXAMPLE: INCOMING")]  # End Parameter
             [ValidateSet('ALL','INCOMING','OUTGOING')]
-            [String]$Direction
+            [String]$Direction,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch]$Force
         )  # End param
+
+BEGIN {
+
+    If (-not $PSBoundParameters.ContainsKey('Verbose'))
+    {
+
+        $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
+
+    }  # End If
+    If (-not $PSBoundParameters.ContainsKey('Confirm'))
+    {
+
+        $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
+
+    }  # End If
+    If (-not $PSBoundParameters.ContainsKey('WhatIf'))
+    {
+
+        $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
+
+    }  # End If
 
     $Obj = @()
     If ($Blocking.IsPresent)
@@ -1675,8 +1779,13 @@ Function New-CybereasonIsolationRule {
     $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
 
     $JsonData = '{' + $StringOne + $StringTwo + ',"blocking":"' + $Block + '","direction":"' + $Direction + '"}'
+}  # End BEGIN
+PROCESS {
 
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
+    {
+
+        $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
 
         $Response.Content | ConvertFrom-Json | `
         ForEach-Object {
@@ -1693,7 +1802,11 @@ Function New-CybereasonIsolationRule {
 
         }  # End ForEach-Object
 
-    $Obj
+        $Obj
+
+    }  # End If
+
+} # End PROCESS
 
 }  # End Function New-CybereasonIsolationRule
 
@@ -1755,7 +1868,7 @@ https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Set-CybereasonIsolationRule {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$True, ConfirmImpact="High")]
         param(
             [Parameter(
                 Mandatory=$True,
@@ -1790,8 +1903,33 @@ Function Set-CybereasonIsolationRule {
                 Mandatory=$True,
                 ValueFromPipeline=$False,
                 HelpMessage="`n[H] Using the Tick format, define the last update value to specifiy the rule you wish to modify the info on `n[E] EXAMPLE: 1525594605852")]  # End Parameter
-            [String]$LastUpdated
+            [String]$LastUpdated,
+
+            [Parameter(
+                Mandatory=$True)]  # End Parameter
+            [Switch]$Force
         )  # End param
+
+BEGIN {
+
+    If (-not $PSBoundParameters.ContainsKey('Verbose'))
+    {
+
+        $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
+
+    }  # End If
+    If (-not $PSBoundParameters.ContainsKey('Confirm'))
+    {
+
+        $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
+
+    }  # End If
+    If (-not $PSBoundParameters.ContainsKey('WhatIf'))
+    {
+
+        $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
+
+    }  # End If
 
     $Obj = @()
     If ($Blocking.IsPresent)
@@ -1841,24 +1979,34 @@ Function Set-CybereasonIsolationRule {
 
     $JsonData = '{"ruleId":"' + $RuleID + '"' + $StringOne + $StringTwo + $StringThree + $StringFour + $StringFive + '}'
 
-    $Response = Invoke-WebRequest -Method PUT -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
+}  # End BEGIN
+PROCESS {
 
-    $Response.Content | ConvertFrom-Json | `
-    ForEach-Object {
-        $RuleId = ($_.ruleId | Out-String).Trim()
-        $IpAddress = ($_.ipAddress | Out-String).Trim()
-        $IpAddressString = ($_.ipAddressString | Out-String).Trim()
-        $Domain = ($_.domain | Out-String).Trim()
-        $PortNumber = ($_.port | Out-String).Trim()
-        $Direction = ($_.direction | Out-String).Trim()
-        $LastUpdated = Get-Date -Date ($_.lastUpdated)
-        $Blocking = ($_.blocking | Out-String).Trim()
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
+    {
 
-        $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking}
+        $Response = Invoke-WebRequest -Method PUT -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
 
-    }  # End ForEach-Object
+        $Response.Content | ConvertFrom-Json | `
+        ForEach-Object {
+            $RuleId = ($_.ruleId | Out-String).Trim()
+            $IpAddress = ($_.ipAddress | Out-String).Trim()
+            $IpAddressString = ($_.ipAddressString | Out-String).Trim()
+            $Domain = ($_.domain | Out-String).Trim()
+            $PortNumber = ($_.port | Out-String).Trim()
+            $Direction = ($_.direction | Out-String).Trim()
+            $LastUpdated = Get-Date -Date ($_.lastUpdated)
+            $Blocking = ($_.blocking | Out-String).Trim()
 
-    $Obj
+            $Obj += New-Object -TypeName PSObject -Property @{RuleId=$RuleId; IPAddress=$IpAddress; IPAddressString=$ipAddressString; Domain=$Domain; Port=$PortNumber; Direction=$Direction; LastUpdated=$LastUpdated; Blocking=$Blocking}
+
+        }  # End ForEach-Object
+
+        $Obj
+
+    }  # End If ShouldProcess
+
+} # End PROCESS
 
 }  # End Function Set-CybereasonIsolationRule
 
@@ -1927,7 +2075,7 @@ https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Remove-CybereasonIsolationRule {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$True, ConfirmImpact="High")]
         param(
         [Parameter(
             Mandatory=$True,
@@ -1962,8 +2110,14 @@ Function Remove-CybereasonIsolationRule {
             Mandatory=$True,
             ValueFromPipeline=$False,
             HelpMessage="`n[H] Using the Tick format, define the last update value to specifiy the rule you wish to modify the info on `n[E] EXAMPLE: 1525594605852")]  # End Parameter
-        [String]$LastUpdated)
+        [String]$LastUpdated,
 
+        [Parameter(
+            Mandatory=$True)]  # End Parameter
+        [Switch]$Force
+    )  # End param
+
+BEGIN {
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule/delete"
 
@@ -2012,8 +2166,18 @@ Function Remove-CybereasonIsolationRule {
 
     $JsonData = '{"ruleId":' + $RuleID + $StringOne + $StringTwo + $StringThree + $StringFour + $StringFive + '}'
 
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
-    $Response.Content | ConvertFrom-Json
+}  # End BEGIN
+PROCESS {
+
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
+    {
+
+        $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
+        $Response.Content | ConvertFrom-Json
+
+    }  # End If ShouldProcess
+
+}  # End PROCESS
 
 }  # End Function Remove-CybereasonIsolationRule
 
@@ -2740,7 +2904,7 @@ https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function New-CybereasonCustomDetectionRule {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$True, ConfirmImpact="High")]
         param(
             [Parameter(
                 Mandatory=$True,
@@ -2832,8 +2996,35 @@ Function New-CybereasonCustomDetectionRule {
 
             [Parameter(
                 Mandatory=$False)]  # End Parameter
-            [Switch][Bool]$IsolateMachine
+            [Switch][Bool]$IsolateMachine,
+
+            [Parameter(
+                Mandatory=$True)]  # End Parameter
+            [Switch]$Force
         )  # End param
+
+BEGIN {
+
+    If (-not $PSBoundParameters.ContainsKey('Verbose'))
+    {
+
+        $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
+
+    }  # End If
+
+    If (-not $PSBoundParameters.ContainsKey('Confirm'))
+    {
+
+        $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
+
+    }  # End If
+
+    if (-not $PSBoundParameters.ContainsKey('WhatIf'))
+    {
+
+        $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
+
+    }  # End If
 
     If ($EnableOnCreation.IsPresent) { $EnableOnCreate = 'true' }  # End If
     Else { $EnableOnCreate = 'false' }  # End Else
@@ -2867,38 +3058,48 @@ Function New-CybereasonCustomDetectionRule {
 
     }  # End Switch
 
-    Write-Verbose "Sending query to $Uri"
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
+}  # End BEGIN
+PROCESS {
 
-    $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
-            ForEach-Object {
-                $id = ($_.id | Out-String).Trim()
-                $Name = ($_.name | Out-String).Trim()
-                $RootCause = ($_.rootCause | Out-String).Trim()
-                $malopDetectionType = ($_.malopDetectionType | Out-String).Trim()
-                $parentId = ($_.rule.parentId | Out-String).Trim()
-                $elementType = ($_.rule.root.elementType | Out-String).Trim()
-                $facetName = ($_.rule.root.filters.facetName | Out-String).Trim()
-                $values = ($_.rule.root.filters.values | Out-String).Trim()
-                $filterType = ($_.rule.root.filters.filterType | Out-String).Trim()
-                $featureTranslation = ($_.rule.root.filters.featureTranslation | Out-String).Trim()
-                $children = $_.rule.root.children
-                $malopActivityType = ($_.root.malopActivityType | Out-String).Trim()
-                $description = ($_.description | Out-String).Trim()
-                $enabled = ($_.enabled | Out-String).Trim()
-                $userName = ($_.userName | Out-String).Trim()
-                $creationTime = Get-Date -Date ($_.creationTime)
-                $updateTime = Get-Date -Date ($_.updateTime)
-                $lastTriggerTime = Get-Date -Date ($_.lastTriggerTime)
-                $autoRemediationActions = $_.autoRemediationActions
-                $autoRemediationStatus = $_.autoRemediationStatus
-                $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
+    {
 
-                $Obj += New-Object -TypeName PSObject -Property @{id=$id; Name=$name; RootCause=$RootCause; malopDetectionType=$malopDetectionType; parentId=$parentId; elementType=$elementType; facetName=$facetName; Values=$values;filterType=$filterType;featureTranslation=$featureTranslation;children=$children;malopActivityType=$malopActivityType;description=$description;enabled=$enabled;userName=$userName;creationTime=$creationTime;updateTime=$updateTime;lastTriggerTime=$lastTriggerTime;autoRemediationActions=$autoRemediationActions;autoRemediationStatus=$autoRemediationStatus;limitExceed=$limitExceed}  # End Properties
+        Write-Verbose "Sending query to $Uri"
+        $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
 
-            }  # End ForEach-Object
+        $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
+                ForEach-Object {
+                    $id = ($_.id | Out-String).Trim()
+                    $Name = ($_.name | Out-String).Trim()
+                    $RootCause = ($_.rootCause | Out-String).Trim()
+                    $malopDetectionType = ($_.malopDetectionType | Out-String).Trim()
+                    $parentId = ($_.rule.parentId | Out-String).Trim()
+                    $elementType = ($_.rule.root.elementType | Out-String).Trim()
+                    $facetName = ($_.rule.root.filters.facetName | Out-String).Trim()
+                    $values = ($_.rule.root.filters.values | Out-String).Trim()
+                    $filterType = ($_.rule.root.filters.filterType | Out-String).Trim()
+                    $featureTranslation = ($_.rule.root.filters.featureTranslation | Out-String).Trim()
+                    $children = $_.rule.root.children
+                    $malopActivityType = ($_.root.malopActivityType | Out-String).Trim()
+                    $description = ($_.description | Out-String).Trim()
+                    $enabled = ($_.enabled | Out-String).Trim()
+                    $userName = ($_.userName | Out-String).Trim()
+                    $creationTime = Get-Date -Date ($_.creationTime)
+                    $updateTime = Get-Date -Date ($_.updateTime)
+                    $lastTriggerTime = Get-Date -Date ($_.lastTriggerTime)
+                    $autoRemediationActions = $_.autoRemediationActions
+                    $autoRemediationStatus = $_.autoRemediationStatus
+                    $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
 
-            $Obj
+                    $Obj += New-Object -TypeName PSObject -Property @{id=$id; Name=$name; RootCause=$RootCause; malopDetectionType=$malopDetectionType; parentId=$parentId; elementType=$elementType; facetName=$facetName; Values=$values;filterType=$filterType;featureTranslation=$featureTranslation;children=$children;malopActivityType=$malopActivityType;description=$description;enabled=$enabled;userName=$userName;creationTime=$creationTime;updateTime=$updateTime;lastTriggerTime=$lastTriggerTime;autoRemediationActions=$autoRemediationActions;autoRemediationStatus=$autoRemediationStatus;limitExceed=$limitExceed}  # End Properties
+
+                }  # End ForEach-Object
+
+        $Obj
+
+    }  # End If ShouldProcess
+
+}  # End PROCESS
 
 }  # End Function New-CybereasonCustomDetectionRule
 
@@ -2992,7 +3193,7 @@ https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
 Function Set-CybereasonCustomDetectionRule {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$True, ConfirmImpact="High")]
         param(
             [Parameter(
                 Mandatory=$True,
@@ -3096,9 +3297,34 @@ Function Set-CybereasonCustomDetectionRule {
                 Mandatory=$True,
                 ValueFromPipeline=$False,
                 HelpMessage="`n[H] The Cybereason user name for the user updating the rule.`n[E] EXAMPLE: admin@cybereason.com")]  # End Parameter
-            [String]$Username
+            [String]$Username,
+
+            [Parameter(
+                Mandatory=$False)]  # End Parameter
+            [Switch]$Force
 
         )  # End param
+
+BEGIN {
+
+    If (-not $PSBoundParameters.ContainsKey('Verbose'))
+    {
+
+        $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
+
+    }  # End If
+    If (-not $PSBoundParameters.ContainsKey('Confirm'))
+    {
+
+        $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
+
+    }  # End If
+    If (-not $PSBoundParameters.ContainsKey('WhatIf'))
+    {
+
+        $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
+
+    }  # End If
 
     If ($EnableOnCreation.IsPresent) { $EnableOnCreate = 'true' }  # End If
     Else { $EnableOnCreate = 'false' }  # End Else
@@ -3116,38 +3342,48 @@ Function Set-CybereasonCustomDetectionRule {
 
     $JsonData = '{"id":' + $RuleID + ',"name":"' + $Name + '","rootCause":"' + $RootCause + '","malopDetectionType":"' + $MalopDetectionType + '","autoRemediationActions":{"killProcess":' + $EnableKill + ',"quarantineFile":' + $EnableQuarantine + ',"isolateMachine":' + $EnableIsolate + '},"autoRemediationStatus":"Active","rule":{"root":{"elementType":"' + $ElementType + '","elementTypeTranslation":"' + $ElementType + '","filters":[{"facetName":"' + $FacetName + '","filterType":"Equals","values":[True]}],"children": [{"elementType":"' + $ChildElementType + '","elementTypeTranslation":"' + $ChildElementName + '","connectionFeature":"' + $ConnectionFeature + '","connectionFeatureTranslation":"' + $ConnectionFeature + '","reversed":False,"filters": [{"facetName":"' + $ChildElementType + '","filterType":"ContainsIgnoreCase","values":["' + $ChildElementName + '"]}]}]},"malopActivityType":"' + $MalopActivityType + '"},"description":"' + $Description + '","enabled":' + $EnableOnCreate + '})'
 
-    Write-Verbose "Sending query to $Uri"
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
+}  # End BEGIN
+PROCESS {
 
-    $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
-            ForEach-Object {
-                $id = ($_.id | Out-String).Trim()
-                $Name = ($_.name | Out-String).Trim()
-                $RootCause = ($_.rootCause | Out-String).Trim()
-                $malopDetectionTypes = ($_.malopDetectionType | Out-String).Trim()
-                $parentId = ($_.rule.parentId | Out-String).Trim()
-                $elementType = ($_.rule.root.elementType | Out-String).Trim()
-                $facetName = ($_.rule.root.filters.facetName | Out-String).Trim()
-                $values = ($_.rule.root.filters.values | Out-String).Trim()
-                $filterType = ($_.rule.root.filters.filterType | Out-String).Trim()
-                $featureTranslation = ($_.rule.root.filters.featureTranslation | Out-String).Trim()
-                $children = $_.rule.root.children
-                $malopActivityType = ($_.root.malopActivityType | Out-String).Trim()
-                $description = ($_.description | Out-String).Trim()
-                $enabled = ($_.enabled | Out-String).Trim()
-                $userName = ($_.userName | Out-String).Trim()
-                $creationTime = Get-Date -Date ($_.creationTime)
-                $updateTime = Get-Date -Date ($_.updateTime)
-                $lastTriggerTime = Get-Date -Date ($_.lastTriggerTime)
-                $autoRemediationActions = $_.autoRemediationActions
-                $autoRemediationStatus = $_.autoRemediationStatus
-                $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
+    {
 
-                $Obj += New-Object -TypeName PSObject -Property @{id=$id; Name=$name; RootCause=$RootCause; malopDetectionType=$MalopDetectionTypes; parentId=$parentId; elementType=$elementType; facetName=$facetName; Values=$values;filterType=$filterType;featureTranslation=$featureTranslation;children=$children;malopActivityType=$malopActivityType;description=$description;enabled=$enabled;userName=$userName;creationTime=$creationTime;updateTime=$updateTime;lastTriggerTime=$lastTriggerTime;autoRemediationActions=$autoRemediationActions;autoRemediationStatus=$autoRemediationStatus;limitExceed=$limitExceed}  # End Properties
+        Write-Verbose "Sending query to $Uri"
+        $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
 
-            }  # End ForEach-Object
+        $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
+                ForEach-Object {
+                    $id = ($_.id | Out-String).Trim()
+                    $Name = ($_.name | Out-String).Trim()
+                    $RootCause = ($_.rootCause | Out-String).Trim()
+                    $malopDetectionTypes = ($_.malopDetectionType | Out-String).Trim()
+                    $parentId = ($_.rule.parentId | Out-String).Trim()
+                    $elementType = ($_.rule.root.elementType | Out-String).Trim()
+                    $facetName = ($_.rule.root.filters.facetName | Out-String).Trim()
+                    $values = ($_.rule.root.filters.values | Out-String).Trim()
+                    $filterType = ($_.rule.root.filters.filterType | Out-String).Trim()
+                    $featureTranslation = ($_.rule.root.filters.featureTranslation | Out-String).Trim()
+                    $children = $_.rule.root.children
+                    $malopActivityType = ($_.root.malopActivityType | Out-String).Trim()
+                    $description = ($_.description | Out-String).Trim()
+                    $enabled = ($_.enabled | Out-String).Trim()
+                    $userName = ($_.userName | Out-String).Trim()
+                    $creationTime = Get-Date -Date ($_.creationTime)
+                    $updateTime = Get-Date -Date ($_.updateTime)
+                    $lastTriggerTime = Get-Date -Date ($_.lastTriggerTime)
+                    $autoRemediationActions = $_.autoRemediationActions
+                    $autoRemediationStatus = $_.autoRemediationStatus
+                    $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
 
-            $Obj
+                    $Obj += New-Object -TypeName PSObject -Property @{id=$id; Name=$name; RootCause=$RootCause; malopDetectionType=$MalopDetectionTypes; parentId=$parentId; elementType=$elementType; facetName=$facetName; Values=$values;filterType=$filterType;featureTranslation=$featureTranslation;children=$children;malopActivityType=$malopActivityType;description=$description;enabled=$enabled;userName=$userName;creationTime=$creationTime;updateTime=$updateTime;lastTriggerTime=$lastTriggerTime;autoRemediationActions=$autoRemediationActions;autoRemediationStatus=$autoRemediationStatus;limitExceed=$limitExceed}  # End Properties
+
+                }  # End ForEach-Object
+
+                $Obj
+
+    }  # End If
+
+}  # End PROCESS
 
 }  # End Function Set-CybereasonCustomDetectionRule
 
@@ -3170,14 +3406,14 @@ The order in which to receive results. Valid values are ASC (ascending) or DESC 
 An object containing details on the filter to apply to return a select group of sensors. f you add a parameter in the filters object, ensure you use this syntax: {“fieldName”: “<filter parameter>”, “operator”: “<operator>”, “values”: [“<value>”]}
 Field 	Type 	Description
 actionsInProgress 	Integer 	The number of actions in progress (i.e. Not Resolved) on the machine.
-amStatus 	Enum 	
+amStatus 	Enum
 
 The Anti-Malware installation status for the sensor. Possible values include:
 
     AM_INSTALLED
     AM_UNINSTALLED
 
-antiExploitStatus 	Enum 	
+antiExploitStatus 	Enum
 
 The status of the Exploit Prevention feature. Possible values include:
 
@@ -3187,7 +3423,7 @@ The status of the Exploit Prevention feature. Possible values include:
 This field returns a value only if you have enabled Exploit Prevention.
 
 This field is applicable for versions 20.1 and higher.
-antiMalwareStatus 	Enum 	
+antiMalwareStatus 	Enum
 
 The Anti-Malware prevention mode for the sensor. Possible values include:
 
@@ -3196,7 +3432,7 @@ The Anti-Malware prevention mode for the sensor. Possible values include:
 
 archiveTimeMs 	Timestamp 	The time (in epoch) when the sensor was archived.
 archiveOrUnarchiveComment 	String 	The comment added when a sensor was archived or unarchived.
-collectionComponents 	Enum 	
+collectionComponents 	Enum
 
 Any special collections enabled on the server and/or sensor. Possible values include:
 
@@ -3205,7 +3441,7 @@ Any special collections enabled on the server and/or sensor. Possible values inc
     File events
     Registry events
 
-collectionStatus 	Enum 	
+collectionStatus 	Enum
 
 States whether the machine has data collection enabled. Possible values include:
 
@@ -3227,7 +3463,7 @@ externalIpAddress 	String 	The machine’s external IP address for the local net
 firstSeenTime 	Timestamp 	The first time the machine was recognized. Timestamp values are returned in epoch.
 fullScanStatus 	Enum 	The status set for the sensor for the full scan.
 fqdn 	String 	The fully qualified domain name (fqdn) for the machine.
-fwStatus 	Enum 	
+fwStatus 	Enum
 
 The status of the Personal Firewall Control feature. Possible values include:
 
@@ -3239,7 +3475,7 @@ This field returns a value only if you have enabled Endpoint Controls.
 This field is applicable for versions 19.2 and higher.
 guid 	String 	The globally unique sensor identifier.
 lastStatusAction 	String 	The last action taken that changed the sensor status.
-lastUpgradeResult 	Enum 	
+lastUpgradeResult 	Enum
 
 The result of the last upgrade process. Possible values include:
 
@@ -3270,7 +3506,7 @@ The result of the last upgrade process. Possible values include:
     AlreadyUpdated
     NewerInstalled
 
-lastUpgradeSteps 	Enum 	
+lastUpgradeSteps 	Enum
 
 A list of step taken in the upgrade process. Possible values include:
 
@@ -3313,7 +3549,7 @@ memoryUsage 	Long 	The amount of RAM on the hosting computer used by the sensor.
 offlineTimeMS 	Timestamp 	The last time (in epoch) that the sensor was offline.
 onlineTimeMS 	Timestamp 	The last time the sensor was seen online.
 organization 	String 	The organization name for the machine on which the sensor is installed.
-osType 	Enum 	
+osType 	Enum
 
 The operating system running on the machine. Possible values include:
 
@@ -3322,7 +3558,7 @@ The operating system running on the machine. Possible values include:
     OSX
     LINUX
 
-osVersionType 	Enum 	
+osVersionType 	Enum
 
 Version of operating system for the machine. Possible values include:
 
@@ -3381,7 +3617,7 @@ outdated 	Boolean 	States whether or not the sensor version is out of sync with 
 pendingActions 	Array 	A list of actions pending to run on the sensor.
 policyId 	String 	The unique identifier the Cybereason platform uses for the policy assigned to the sensor.
 policyName 	String 	The name of the policy assigned to this sensor.
-powerShellStatus 	Enum 	
+powerShellStatus 	Enum
 
 The PowerShell Prevention mode. Possible values include:
 
@@ -3390,7 +3626,7 @@ The PowerShell Prevention mode. Possible values include:
     PS_DEFAULT
 
 preventionError 	String 	The error received for prevention by the sensor.
-preventionStatus 	Enum 	
+preventionStatus 	Enum
 
 The Execution Prevention mode. Possible values include:
 
@@ -3402,7 +3638,7 @@ The Execution Prevention mode. Possible values include:
 proxyAddress 	String 	The address for the Proxy server used by this sensor.
 pylumID 	String 	The unique identifier assigned by Cybereason to the sensor.
 quickScanStatus 	Enum 	The status set for the sensor for a quick scan.
-ransomwareStatus 	Enum 	
+ransomwareStatus 	Enum
 
 The Anti-Ransomware mode. Possible values include:
 
@@ -3412,7 +3648,7 @@ The Anti-Ransomware mode. Possible values include:
     DETECT_AND_SUSPEND
     DETECT_SUSPEND_PREVENT
 
-remoteShellStatus 	Enum 	
+remoteShellStatus 	Enum
 
 Whether or not the Remote Shell utility is enabled for the sensor. Possible values include:
 
@@ -3425,7 +3661,7 @@ sensorArchivedByUser 	String 	The Cybereason user name for the user who archived
 sensorLastUpdate 	Timestamp 	The last time (in epoch) that the sensor was updated.
 serverId 	String 	The unique identifier for the sensor’s server.
 serverName 	String 	The name of the server for the sensor.
-serviceStatus 	Enum 	
+serviceStatus 	Enum
 
 Indicates the current value of the Anti-Malware service. Possible values include:
 
@@ -3437,7 +3673,7 @@ Indicates the current value of the Anti-Malware service. Possible values include
 siteName 	String 	The name of the site for the sensor.
 siteId 	Long 	The identifier for the sensor’s site.
 staleTimeMS 	Integer 	The time (in epoch) when the Sensor was classified as Stale.
-staticAnalysisDetectMode 	Enum 	
+staticAnalysisDetectMode 	Enum
 
 The value for the Artificial Intelligence Detect mode in the Anti-Malware settings. Possible values include:
 
@@ -3447,7 +3683,7 @@ The value for the Artificial Intelligence Detect mode in the Anti-Malware settin
     AGGRESSIVE
     SET_BY_POLICY
 
-staticAnalysisDetectModeOrigin 	Enum 	
+staticAnalysisDetectModeOrigin 	Enum
 
 The source of the value for the Artificial Intelligence Detect mode setting. Possible values include:
 
@@ -3456,7 +3692,7 @@ The source of the value for the Artificial Intelligence Detect mode setting. Pos
     SET_MANUALLY
     AWAITING_UPDATE
 
-staticAnalysisPreventMode 	Enum 	
+staticAnalysisPreventMode 	Enum
 
 The value for the Artificial Intelligence Prevent Mode in the Anti-Malware settings. Possible values include:
 
@@ -3465,7 +3701,7 @@ The value for the Artificial Intelligence Prevent Mode in the Anti-Malware setti
     MODERATE
     AGGRESSIVE
 
-staticAnalysisPreventModeOrigin 	Enum 	
+staticAnalysisPreventModeOrigin 	Enum
 
 The source of the value for the Artificial Intelligence Prevent mode setting. Possible values include:
 
@@ -3474,7 +3710,7 @@ The source of the value for the Artificial Intelligence Prevent mode setting. Po
     SET_MANUALLY
     AWAITING_UPDATE
 
-status 	Enum 	
+status 	Enum
 
 The status of the sensor. Possible values include:
 
@@ -3485,7 +3721,7 @@ The status of the sensor. Possible values include:
 
 statusTimeMS 	Timestamp 	The last time (in epoch) when the sensor sent a status.
 upTime 	Long 	The time the sensors have been in the UP state.
-usbStatus 	Enum 	
+usbStatus 	Enum
 
 The status of the Device Control feature. Possible values include:
 
@@ -3526,7 +3762,7 @@ https://www.linkedin.com/in/roberthosborne/
 https://www.credly.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 #>
-Function Get-CybereasonListAllSensors {
+Function Get-CybereasonListAllSensor {
     [CmdletBinding()]
         param(
             [Parameter(
@@ -3627,12 +3863,13 @@ Function Get-CybereasonListAllSensors {
 
             $Obj
 
-}  # End Function Get-CybereasonListAllSensors
+}  # End Function Get-CybereasonListAllSensor
+
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU86iHllSzEFVz0aZHh8PbJflJ
-# zASgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUosiClqI57yrJHSqd6YrWPG2e
+# UnGgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -3692,11 +3929,11 @@ Function Get-CybereasonListAllSensors {
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FI0TjOxxmhUMx8fI/Va3rxKXICv0MA0GCSqGSIb3DQEBAQUABIIBABLjD2Lf7m70
-# Pr9URKLbTYSdtOgeu/tCsEKEDdGxtCldN8EPQxVgJ3w/X9Cy5r0yFDb37izgdesY
-# lrfmgt2P7TMKJoKq/4ZtyzPoIpiyJWy8Xgzz+91C3M4lUAsK6zNXE7zgdHnvf7Cr
-# kWNGGvtvJ8aqpLaN+J88Rj7iHc+gRZ/gndKfBOoiJGV+e5IXY6k42ExehBtRUi8g
-# sR/qYthBFUONafjxKOquJlQwAR8TR6HBN2XNFZZ0rcmf3AAGBOG8rruYs9SjepcH
-# iA7pwkx+AsVdBUVKCScOqDyX8Ppx+gNftfAtjeAblixpP+HFQHujzS6hkUJ1YUCS
-# 6kovc1U3+oc=
+# FK4ePaW1I16gjuJtkO48Eh5QFrOHMA0GCSqGSIb3DQEBAQUABIIBAH2fAj5JXgmp
+# ekpInJeU4t4rTSvmf4CyzLUS1z132sSKbARzK64WeO3QdKMD8RzWqA+RdVQHxX0Y
+# XE2vo6LrodDsDSTfTtPmyeSv/SM9d5irkp+ZsHkE7scxqhTW3sEzlXgE+Xt8AKAD
+# Gu3Sc0X3yoNdRgIyQgTzxtLRIbCfATVf3cyyTNuXnKLqGUsQJPug591Ihs6Y22Vy
+# bWqLz3fWygin9CVHWZirZSA7pE/luoDvkNxUO5CzVGJYQK7V4t2x0hvO+SPTouLz
+# 6lnRrDk5hRYWmAHloJ7JoCwqrd0KxObLSrz9Jl9Z05CtYJfNLFnhmNyrtWme3Ng1
+# JXKiNKJuKnY=
 # SIG # End signature block

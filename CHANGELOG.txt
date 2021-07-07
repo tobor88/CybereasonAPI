@@ -1,6 +1,12 @@
 *******************************************************************************************************
 #                              CHANGE LOG FOR CYBEREASON API MODULE                                   #
 *******************************************************************************************************
+Module Version 1.0.2
+    - Added Two Factor Authentication in Connect-CybereasonAPI cmdlet for GUI users to utilize the Get-CybereasonThreatIntel cmdlet
+    - Add ShouldProcess to cmdlets that use the PowerShell verbs Set and New
+    - Added cmdlet Get-CybereasonListAllSensor from the Manage Sensors API section on Cybereason
+Module Version 1.0.1
+    - Corrected some help and misspelled words
 Module Version 1.0.0
     - Initial Creation of Module
 #--------------------------------------------------------------------------------------------------------
@@ -8,9 +14,6 @@ Module Version 1.0.0
 =========================================================================================================
 #                              PSScriptAnalyzer Comments from Author                                    #
 =========================================================================================================
-PSUseShouldProcessForStateChangingFunctions: I will add -WhatIf to the Set-, Stop-, New-, and Remove- 
-commands in the future after I am confident I have them all working as expected.
-
 PSAvoidGlobalVars: The Global variables are set to ensure you can keep using your authenticated Cookie 
 with ease.
 
@@ -22,36 +25,15 @@ figure it out
 **********************************************************************************************************
 RuleName                            Severity     ScriptName Line  Message
 --------                            --------     ---------- ----  -------
-PSUseShouldProcessForStateChangingF Warning      Cybereason 884   Function 'Set-CybereasonReputation' has verb that
-unctions                                         API.psm1         could change system state. Therefore, the function
-                                                                  has to support 'ShouldProcess'.
-PSUseShouldProcessForStateChangingF Warning      Cybereason 1325  Function 'Stop-CybereasonMalopRemediation' has verb
-unctions                                         API.psm1         that could change system state. Therefore, the
-                                                                  function has to support 'ShouldProcess'.
-PSUseShouldProcessForStateChangingF Warning      Cybereason 1582  Function 'New-CybereasonIsolationRule' has verb that
-unctions                                         API.psm1         could change system state. Therefore, the function
-                                                                  has to support 'ShouldProcess'.
-PSUseShouldProcessForStateChangingF Warning      Cybereason 1720  Function 'Set-CybereasonIsolationRule' has verb that
-unctions                                         API.psm1         could change system state. Therefore, the function
-                                                                  has to support 'ShouldProcess'.
-PSUseShouldProcessForStateChangingF Warning      Cybereason 1892  Function 'Remove-CybereasonIsolationRule' has verb
-unctions                                         API.psm1         that could change system state. Therefore, the
-                                                                  function has to support 'ShouldProcess'.
-PSUseShouldProcessForStateChangingF Warning      Cybereason 2675  Function 'New-CybereasonCustomDetectionRule' has
-unctions                                         API.psm1         verb that could change system state. Therefore, the
-                                                                  function has to support 'ShouldProcess'.
-PSUseShouldProcessForStateChangingF Warning      Cybereason 2927  Function 'Set-CybereasonCustomDetectionRule' has
-unctions                                         API.psm1         verb that could change system state. Therefore, the
-                                                                  function has to support 'ShouldProcess'.
-PSAvoidGlobalVars                   Warning      Cybereason 127   Found global variable 'Global:Session'.
-                                                 API.psm1
-PSAvoidGlobalVars                   Warning      Cybereason 128   Found global variable 'Global:Server'.
-                                                 API.psm1
-PSAvoidGlobalVars                   Warning      Cybereason 129   Found global variable 'Global:Port'.
-                                                 API.psm1
 PSUseBOMForUnicodeEncodedFile       Warning      Cybereason       Missing BOM encoding for non-ASCII encoded file
                                                  API.psm1         'CybereasonAPI.psm1'
+PSAvoidGlobalVars                   Warning      Cybereason 159   Found global variable 'Global:CybereasonSession'.
+                                                 API.psm1
+PSAvoidGlobalVars                   Warning      Cybereason 160   Found global variable 'Global:Server'.
+                                                 API.psm1
+PSAvoidGlobalVars                   Warning      Cybereason 161   Found global variable 'Global:Port'.
+                                                 API.psm1
 
 #----------------------------------------------------------------------
 # Command for updating Module Manifest
-# New-ModuleManifest -Path .\CybereasonAPI.psd1 -Author 'Robert H. Osborne' -Copyright '(c) 2020 Robert H. Osborne. All rights reserved.' -CompanyName 'OsbornePro' -RootModule .\CybereasonAPI.psm1 -ModuleVersion 1.0.1 -Description "Collection of PowerShell cmdlets that can be used to interact with the Cybereason API." -PowerShellVersion "3.0" -PowerShellHostName 'ConsoleHost' -CLRVersion '3.5' -DotNetFrameworkVersion '3.5' -ProcessorArchitecture None -FunctionsToExport "Connect-CybereasonAPI","Get-CybereasonThreatIntel","Get-CybereasonReputation","Set-CybereasonReputation","Invoke-CybereasonRemediateItem","Get-CybereasonRemediationProgress","Stop-CybereasonMalopRemediation","Get-CybereasonRemediationStatus","Get-CybereasonIsolationRule","New-CybereasonIsolationRule","Set-CybereasonIsolationRule","Remove-CybereasonIsolationRule","Get-CybereasonMalwareCount","Get-CybereasonMalwareType","Get-CybereasonCustomDetectionRule","New-CybereasonCustomDetectionRule","Set-CybereasonCustomDetectionRule" -CmdletsToExport "Connect-CybereasonAPI","Get-CybereasonThreatIntel","Get-CybereasonReputation","Set-CybereasonReputation","Invoke-CybereasonRemediateItem","Get-CybereasonRemediationProgress","Stop-CybereasonMalopRemediation","Get-CybereasonRemediationStatus","Get-CybereasonIsolationRule","New-CybereasonIsolationRule","Set-CybereasonIsolationRule","Remove-CybereasonIsolationRule","Get-CybereasonMalwareCount","Get-CybereasonMalwareType","Get-CybereasonCustomDetectionRule","New-CybereasonCustomDetectionRule","Set-CybereasonCustomDetectionRule" -ProjectUri "https://github.com/tobor88/CybereasonAPI" -ReleaseNotes 'https://github.com/tobor88/CybereasonAPI/blob/main/CHANGELOG.txt' -LicenseUri "https://github.com/tobor88/CybereasonAPI/blob/main/LICENSE" -IconUri 'https://raw.githubusercontent.com/tobor88/CybereasonAPI/main/images/cyberreason.jpg' -HelpInfoUri "https://github.com/tobor88/CybereasonAPI/blob/main/README.md" -Tags 'NGFW','EDR','Cybereason','API','BlueTeam','CyberSecurity','Analyst','Security','SOC'
+# New-ModuleManifest -Path .\CybereasonAPI.psd1 -Author 'Robert H. Osborne' -Copyright '(c) 2021 OsbornePro LLC. All rights reserved.' -CompanyName 'OsbornePro' -RootModule .\CybereasonAPI.psm1 -ModuleVersion 1.0.2 -Description "Collection of PowerShell cmdlets that can be used to interact with the Cybereason API." -PowerShellVersion "3.0" -PowerShellHostName 'ConsoleHost' -CLRVersion '3.5' -DotNetFrameworkVersion '3.5' -ProcessorArchitecture None -FunctionsToExport "Connect-CybereasonAPI","Get-CybereasonThreatIntel","Get-CybereasonReputation","Set-CybereasonReputation","Invoke-CybereasonRemediateItem","Get-CybereasonRemediationProgress","Stop-CybereasonMalopRemediation","Get-CybereasonRemediationStatus","Get-CybereasonIsolationRule","New-CybereasonIsolationRule","Set-CybereasonIsolationRule","Remove-CybereasonIsolationRule","Get-CybereasonMalwareCount","Get-CybereasonMalwareType","Get-CybereasonCustomDetectionRule","New-CybereasonCustomDetectionRule","Set-CybereasonCustomDetectionRule","Get-CybereasonListAllSensor" -CmdletsToExport "Connect-CybereasonAPI","Get-CybereasonThreatIntel","Get-CybereasonReputation","Set-CybereasonReputation","Invoke-CybereasonRemediateItem","Get-CybereasonRemediationProgress","Stop-CybereasonMalopRemediation","Get-CybereasonRemediationStatus","Get-CybereasonIsolationRule","New-CybereasonIsolationRule","Set-CybereasonIsolationRule","Remove-CybereasonIsolationRule","Get-CybereasonMalwareCount","Get-CybereasonMalwareType","Get-CybereasonCustomDetectionRule","New-CybereasonCustomDetectionRule","Set-CybereasonCustomDetectionRule","Get-CybereasonListAllSensor" -ProjectUri "https://github.com/tobor88/CybereasonAPI" -ReleaseNotes 'https://github.com/tobor88/CybereasonAPI/blob/main/CHANGELOG.txt' -LicenseUri "https://github.com/tobor88/CybereasonAPI/blob/main/LICENSE" -IconUri 'https://raw.githubusercontent.com/tobor88/CybereasonAPI/main/images/cyberreason.jpg' -HelpInfoUri "https://github.com/tobor88/CybereasonAPI/blob/main/README.md" -Tags 'NGFW','EDR','Cybereason','API','BlueTeam','CyberSecurity','Analyst','Security','SOC'

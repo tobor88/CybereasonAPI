@@ -127,19 +127,19 @@ Function Connect-CybereasonAPI {
         username="$Username"
         password="$Passwd"
     }  # End Body
-    If ($Authenticator)
+    If ($Authenticator.Length -gt 0)
     {
 
-        $Body = @{
-            username="$Username"
-            password="$Passwd"
+        $TfaBody = @{
             totpCode="$Authenticator"
+            submit="Login"
         }  # End Body
 
     }  # End If
 
     Write-Verbose "Sending request to $Uri"
-    $Results = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $Body -SessionVariable 'CybereasonSession'
+    Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $Body -SessionVariable 'CybereasonSession' | Out-Null
+    $Results = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $TfaBody -SessionVariable 'CybereasonSession'
 
     If ($Results.StatusCode -eq '200')
     {
@@ -3868,8 +3868,8 @@ Function Get-CybereasonListAllSensor {
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUosiClqI57yrJHSqd6YrWPG2e
-# UnGgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUiwKEEA46q0ybN+mnH6TYPFd8
+# D76gggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -3929,11 +3929,11 @@ Function Get-CybereasonListAllSensor {
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FK4ePaW1I16gjuJtkO48Eh5QFrOHMA0GCSqGSIb3DQEBAQUABIIBAH2fAj5JXgmp
-# ekpInJeU4t4rTSvmf4CyzLUS1z132sSKbARzK64WeO3QdKMD8RzWqA+RdVQHxX0Y
-# XE2vo6LrodDsDSTfTtPmyeSv/SM9d5irkp+ZsHkE7scxqhTW3sEzlXgE+Xt8AKAD
-# Gu3Sc0X3yoNdRgIyQgTzxtLRIbCfATVf3cyyTNuXnKLqGUsQJPug591Ihs6Y22Vy
-# bWqLz3fWygin9CVHWZirZSA7pE/luoDvkNxUO5CzVGJYQK7V4t2x0hvO+SPTouLz
-# 6lnRrDk5hRYWmAHloJ7JoCwqrd0KxObLSrz9Jl9Z05CtYJfNLFnhmNyrtWme3Ng1
-# JXKiNKJuKnY=
+# FK58ZDPTrtEwWviwQRGz0Ql5E7EjMA0GCSqGSIb3DQEBAQUABIIBALv61uncU6bw
+# 2IvkAGy8Rj4kjE7kUMao33TOgEE9ezNB7g7uL4FmT/46qlIVFxy6c3AlKH9RZ9yJ
+# ulMc2YAT2opWmo7zZWQkjoG5iHXLwYpk/a1ZoTPJoDASAd7ZgMtWnGWvL2EHTsrL
+# abCyiYnlPgZ/r3q/jjUCYkXMhBGz8wM1rRAKyfZrmMONGuJcSuloKAqWwBcvK7p5
+# LEGy7oZEt0ItfhX79l+N85JiGNgZWYLgXgE4cmB+XPfXmyTg5jdfeLUOJmjnDwFT
+# 4uHE4NGwGTXRZTN+5VlP1qtshdAKuQnBI86qBn6AgLOOvKIf4qv19BSHbgKszW/i
+# gV6T1IA3Mww=
 # SIG # End signature block

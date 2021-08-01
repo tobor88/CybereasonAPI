@@ -47,7 +47,7 @@ None
 
 
 .LINK
-https://nest.cybereason.com/documentation/api-documentation
+https://nest.cybereason.com/documentation/api-documentation/all-versions/log-api
 https://roberthsoborne.com
 https://writeups.osbornepro.com
 https://btps-secpack.com

@@ -48,9 +48,9 @@ None
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/log-api
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -345,9 +345,9 @@ None
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -811,9 +811,9 @@ The CSV list is sent to the file designated in the Path parameter.
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/get-reputation#getreputations
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -909,9 +909,9 @@ None
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/get-reputation#getreputations
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -1135,9 +1135,9 @@ System.Object[]
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/remediate-items#remediatemalops
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -1284,9 +1284,9 @@ None
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/check-remediation-progress
 https://nest.cybereason.com/api-documentation/all-versions/APIReference/RemediationAPI/remediateMalop.html#remediate-items
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -1395,9 +1395,9 @@ None
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/abort-malop-remediation
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -1515,9 +1515,9 @@ None
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/get-remediation-statuses
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -1593,9 +1593,9 @@ None
 
 .LINK
 https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/retrieveRules.html#getisolationrules
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -1686,9 +1686,9 @@ None
 
 .LINK
 https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/createRule.html#createisolationrule
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -1858,9 +1858,9 @@ None
 
 .LINK
 https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/updateRule.html#updateisolationrule
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -2065,9 +2065,9 @@ None
 
 .LINK
 https://nest.cybereason.com/api-documentation/all-versions/APIReference/IsolationAPI/deleteRule.html#deleteisolationrule
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -2208,9 +2208,9 @@ None
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/get-malware-counts#getmalwarecounts
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -2312,9 +2312,9 @@ None
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/query-malware-types
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -2550,9 +2550,9 @@ None
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/add-custom-detection-rules
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -2894,9 +2894,9 @@ None
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/add-custom-detection-rules
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -3183,9 +3183,9 @@ None
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/update-custom-detection-rule
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -3735,7 +3735,8 @@ This field is applicable for versions 19.2 and higher.
 version 	String 	The sensor version number.
 
 .EXAMPLE
-Set-CybereasonCustomDetectionRule -RuleID 1580246401162 -Name 'Test Rule 1' -FacetName 'maliciousUseOfRegsvr32ModuleEvidence' -ChildFacetName name  -RootCause self
+Get-CybereasonListAllSensor -Limit 1000 -Offset 0 -Sort DESC -Filter osType:WINDOWS
+# This example is used to return a limit of 1000 Windows sensors in descending order
 
 
 .NOTES
@@ -3753,9 +3754,9 @@ None
 
 .LINK
 https://nest.cybereason.com/documentation/api-documentation/all-versions/query-sensors#getsensors
-https://roberthsoborne.com
+https://osbornepro.com
 https://writeups.osbornepro.com
-https://btps-secpack.com
+https://btpssecpack.osbornepro.com
 https://github.com/tobor88
 https://gitlab.com/tobor88
 https://www.powershellgallery.com/profiles/tobor
@@ -3869,8 +3870,8 @@ Function Get-CybereasonListAllSensor {
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUS8RwNpeOYsaQNRqHHbv/coba
-# yVKgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUpCBPLKiw4fPP9zeMNoYxvS2J
+# koigggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -3930,11 +3931,11 @@ Function Get-CybereasonListAllSensor {
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FFpiP2kwPC7KDwEe/mViwiGu9cfnMA0GCSqGSIb3DQEBAQUABIIBABnjwRoda2z5
-# N6uAtUBsrfvoLz0/U8wBUaBHVSFfYR8r/9lvHy4FdotZI8rlHAqO79mtcjwuWb3m
-# FYnwzKtPeTn6XNne6hU7982FDVP61KovdJ3juIXGOPt8OZvRZcUMp70LkWSxeJ7X
-# 7TbmZJ9oqTLcQFYqhOoVP6NpKnPiMAC3i6JQjdoXnmmnlynwf1r4ich/wy//jwAE
-# 1iVAJjAWboD+LEzXmgUDJ1cSGXcUnQsjILWcyG8b0XFKTL9W8g2N1PVd5w8zORzq
-# 72x0HFCHMD8wF5whLhG2ld9MTSeF1T838LR7SVvdxZuHNbDAVHtSo8T8saT+ewd6
-# PZ6l8Ciz7aY=
+# FPZhTRq73HmwzNkfG2Ca6vkqb0ufMA0GCSqGSIb3DQEBAQUABIIBAIXz8wuVV2kU
+# R4DQ1GFJiWWlGqqxaSIrSR1Z+C63MphfWodULS5OJ5+TTee+2KEMeJHKciSTKctZ
+# 8Kzwzm4rfFYKnMxfgWbTK1h+7aOLczd7rnawg7IhVP3y3HXXArOWxBiQ2oOumKYl
+# n7Z85aRP96vykZ4ud73YtjUc5fvOEVzqfb/kFr9V9kmcQ1AjdwM5WvGvivJoKn8s
+# dn8/nxMJK3lfAJO5B/mk9xvxEnedEJmsu2GADE3r9E3k+xzO+P6cGoDDR+2ySVQZ
+# YtqBGvDlr4pN7QfSeaplBcquTjxyrPDAz3sLJKr8FBg6vZRX95S1ot23WxnO99rS
+# rJ5BNjcfVgs=
 # SIG # End signature block

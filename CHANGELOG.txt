@@ -1,11 +1,16 @@
 *******************************************************************************************************
 #                              CHANGE LOG FOR CYBEREASON API MODULE                                   #
 *******************************************************************************************************
+Module Version 1.0.5
+    - Added ability to sign into Cybereason with a GUI use and an API user to allow the use of both session tokens. This prevents limitations on GUI users API permissions applied by Cybereason
+    - Applied the use of the new Global Variable $APICybereasonSession in cmdlets that require the API user
+    - Removed false error message returned by Get-CybereasonCustomDetectionRule where lastTriggerTime returns a null value
+    - Added more detailed error messages to cmdlets
 Module Version 1.0.4
     - Corrected Connect-CybereasonAPI so TFA and non-TFA authentication will work again
     - Removed PowerShellHostName "ConsoleHost" value from CybereasonAPI.psd1 over requests to use this
     in VS Code and WinRM sessions
-Module Version 1.0.3 
+Module Version 1.0.3
     - Corrected TFA area of Connect-CybereasonAPI so TFA works
 Module Version 1.0.2
     - USE LATEST VERSION 1.0.3!!!
@@ -21,10 +26,10 @@ Module Version 1.0.0
 =========================================================================================================
 #                              PSScriptAnalyzer Comments from Author                                    #
 =========================================================================================================
-PSAvoidGlobalVars: The Global variables are set to ensure you can keep using your authenticated Cookie 
+PSAvoidGlobalVars: The Global variables are set to ensure you can keep using your authenticated Cookie
 with ease.
 
-PSUseBOMForUnicodeEncodedFile: I do not know what file is being referred too here but will fix it when I 
+PSUseBOMForUnicodeEncodedFile: I do not know what file is being referred too here but will fix it when I
 figure it out
 
 **********************************************************************************************************

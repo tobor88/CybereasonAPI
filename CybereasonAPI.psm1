@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-This cmdlet is used to authenticate to the Cybereason API. Once this is done a global $CybereasonSession variable is created that will be used for all other cmdlets in this module.
+This cmdlet is used to authenticate to the Cybereason API and is capable of simultaneous authentication of an API and GUI user. This was done because only the API user has permissions to make certain calls. Once this is done a global $CybereasonSession variable is created that will be used for all other cmdlets in this module.
 
 
 .DESCRIPTION
@@ -19,13 +19,19 @@ This is the email address you use to sign into Cybereason
 .PARAMETER Passwd
 This is the password you use to sign into your Cybereason account. The session history gets cleared to attempt preventing the password from appearing in the session logs. This does not clear the events logs. I suggest only letting administrators view the PowerShell event logs.
 
+.PARAMETER ApiUser
+This is the email address you use to sign into Cybereason with the API user. It can be used in conjuntion with -Username creating two session tokens. The reason for this is some cmdlets only work with the API permissioned user
+
+.PARAMETER ApiPassword
+This is the password to authenticate the Cybereason API user. It can be used in conjuntion with -Username creating two session tokens. The reason for this is some cmdlets only work with the API permissioned user
+
 .PARAMETER Authenticator
 This parameter is for NON-API Cybereason users to authenticate to Cyberason using Two Factor Authentication (TFA). When used, the only cmdlet in this module that will work is Get-CybereasonThreatIntel
 
 
 .EXAMPLE
-Connect-CybereasonAPI -Server 123.45.67.78 -Port 8443 -Username api-user@cyberason.com -Passwd "Password123!" -ClearHistory
-# This example authenticates to the Cybereason API and creates a $CybereasonSession variable to be used by other cmdlets. This also clears the PowerShell command history of the current session as well as the HistorySavePath file value.
+Connect-CybereasonAPI -Server 123.45.67.78 -Port 8443 -Username api-user@cyberason.com -Passwd "Password123!" -ApiUser api@domain.com -ApiPassword "!321drowssaP" -ClearHistory
+# This example authenticates to the Cybereason API with an API User and GUI user to creates a $CybereasonSession and $APICybereasonSession variable to be used by other cmdlets. This also clears the PowerShell command history of the current session as well as the HistorySavePath file value.
 
 .EXAMPLE
 Connect-CybereasonAPI -Server 123.45.67.78 -Port 443 -Username admin-user@cyberason.com -Passwd "Password123!" -Authenticator 123123 -ClearHistory
@@ -62,22 +68,30 @@ Function Connect-CybereasonAPI {
     [CmdletBinding()]
         param(
             [Parameter(
-                Position=0,
-                Mandatory=$True,
+                Mandatory=$False,
                 ValueFromPipeline=$False,
                 HelpMessage="`n[H] Enter the email you wish to sign in with `n[E] EXAMPLE: admin.user@domain.com")]  # End Parameter
-            [ValidateNotNullOrEmpty()]
             [String]$Username,
 
             [Parameter(
-                Position=1,
-                Mandatory=$True,
-                ValueFromPipeline=$False)]  # End Parameter
-            [ValidateNotNullOrEmpty()]
+                Mandatory=$False,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the password of the GUI user you wish to sign in with `n[E] EXAMPLE: Password123!")]  # End Parameter)]  # End Parameter
             [String]$Passwd,
 
             [Parameter(
-                Position=2,
+                Mandatory=$False,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the email of the API user you wish to sign in with `n[E] EXAMPLE: api.user@domain.com")]  # End Parameter
+            [String]$ApiUser,
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False,
+                HelpMessage="`n[H] Enter the password of the API user you wish to sign in with `n[E] EXAMPLE: SuperStrongPassword1!")]  # End Parameter
+            [String]$ApiPassword,
+
+            [Parameter(
                 Mandatory=$True,
                 ValueFromPipeline=$False,
                 HelpMessage="`n[H] Enter the IP address or hostname of your Cybereason server. DO NOT include the port `n[E] EXAMPLE: 10.0.0.1`n[E] EXAMPLE: asdf.cybereason.com")]
@@ -85,84 +99,126 @@ Function Connect-CybereasonAPI {
             [String]$Server,
 
             [Parameter(
-                Position=3,
                 Mandatory=$False,
                 ValueFromPipeline=$False)]  # End Parameter
             [ValidateRange(1,65535)]
             [String]$Port = "443",
 
             [Parameter(
-                Position=4,
-                Mandatory=$False,
-                ValueFromPipeline=$False,  # End Parameter
-                HelpMessage="`n[H] Enter the code from your authenticator app `n[E] EXAMPLE: 123456")]
-            [String]$Authenticator,
+                Mandatory=$False)]
+            [Switch][Bool]$TFAPrompt,
 
             [Parameter(
                 Mandatory=$False)]  # End Parameter
             [Switch][Bool]$ClearHistory
         )  # End param
 
-    Write-Verbose "Validating username parameter is in email address format"
-    Try
-    {
-
-        $Null = [MailAddress]$Username
-
-    }  # End Try
-    Catch
-    {
-
-        Throw "[x] The username you defined is not a valid email address."
-
-    }  # End Catch
-
-
     $Uri = "https://" + $Server + ":" + $Port + "/login.html"
 
     Write-Verbose "Ensuring TLS 1.2 is being used"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    $Body = @{
-        username="$Username"
-        password="$Passwd"
-    }  # End Body
-    $Results = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $Body -SessionVariable 'CybereasonSession'
+    If ($UserName.Length -gt 0) {
 
-    If ($Authenticator.Length -gt 0)
-    {
+        Write-Verbose "Validating username parameter is in email address format"
+        Try {
 
-        $TfaBody = @{
-            totpCode="$Authenticator"
-            submit="Login"
+            $Null = [MailAddress]$Username
+
+        }  # End Try
+        Catch {
+
+            Throw "[x] The GUI username you defined is not a valid email address."
+
+        }  # End Catch
+
+        $Body = @{
+            username="$Username"
+            password="$Passwd"
         }  # End Body
-        $Results = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $TfaBody -SessionVariable 'CybereasonSession'
+        $Results = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $Body -SessionVariable 'CybereasonSession'
+
+        If ($TFAPrompt.IsPresent) {
+
+            [int]$Authenticator = Read-Host -Prompt "Enter your TFA Code EXAMPLE: 123456 "
+            $TfaBody = @{
+                totpCode=$Authenticator
+                submit="Login"
+            }  # End Body
+            $Results = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $TfaBody -SessionVariable 'CybereasonSession'
+
+        }  # End If
+
+        $Token = ($Results.Headers.'Set-Cookie' -Split ";")[0]
+        If ($Token) {
+
+            Write-Verbose "JSESSIONID token was created successfully for $UserName"
+
+        }  # End If
+        Else {
+
+            Throw "[x] No JSESSIONID was created for $UserName"
+
+        }  # End Else
+
+        Write-Verbose "Sending request to $Uri"
+        If ($Results.RawContent.Contains("JSESSIONID=")) {
+
+            Write-Output "[*] Successfully created an authenticated session to the Cybereason API."
+
+        }  # End If
+        Else {
+
+            Throw "[x] Authentication failed for $Username"
+
+        }  # End Else
+
+        Write-Output "[*] Created session token for GUI user"
+        $Global:CybereasonSession = $CybereasonSession
 
     }  # End If
 
+    If ($ApiUser.Length -gt 0) {
 
-    Write-Verbose "Sending request to $Uri"
-    If ($Results.StatusCode -eq '200')
-    {
+        Write-Verbose "Validating API username parameter is in email address format"
+        Try {
 
-        Write-Output "[*] Successfully created an authenticated session to the Cybereason API."
+            $Null = [MailAddress]$ApiUser
+
+        }  # End Try
+        Catch {
+
+            Throw "[x] The API username you defined is not a valid email address."
+
+        }  # End Catch
+
+        $Body1 = @{
+            username="$ApiUser"
+            password="$ApiPassword"
+        }  # End Body
+        $Results1 = Invoke-WebRequest -Method POST -Uri $Uri -ContentType "application/x-www-form-urlencoded" -Body $Body1 -SessionVariable 'APICybereasonSession'
+
+        Write-Verbose "Sending request to $Uri"
+        If ($Results1.ParsedHtml.title -ne "Cybereason | Login") {
+
+            Write-Output "[*] Successfully created an authenticated session to the Cybereason API."
+
+        }  # End If
+        Else {
+
+            Throw "[x] Authentication failed for $ApiUser"
+
+        }  # End Else
+
+        Write-Output "[*] Created session token for API user"
+        $Global:APICybereasonSession = $APICybereasonSession
 
     }  # End If
-    Else
-    {
 
-        Write-Warning "[!] Status code returned was not a value of 200. Value received is below"
-        $Results.StatusCode
-        $Results
-
-    }  # End Else
-
-    $Global:CybereasonSession = $CybereasonSession
     $Global:Server = $Server
     $Global:Port = $Port
 
-    If ($ClearHistory.IsPresent)
-    {
+    If ($ClearHistory.IsPresent) {
 
         Write-Output "[*] Using the Clear-History command to clear the current PowerShell sessions command history"
         Clear-History
@@ -173,8 +229,7 @@ Function Connect-CybereasonAPI {
         Write-Warning "This PowerShells session history has just been cleared to prevent the clear text password from appearing in log files. This does not clear the PowerShell Event log. Only allow administrators to view that log."
 
     }  # End If
-    Else
-    {
+    Else {
 
         Write-Warning "The -ClearHistory parameter was not specified. If you wish to remove the clear text password from this session command history you will need to manually issue the command Clear-History"
 
@@ -440,15 +495,13 @@ Function Get-CybereasonThreatIntel {
     $Obj = @()
     $Site = 'https://sage.cybereason.com/rest/'
 
-    Switch ($PSBoundParameters.Keys)
-    {
+    Switch ($PSBoundParameters.Keys) {
 
         'Md5Hash' {
 
             $Uri = $Site + 'classification_v1/file_batch'
 
-            ForEach ($MD in $Md5Hash)
-            {
+            ForEach ($MD in $Md5Hash) {
 
                 $JsonData = '{"requestData": [{"requestKey": {"md5": "' + $MD + '"} }] }'
 
@@ -474,8 +527,7 @@ Function Get-CybereasonThreatIntel {
 
             $Uri = $Site + 'classification_v1/file_batch'
 
-            ForEach ($FilesMD5 in $FileToHash)
-            {
+            ForEach ($FilesMD5 in $FileToHash) {
 
                 $FileHash = (Get-FileHash -Algorithm MD5 -Path $FilesMD5).Hash
                 $JsonData = '{"requestData": [{"requestKey": {"md5": "' + $FileHash + '"} }] }'
@@ -506,18 +558,15 @@ Function Get-CybereasonThreatIntel {
             $Uri = $Site + 'classification_v1/ip_batch'
             $IPv4Regex = '(((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))'
 
-            ForEach ($IPAddr in $IPAddress)
-            {
+            ForEach ($IPAddr in $IPAddress) {
 
                 Write-Verbose "Chekcing $IPAddr"
-                If ($IPAddr -Match $IPv4Regex)
-                {
+                If ($IPAddr -Match $IPv4Regex) {
 
                     $IPType = 'Ipv4'
 
                 }  # End If
-                Else
-                {
+                Else {
 
                     $IPType = 'Ipv6'
 
@@ -548,8 +597,7 @@ Function Get-CybereasonThreatIntel {
 
             $Uri = $Site + 'classification_v1/domain_batch'
 
-            ForEach ($Dom in $Domain)
-            {
+            ForEach ($Dom in $Domain) {
 
                 Write-Verbose "Testing $Dom"
 
@@ -717,8 +765,7 @@ Function Get-CybereasonThreatIntel {
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Results = $Response.Content | ConvertFrom-Json
-            For ($i = 0; $i -le $Results.ipReputationResponseList.Count; $i++)
-            {
+            For ($i = 0; $i -le $Results.ipReputationResponseList.Count; $i++) {
 
                 $IPAddress = ($Results.ipReputationResponseList.requestkey.ipaddress[$i] | Out-String).Trim()
                 $AddressType = ($Results.ipReputationResponseList.requestkey.addressType[$i] | Out-String).Trim()
@@ -742,8 +789,7 @@ Function Get-CybereasonThreatIntel {
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Results = $Response.Content | ConvertFrom-Json
-            For ($i = 0; $i -le ($Results.domainReputationResponseList).Count; $i++)
-            {
+            For ($i = 0; $i -le ($Results.domainReputationResponseList).Count; $i++) {
 
                 $Domain = ($Results.domainReputationResponseList.requestkey[$i] | Out-String).Trim()
                 $ReputationSource = ($Results.domainReputationResponseList.aggregatedResult.reputationSource[$i] | Out-String).Trim()
@@ -766,7 +812,6 @@ Function Get-CybereasonThreatIntel {
             $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData
 
             $Obj = $Response.Content | ConvertFrom-Json
-
             $Obj
 
         }  # End Switch DbUpdateCheck
@@ -833,18 +878,27 @@ Function Get-CybereasonReputation {
     $Uri = 'https://' + $Server + ":$Port" + '/rest/classification/download'
 
     Write-Verbose "Sending request to $Uri"
-    If ($Path.Length -gt 0)
-    {
+    If ($Path.Length -gt 0) {
 
         Write-Verbose "Downloading file to $Path"
-        Invoke-RestMethod -URI $Uri -WebSession $CybereasonSession -Headers @{charset='utf-8'} -ContentType "application/json" -Method GET -OutFile "$Path"
+        $Result = Invoke-RestMethod -URI $Uri -WebSession $APICybereasonSession -Headers @{charset='utf-8'} -ContentType "application/json" -Method GET -OutFile "$Path"
 
     }  # End If
-    Else
-    {
+    Else {
 
         Write-Verbose "Returning CSV formatted results to window"
-        Invoke-RestMethod -URI $Uri -WebSession $CybereasonSession -ContentType "application/json" -Method GET
+        $Result = Invoke-RestMethod -URI $Uri -WebSession $APICybereasonSession -ContentType "application/json" -Method GET
+
+    }  # End Else
+
+    If ($Result.Contains("html")) {
+
+        Write-Error "[x] You do not have the appropriate permissions to execute this command"
+
+    }  # End If
+    Else {
+
+        $Result
 
     }  # End Else
 
@@ -957,33 +1011,28 @@ Function Set-CybereasonReputation {
 
             [Parameter(
                 Mandatory=$False)]  # End Parameter
-            [Switch]$Force
-        )  # End param
+            [Switch]$Force)  # End param
 
 BEGIN {
 
-    If (-not $PSBoundParameters.ContainsKey('Verbose'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Verbose')) {
 
         $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
 
     }  # End If
-    If (-not $PSBoundParameters.ContainsKey('Confirm'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Confirm')) {
 
         $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
 
     }  # End If
-    If (-not $PSBoundParameters.ContainsKey('WhatIf'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('WhatIf')) {
 
         $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
 
     }  # End If
 
-    $Uri = "https://" + $Server + ":" + $Port + '/rest/classification/update '
-    Switch ($Action)
-    {
+    $Uri = "https://" + $Server + ":" + $Port + '/rest/classification/update'
+    Switch ($Action) {
 
         'Add' { $Remove = 'false' }
         'Remove' { $Remove = 'true' }
@@ -991,30 +1040,24 @@ BEGIN {
     }  # End Switch
 
 }  # End BEGIN
-
 PROCESS {
 
-    If ($PSBoundParameters.Keys -eq 'File')
-    {
+    If ($PSBoundParameters.Keys -eq 'File') {
 
-        ForEach ($F in $File)
-        {
+        ForEach ($F in $File) {
 
             $Hash = (Get-FileHash -Algorithm MD5 -Path $F).Hash
-            If ($PreventExecution -like 'true')
-            {
+            If ($PreventExecution -like 'true') {
 
                 Write-Warning "You are about to prevent the execution of this file on all devices in your environment"
                 $Answer = Read-Host -Prompt "Are you sure you wish to perform this action? [Y/n]"
 
-                If ($Answer -like 'n')
-                {
+                If ($Answer -like 'n') {
 
                     $PreventExecution = 'false'
 
                 }  # End If
-                Else
-                {
+                Else {
 
                     Write-Output "[*] Preventing the execution of the file with hash : $F"
 
@@ -1024,11 +1067,20 @@ PROCESS {
 
             $JsonData = '[{"keys": ["' + $Hash + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
 
-            If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
-            {
+            If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?")) {
 
                 Write-Verbose "Sending request to $Uri"
                 $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $CybereasonSession
+                If ($Response.ParsedHtml.title -ne "Cybereason | Login") {
+
+                    Write-Verbose "[*] Successfully authenticated to modify reputation list"
+
+                }  # End If
+                Else {
+
+                    Throw "[x] You do not have permissions to modify the Custom Reputation List"
+
+                }  # End Else
                 $Response.Content | ConvertFrom-Json
 
             }  # End If
@@ -1036,16 +1088,13 @@ PROCESS {
         }  # End ForEach
 
     }  # End Switch File
-    Else
-    {
+    Else {
 
         $IPv4Regex = '(((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}))'
-        ForEach ($Key in $Keys)
-        {
+        ForEach ($Key in $Keys) {
 
             Write-Verbose "Ensuring the Prevent Execution value is set to false when the Key value defined is an IP address or domain name"
-            If ((!($Key.Length -eq 32)) -or (!($Key.Length -eq 40)) -or ($Key -Match $IPv4Regex) -or ($Key -like "*.*"))
-            {
+            If ((!($Key.Length -eq 32)) -or (!($Key.Length -eq 40)) -or ($Key -Match $IPv4Regex) -or ($Key -like "*.*")) {
 
                 $PreventExecution = 'false'
 
@@ -1053,11 +1102,20 @@ PROCESS {
 
             $JsonData = '[{"keys": ["' + $Key + '"],"maliciousType": "' + $Modify + '", "prevent": "' + $PreventExecution + '", "remove": "' + $Remove + '"}]'
 
-            If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
-            {
+            If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?")) {
 
                 Write-Verbose "Sending request to $Uri"
                 $Response = Invoke-WebRequest -Uri $Uri -Method POST -ContentType "application/json" -Body $JsonData -WebSession $CybereasonSession
+                If ($Response.ParsedHtml.title -ne "Cybereason | Login") {
+
+                    Write-Verbose "[*] Successfully authenticated to modify reputation list"
+
+                }  # End If
+                Else {
+
+                    Throw "[x] You do not have permissions to modify the Custom Reputation List"
+
+                }  # End Else
                 $Response.Content | ConvertFrom-Json
 
             }  # End If
@@ -1067,7 +1125,6 @@ PROCESS {
     }  # End Else
 
 }  # End PROCESS
-
 END {
 
     Write-Verbose ('[{0}] Confirm={1} ConfirmPreference={2} WhatIf={3} WhatIfPreference={4}' -f $MyInvocation.MyCommand, $Confirm, $ConfirmPreference, $WhatIf, $WhatIfPreference)
@@ -1186,14 +1243,12 @@ Function Invoke-RemediateItem {
 
     $Obj = @()
     Write-Verbose "Validating -InitiatorUserName parameter is in email address format"
-    Try
-    {
+    Try {
 
         $Null = [MailAddress]$InitiatorUserName
 
     }  # End Try
-    Catch
-    {
+    Catch {
 
         Throw "[x] The username you defined, $InitiatorUserName, is not a valid email address."
 
@@ -1201,8 +1256,7 @@ Function Invoke-RemediateItem {
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/remediate"
 
-    Switch ($PSBoundParameters.Keys)
-    {
+    Switch ($PSBoundParameters.Keys) {
 
         'MalopID' {
 
@@ -1319,14 +1373,12 @@ Function Get-CybereasonRemediationProgress {
 
     $Obj = @()
     Write-Verbose "Validating -InitiatorUserName parameter is in email address format"
-    Try
-    {
+    Try {
 
         $Null = [MailAddress]$InitiatorUserName
 
     }  # End Try
-    Catch
-    {
+    Catch {
 
         Throw "[x] The username you defined, $InitiatorUserName, is not a valid email address."
 
@@ -1427,20 +1479,17 @@ Function Stop-CybereasonMalopRemediation {
 
 BEGIN {
 
-    If (-not $PSBoundParameters.ContainsKey('Verbose'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Verbose')) {
 
         $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
 
     }  # End If
-    If (-not $PSBoundParameters.ContainsKey('Confirm'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Confirm')) {
 
         $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
 
     }  # End If
-    If (-not $PSBoundParameters.ContainsKey('WhatIf'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('WhatIf')) {
 
         $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
 
@@ -1451,8 +1500,8 @@ BEGIN {
 }  # End BEGIN
 PROCESS {
 
-    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
-    {
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?")) {
+
         $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
         $Response.Content | ConvertFrom-Json | `
@@ -1611,8 +1660,7 @@ Function Get-CybereasonIsolationRule {
     $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
     $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
 
-    If ($Response.StatusCode -eq 200)
-    {
+    If ($Response.StatusCode -eq 200) {
 
         $Response.Content | ConvertFrom-Json | `
         ForEach-Object {
@@ -1631,9 +1679,8 @@ Function Get-CybereasonIsolationRule {
 
         $Obj
 
-    }
-    Else
-    {
+    }  # End If
+    Else {
 
         Write-Output "[*] No isolation rules were found or access was denied. Try authenticating with a non-api user if you believe you should have this access."
         $Response
@@ -1730,48 +1777,41 @@ Function New-CybereasonIsolationRule {
 
 BEGIN {
 
-    If (-not $PSBoundParameters.ContainsKey('Verbose'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Verbose')) {
 
         $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
 
     }  # End If
-    If (-not $PSBoundParameters.ContainsKey('Confirm'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Confirm')) {
 
         $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
 
     }  # End If
-    If (-not $PSBoundParameters.ContainsKey('WhatIf'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('WhatIf')) {
 
         $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
 
     }  # End If
 
     $Obj = @()
-    If ($Blocking.IsPresent)
-    {
+    If ($Blocking.IsPresent) {
 
         $Block = 'true'
 
     }  # End If
-    Else
-    {
+    Else {
 
         $Block = 'false'
 
     }  # End If
 
-    If ($IpAddressString.Length -gt 0)
-    {
+    If ($IpAddressString.Length -gt 0) {
 
         $StringOne = '"ipAddressString":"' + $IpAddressString + '"'
 
     }  # End If
 
-    If ($PortNumber.Length -gt 0)
-    {
+    If ($PortNumber.Length -gt 0) {
 
         $StringTwo = ',"port":' + $PortNumber
 
@@ -1780,11 +1820,11 @@ BEGIN {
     $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
 
     $JsonData = '{' + $StringOne + $StringTwo + ',"blocking":"' + $Block + '","direction":"' + $Direction + '"}'
+
 }  # End BEGIN
 PROCESS {
 
-    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
-    {
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?")) {
 
         $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
 
@@ -1913,35 +1953,30 @@ Function Set-CybereasonIsolationRule {
 
 BEGIN {
 
-    If (-not $PSBoundParameters.ContainsKey('Verbose'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Verbose')) {
 
         $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
 
     }  # End If
-    If (-not $PSBoundParameters.ContainsKey('Confirm'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Confirm')) {
 
         $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
 
     }  # End If
-    If (-not $PSBoundParameters.ContainsKey('WhatIf'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('WhatIf')) {
 
         $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
 
     }  # End If
 
     $Obj = @()
-    If ($Blocking.IsPresent)
-    {
+    If ($Blocking.IsPresent) {
 
         $Block = 'true'
         $StringThree = ',"blocking":"' + $Block + '"'
 
     }  # End If
-    Else
-    {
+    Else {
 
         $Block = 'false'
         $StringThree = ',"blocking":"' + $Block + '"'
@@ -1950,29 +1985,25 @@ BEGIN {
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule"
 
-    If ($IpAddressString.Length -gt 0)
-    {
+    If ($IpAddressString.Length -gt 0) {
 
         $StringOne = ',"ipAddressString":"' + $IpAddressString + '"'
 
     }  # End If
 
-    If ($PortNumber.Length -gt 0)
-    {
+    If ($PortNumber.Length -gt 0) {
 
         $StringTwo = ',"port":' + $PortNumber
 
     }  # End If
 
-    If ($Direction.Length -gt 0)
-    {
+    If ($Direction.Length -gt 0) {
 
         $StringFour = ',"direction":"' + $Direction + '"'
 
     }  # End If
 
-    If ($LastUpdated.Length -gt 0)
-    {
+    If ($LastUpdated.Length -gt 0) {
 
         $StringFive = ',"lastUpdated":' + $LasUpdated
 
@@ -1983,8 +2014,7 @@ BEGIN {
 }  # End BEGIN
 PROCESS {
 
-    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
-    {
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?")) {
 
         $Response = Invoke-WebRequest -Method PUT -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
 
@@ -2122,44 +2152,38 @@ BEGIN {
 
     $Uri = "https://" + $Server + ":" + $Port + "/rest/settings/isolation-rule/delete"
 
-    If ($Blocking.IsPresent)
-    {
+    If ($Blocking.IsPresent) {
 
         $Block = 'true'
         $StringThree = ',"blocking":"' + $Block + '"'
 
     }  # End If
-    Else
-    {
+    Else {
 
         $Block = 'false'
         $StringThree = ',"blocking":"' + $Block + '"'
 
     }  # End If
 
-    If ($IpAddressString.Length -gt 0)
-    {
+    If ($IpAddressString.Length -gt 0) {
 
         $StringOne = ',"ipAddressString":"' + $IpAddressString + '"'
 
     }  # End If
 
-    If ($PortNumber.Length -gt 0)
-    {
+    If ($PortNumber.Length -gt 0) {
 
         $StringTwo = ',"port":' + $PortNumber
 
     }  # End If
 
-    If ($Direction.Length -gt 0)
-    {
+    If ($Direction.Length -gt 0) {
 
         $StringFour = ',"direction":"' + $Direction + '"'
 
     }  # End If
 
-    If ($LastUpdated.Length -gt 0)
-    {
+    If ($LastUpdated.Length -gt 0) {
 
         $StringFive = ',"lastUpdated":' + $LasUpdated
 
@@ -2170,8 +2194,7 @@ BEGIN {
 }  # End BEGIN
 PROCESS {
 
-    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
-    {
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?")) {
 
         $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
         $Response.Content | ConvertFrom-Json
@@ -2227,7 +2250,7 @@ Function Get-CybereasonMalwareCount {
     $JsonData = '{"compoundQueryFilters":[{"filters":[{"fieldName":"needsAttention","operator":"Is","values":[true]}],"filterName":"needsAttention"},{"filters":[{"fieldName":"type","operator":"Equals","values":["KnownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":[false]}],"filterName":"KnownMalware"},{"filters":[{"fieldName":"type","operator":"Equals","values":["UnknownMalware"]},{"fieldName":"needsAttention","operator":"Is","values":[false]}],"filterName":"UnknownMalware"},{"filters":[{"fieldName":"type","operator":"Equals","values":["FilelessMalware"]},{"fieldName":"needsAttention","operator":"Is","values":[false]}],"filterName":"FilelessMalware"},{"filters":[{"fieldName":"type","operator":"Equals","values":["ApplicationControlMalware"]}],"filterName":"ApplicationControlMalware"}]}'
 
     Write-Verbose "Sending query to $Uri"
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $APICybereasonSession -Body $JsonData
     $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data | Select-Object -ExpandProperty malwareCountFilters
 
     $TotalCount = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data).TotalCount
@@ -2391,8 +2414,7 @@ Function Get-CybereasonMalwareType {
 
     $Uri = 'https://' + $Server + ':' + $Port + '/rest/malware/query'
 
-    Switch ($PSBoundParameters.Keys)
-    {
+    Switch ($PSBoundParameters.Keys) {
 
         'NeedsAttention' {
 
@@ -2409,8 +2431,7 @@ Function Get-CybereasonMalwareType {
         'MalwareAfter' {
 
             $NeedsAttentionBool = 'false'
-            If ($NeedsAttention.IsPresent)
-            {
+            If ($NeedsAttention.IsPresent) {
 
                 $NeedsAttentionBool = 'true'
 
@@ -2423,8 +2444,7 @@ Function Get-CybereasonMalwareType {
         'MalwareBefore' {
 
             $NeedsAttentionBool = 'false'
-            If ($NeedsAttention.IsPresent)
-            {
+            If ($NeedsAttention.IsPresent) {
 
                 $NeedsAttentionBool = 'true'
 
@@ -2437,8 +2457,7 @@ Function Get-CybereasonMalwareType {
         'Status' {
 
             $NeedsAttentionBool = 'false'
-            If ($NeedsAttention.IsPresent)
-            {
+            If ($NeedsAttention.IsPresent) {
 
                 $NeedsAttentionBool = 'true'
 
@@ -2454,22 +2473,19 @@ Function Get-CybereasonMalwareType {
 
     $Results = $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty data
 
-    If ($Results.totalResults -eq 0)
-    {
+    If ($Results.totalResults -eq 0) {
 
         Write-Output "[*] There were not any results returned"
         $Results
 
     }  # End If
-    Else
-    {
+    Else {
 
         $Results.malwares
 
     }  # End Else
 
-    If ($Results.hasMoreResults -like 'True')
-    {
+    If ($Results.hasMoreResults -like 'True') {
 
         Write-Output "[*] More results were found but not all were returned. Raise the -Limit parameters value if you wish to view more"
 
@@ -2600,15 +2616,14 @@ Function Get-CybereasonCustomDetectionRule {
 
     $Obj = @()
 
-    Switch ($PSBoundParameters.Keys)
-    {
+    Switch ($PSBoundParameters.Keys) {
 
         'Active' {
 
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/live'
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $APICybereasonSession
 
             $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
             ForEach-Object {
@@ -2627,9 +2642,9 @@ Function Get-CybereasonCustomDetectionRule {
                 $description = ($_.description | Out-String).Trim()
                 $enabled = ($_.enabled | Out-String).Trim()
                 $userName = ($_.userName | Out-String).Trim()
-                $creationTime = Get-Date -Date ($_.creationTime)
-                $updateTime = Get-Date -Date ($_.updateTime)
-                $lastTriggerTime = Get-Date -Date ($_.lastTriggerTime)
+                $creationTime = (Get-Date -Date ($_.creationTime) -ErrorAction SilentlyContinue | Out-String).Trim()
+                $updateTime = (Get-Date -Date ($_.updateTime) -ErrorAction SilentlyContinue | Out-String).Trim()
+                $lastTriggerTime = If ($_.lastTriggerTime -like $Null) {Get-Date -Date "1/1/1111 11:11:11"} Else {(Get-Date -Date ($_.lastTriggerTime) -ErrorAction SilentlyContinue | Out-String).Trim()}
                 $autoRemediationActions = $_.autoRemediationActions
                 $autoRemediationStatus = $_.autoRemediationStatus
                 $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
@@ -2660,14 +2675,12 @@ Function Get-CybereasonCustomDetectionRule {
 
             }  # End ForEach-Object
 
-            If ($Obj.Count -eq 0)
-            {
+            If ($Obj.Count -eq 0) {
 
                 Write-Output "[*] No results were found"
 
             }  # End If
-            Else
-            {
+            Else {
 
                 $Obj
 
@@ -2681,7 +2694,7 @@ Function Get-CybereasonCustomDetectionRule {
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/deleted'
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $APICybereasonSession
 
             $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty rules | `
             ForEach-Object {
@@ -2700,9 +2713,9 @@ Function Get-CybereasonCustomDetectionRule {
                 $description = ($_.description | Out-String).Trim()
                 $enabled = ($_.enabled | Out-String).Trim()
                 $userName = ($_.userName | Out-String).Trim()
-                $creationTime = Get-Date -Date ($_.creationTime)
-                $updateTime = Get-Date -Date ($_.updateTime)
-                $lastTriggerTime = Get-Date -Date ($_.lastTriggerTime)
+                $creationTime = (Get-Date -Date ($_.creationTime) -ErrorAction SilentlyContinue | Out-String).Trim()
+                $updateTime = (Get-Date -Date ($_.updateTime) -ErrorAction SilentlyContinue | Out-String).Trim()
+                $lastTriggerTime = If ($_.lastTriggerTime -like $Null) {Get-Date -Date "1/1/1111 11:11:11"} Else {(Get-Date -Date ($_.lastTriggerTime) -ErrorAction SilentlyContinue | Out-String).Trim()}
                 $autoRemediationActions = $_.autoRemediationActions
                 $autoRemediationStatus = $_.autoRemediationStatus
                 $limitExceed = ($Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty limitExceed | Out-String).Trim()
@@ -2733,14 +2746,12 @@ Function Get-CybereasonCustomDetectionRule {
 
             }  # End ForEach-Object
 
-            If ($Obj.Count -eq 0)
-            {
+            If ($Obj.Count -eq 0) {
 
                 Write-Output "[*] No results were found"
 
             }  # End If
-            Else
-            {
+            Else {
 
                 $Obj
 
@@ -2753,7 +2764,7 @@ Function Get-CybereasonCustomDetectionRule {
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/rootCauses'
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $APICybereasonSession
 
             $Response.Content | ConvertFrom-Json
 
@@ -2764,7 +2775,7 @@ Function Get-CybereasonCustomDetectionRule {
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/getMalopDetectionTypes'
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $APICybereasonSession
 
             $Response.Content | ConvertFrom-Json
 
@@ -2775,7 +2786,7 @@ Function Get-CybereasonCustomDetectionRule {
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/getMalopActivityTypes'
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $APICybereasonSession
 
             $Response.Content | ConvertFrom-Json
 
@@ -2787,12 +2798,12 @@ Function Get-CybereasonCustomDetectionRule {
             $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/history/' + $RuleID.ToString()
 
             Write-Verbose "Sending query to $Uri"
-            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession
+            $Response = Invoke-WebRequest -Method GET -ContentType 'application/json' -Uri $Uri -WebSession $APICybereasonSession
 
             $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty history | `
             ForEach-Object {
                 $Username = ($_.username | Out-String).Trim()
-                $Date = Get-Date -Date $_.date
+                $Date = (Get-Date -Date $_.date -ErrorAction SilentlyContinue | Out-String).Trim()
                 $JsonRef = ($_.changes.jsonRef | Out-String).Trim()
                 $OriginalValue = ($_.changes.originalValue | Out-String).Trim()
                 $NewValue = ($_.changes.newValue | Out-String).Trim()
@@ -2801,14 +2812,12 @@ Function Get-CybereasonCustomDetectionRule {
 
             }  # End ForEach-Object
 
-            If ($Obj.Length -eq 0)
-            {
+            If ($Obj.Length -eq 0) {
 
                 Write-Output "[*] No results were found"
 
             }  # End If
-            Else
-            {
+            Else {
 
                 $Obj
 
@@ -3006,22 +3015,19 @@ Function New-CybereasonCustomDetectionRule {
 
 BEGIN {
 
-    If (-not $PSBoundParameters.ContainsKey('Verbose'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Verbose')) {
 
         $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
 
     }  # End If
 
-    If (-not $PSBoundParameters.ContainsKey('Confirm'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Confirm')) {
 
         $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
 
     }  # End If
 
-    if (-not $PSBoundParameters.ContainsKey('WhatIf'))
-    {
+    if (-not $PSBoundParameters.ContainsKey('WhatIf')) {
 
         $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
 
@@ -3042,8 +3048,7 @@ BEGIN {
 
     $Uri = 'https://' + $Server + ':' + $Port + '/rest/customRules/decisionFeature/create'
 
-    Switch ($PSBoundParameters.Keys)
-    {
+    Switch ($PSBoundParameters.Keys) {
 
         'Children' {
 
@@ -3062,8 +3067,7 @@ BEGIN {
 }  # End BEGIN
 PROCESS {
 
-    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
-    {
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?")) {
 
         Write-Verbose "Sending query to $Uri"
         $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
@@ -3308,20 +3312,17 @@ Function Set-CybereasonCustomDetectionRule {
 
 BEGIN {
 
-    If (-not $PSBoundParameters.ContainsKey('Verbose'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Verbose')) {
 
         $VerbosePreference = $PSCmdlet.SessionState.PSVariable.GetValue('VerbosePreference')
 
     }  # End If
-    If (-not $PSBoundParameters.ContainsKey('Confirm'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('Confirm')) {
 
         $ConfirmPreference = $PSCmdlet.SessionState.PSVariable.GetValue('ConfirmPreference')
 
     }  # End If
-    If (-not $PSBoundParameters.ContainsKey('WhatIf'))
-    {
+    If (-not $PSBoundParameters.ContainsKey('WhatIf')) {
 
         $WhatIfPreference = $PSCmdlet.SessionState.PSVariable.GetValue('WhatIfPreference')
 
@@ -3346,8 +3347,7 @@ BEGIN {
 }  # End BEGIN
 PROCESS {
 
-    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?"))
-    {
+    If ($Force -or $PSCmdlet.ShouldProcess("ShouldProcess?")) {
 
         Write-Verbose "Sending query to $Uri"
         $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
@@ -3803,7 +3803,7 @@ Function Get-CybereasonListAllSensor {
     $JsonData = $JsonData + "`"fieldName`":`"$FieldName`",`"operator`":`"Equals`",`"values`":[`"$Value`"]}]})"
 
     Write-Verbose "Sending query to $Uri"
-    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $CybereasonSession -Body $JsonData
+    $Response = Invoke-WebRequest -Method POST -ContentType 'application/json' -Uri $Uri -WebSession $APICybereasonSession -Body $JsonData
 
     $Response.Content | ConvertFrom-Json | Select-Object -ExpandProperty sensors | `
             ForEach-Object {
@@ -3870,8 +3870,8 @@ Function Get-CybereasonListAllSensor {
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUpCBPLKiw4fPP9zeMNoYxvS2J
-# koigggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUoiBMrFdX+GAoyvyU2Y5bdtOh
+# oc+gggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -3931,11 +3931,11 @@ Function Get-CybereasonListAllSensor {
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FPZhTRq73HmwzNkfG2Ca6vkqb0ufMA0GCSqGSIb3DQEBAQUABIIBAIXz8wuVV2kU
-# R4DQ1GFJiWWlGqqxaSIrSR1Z+C63MphfWodULS5OJ5+TTee+2KEMeJHKciSTKctZ
-# 8Kzwzm4rfFYKnMxfgWbTK1h+7aOLczd7rnawg7IhVP3y3HXXArOWxBiQ2oOumKYl
-# n7Z85aRP96vykZ4ud73YtjUc5fvOEVzqfb/kFr9V9kmcQ1AjdwM5WvGvivJoKn8s
-# dn8/nxMJK3lfAJO5B/mk9xvxEnedEJmsu2GADE3r9E3k+xzO+P6cGoDDR+2ySVQZ
-# YtqBGvDlr4pN7QfSeaplBcquTjxyrPDAz3sLJKr8FBg6vZRX95S1ot23WxnO99rS
-# rJ5BNjcfVgs=
+# FFL14uv8lONRsJiRa0e+NIU+kXs9MA0GCSqGSIb3DQEBAQUABIIBABL8XHITG44Y
+# JVs6UWcDdQZ7g3faNOhMNEm5fiVKZ965KslAZRXyZzKX+8LspQGtqoF4hEVsGkMn
+# VaD7JtGqEVx2baC5kOPhYw4aGeP48ySDppm+tTa59/NPllBI3WnJdmN06HuzgD2Q
+# yOtQ+3J6A2WaAUazoZMuQrwfJa/LcxsP5YKbVK1TTsI6IjX4xfiWlmeK72gzT7YO
+# lgRU1hCVZpO0+1O4eK8tEm+PZ37c2liK8nLrrpvHhIzpLOd+lWvuZv8j6p4J/3qP
+# eIL0+/zadJVUz7Jj+HgzCXXNLvRLmHTAaLNsrrEn1LgbC181uRNm16Vh+2aApuSL
+# 7u1SXnHu1f8=
 # SIG # End signature block

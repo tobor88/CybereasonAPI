@@ -1,7 +1,26 @@
 <center><img src="https://raw.githubusercontent.com/tobor88/CybereasonAPI/main/images/cyberreason.jpg" alt="Cybereason" width="25%" height="25%"></center>
 
 # CybereasonAPI
-### [NOW IN POWERSHELL GALLERY!!!](https://www.powershellgallery.com/packages/CybereasonAPI/1.0.0)
+
+![Maintenance](https://img.shields.io/badge/Maintenance-Not%20Maintained-yellow)
+
+## ⚠️ Project Maintenance Status
+
+> **Maintenance Notice (Important)**
+>
+> This module is **no longer actively maintained**. I no longer have access to a Cybereason environment, which makes it impossible for me to validate changes, test against newer API versions, or troubleshoot reported issues.
+>
+> As a result:
+>
+> * New Cybereason API changes may **break functionality**
+> * Issues and pull requests may **not be addressed in a timely manner**
+> * Compatibility with newer Cybereason releases is **not guaranteed**
+>
+> The module remains published for **reference, learning, and community use**, and may still work in environments running older or unchanged versions of the Cybereason API.
+>
+> **Community contributions are welcome.** If you actively use Cybereason and would like to maintain or fork this project, feel free to do so. If someone is interested in taking over long-term maintenance, open an issue and I’m happy to discuss transferring stewardship.
+
+### [IN POWERSHELL GALLERY!!!](https://www.powershellgallery.com/packages/CybereasonAPI/1.0.0)
 ```powershell
 # Install Module
 Install-Module -Name CybereasonAPI
